@@ -1,0 +1,113 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { I18nProvider } from "@/lib/i18n";
+import ScrollToTop from "@/components/ScrollToTop";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import StickyCTA from "@/components/StickyCTA";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
+import CallbackWidget from "@/components/CallbackWidget";
+import Index from "./pages/Index";
+import Eligibility from "./pages/Eligibility";
+import Compare from "./pages/Compare";
+import Calculator from "./pages/Calculator";
+import Blog from "./pages/Blog";
+import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBanks from "./pages/admin/AdminBanks";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminLeads from "./pages/admin/AdminLeads";
+import AdminCommissions from "./pages/admin/AdminCommissions";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <I18nProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <AuthProvider>
+            <ScrollToTop />
+            <Routes>
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="banks" element={<AdminBanks />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="leads" element={<AdminLeads />} />
+                <Route path="commissions" element={<AdminCommissions />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+              </Route>
+
+              {/* Public routes */}
+              <Route path="/" element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1"><Index /></div>
+                  <Footer />
+                  <StickyCTA />
+                  <ExitIntentPopup />
+                  <CallbackWidget />
+                </div>
+              } />
+              <Route path="/eligibility" element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1"><Eligibility /></div>
+                  <Footer />
+                  <StickyCTA />
+                  <CallbackWidget />
+                </div>
+              } />
+              <Route path="/compare" element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1"><Compare /></div>
+                  <Footer />
+                  <StickyCTA />
+                  <CallbackWidget />
+                </div>
+              } />
+              <Route path="/calculator" element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1"><Calculator /></div>
+                  <Footer />
+                  <StickyCTA />
+                  <CallbackWidget />
+                </div>
+              } />
+              <Route path="/blog" element={
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1"><Blog /></div>
+                  <Footer />
+                  <StickyCTA />
+                  <CallbackWidget />
+                </div>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </I18nProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
