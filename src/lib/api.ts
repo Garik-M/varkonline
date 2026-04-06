@@ -72,7 +72,9 @@ class ApiClient {
 
   // Products
   async getProducts(filters?: { loan_type?: string; bank_id?: string }) {
-    const params = new URLSearchParams(filters as any);
+    const params = new URLSearchParams();
+    if (filters?.loan_type) params.set('loan_type', filters.loan_type);
+    if (filters?.bank_id) params.set('bank_id', filters.bank_id);
     return this.request(`/products?${params}`);
   }
 
@@ -149,7 +151,9 @@ class ApiClient {
   }
 
   async getAnalytics(filters?: { event_type?: string; days?: number }) {
-    const params = new URLSearchParams(filters as any);
+    const params = new URLSearchParams();
+    if (filters?.event_type) params.set('event_type', filters.event_type);
+    if (filters?.days) params.set('days', String(filters.days));
     return this.request(`/analytics/events?${params}`);
   }
 
