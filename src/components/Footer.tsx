@@ -23,7 +23,6 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src="/logo.png" alt="VarkOnline.am" className="h-7 w-auto" />
-              <span className="font-extrabold text-lg">VarkOnline.am</span>
             </div>
             <p className="text-sm text-primary-foreground/60 leading-relaxed mb-5">
               {t("footer.description")}

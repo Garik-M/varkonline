@@ -25,14 +25,6 @@ export default function Header() {
       <div className="container-tight flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
           <img src="/logo.png" alt="VarkOnline.am" className="h-8 w-auto" />
-          <div className="flex items-baseline gap-0.5">
-            <span className="font-extrabold text-lg text-foreground tracking-tight">
-              VarkOnline
-            </span>
-            <span className="text-xs font-medium text-muted-foreground">
-              .am
-            </span>
-          </div>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
