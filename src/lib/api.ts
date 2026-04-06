@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://varkonline-back.vercel.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://varkonlineback-production.up.railway.app/api';
 
 class ApiClient {
   private getHeaders() {
