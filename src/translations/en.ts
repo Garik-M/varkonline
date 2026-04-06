@@ -221,5 +221,9 @@ export const en = {
     mortgageGuides: "Mortgage Guides",
     creditScore: "Credit Score",
     readMore: "Read More",
+    noPosts: "No blog posts available yet.",
+  },
+  common: {
+    loading: "Loading...",
   },
 };

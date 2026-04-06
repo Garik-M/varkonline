@@ -156,6 +156,39 @@ class ApiClient {
   async getDashboardStats() {
     return this.request('/analytics/dashboard');
   }
+
+  // Blog
+  async getBlogPosts() {
+    return this.request('/blog');
+  }
+
+  async getBlogPostBySlug(slug: string) {
+    return this.request(`/blog/slug/${slug}`);
+  }
+
+  async getAdminBlogPosts() {
+    return this.request('/blog/admin/all');
+  }
+
+  async createBlogPost(data: any) {
+    return this.request('/blog', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateBlogPost(id: string, data: any) {
+    return this.request(`/blog/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteBlogPost(id: string) {
+    return this.request(`/blog/${id}`, {
+      method: 'DELETE'
+    });
+  }
 }
 
 export const api = new ApiClient();

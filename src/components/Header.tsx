@@ -6,7 +6,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const navKeys = ["home", "eligibility", "compare", "calculator", "blog"] as const;
+const navKeys = [
+  "home",
+  "eligibility",
+  "compare",
+  "calculator",
+  "blog",
+] as const;
 const navHrefs = ["/", "/eligibility", "/compare", "/calculator", "/blog"];
 
 export default function Header() {
@@ -17,13 +23,15 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/60">
       <div className="container-tight flex items-center justify-between h-16 px-4">
-        <Link to="/" className="flex items-center gap-1.5">
-          <div className="w-9 h-9 rounded-xl accent-gradient flex items-center justify-center shadow-sm">
-            <span className="text-accent-foreground font-extrabold text-sm">V</span>
-          </div>
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="VarkOnline.am" className="h-8 w-auto" />
           <div className="flex items-baseline gap-0.5">
-            <span className="font-extrabold text-lg text-foreground tracking-tight">VarkOnline</span>
-            <span className="text-xs font-medium text-muted-foreground">.am</span>
+            <span className="font-extrabold text-lg text-foreground tracking-tight">
+              VarkOnline
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">
+              .am
+            </span>
           </div>
         </Link>
 
@@ -45,7 +53,11 @@ export default function Header() {
 
         <div className="hidden lg:flex items-center gap-2">
           <LanguageSwitcher />
-          <Button size="sm" className="accent-gradient border-0 text-accent-foreground shadow-sm hover:shadow-md transition-shadow" asChild>
+          <Button
+            size="sm"
+            className="accent-gradient border-0 text-accent-foreground shadow-sm hover:shadow-md transition-shadow"
+            asChild
+          >
             <Link to="/eligibility">
               {t("cta.checkEligibility")}
               <ArrowRight className="ml-1.5" size={14} />
@@ -55,7 +67,11 @@ export default function Header() {
 
         <div className="flex items-center gap-2 lg:hidden">
           <LanguageSwitcher />
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-foreground" aria-label="Menu">
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 text-foreground"
+            aria-label="Menu"
+          >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -85,7 +101,10 @@ export default function Header() {
                   {t(`nav.${key}`)}
                 </Link>
               ))}
-              <Button className="mt-3 accent-gradient border-0 text-accent-foreground py-5 rounded-xl" asChild>
+              <Button
+                className="mt-3 accent-gradient border-0 text-accent-foreground py-5 rounded-xl"
+                asChild
+              >
                 <Link to="/eligibility" onClick={() => setMobileOpen(false)}>
                   {t("cta.checkEligibility")}
                   <ArrowRight className="ml-1.5" size={14} />

@@ -1,8 +1,15 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  LayoutDashboard, Building2, CreditCard, Users, DollarSign,
-  LogOut, Loader2, BarChart3
+  LayoutDashboard,
+  Building2,
+  CreditCard,
+  Users,
+  DollarSign,
+  LogOut,
+  Loader2,
+  BarChart3,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +21,7 @@ const navItems = [
   { path: "/admin/leads", label: "Leads", icon: Users },
   { path: "/admin/commissions", label: "Commissions", icon: DollarSign },
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/admin/blog", label: "Blog", icon: FileText },
 ];
 
 export default function AdminLayout() {
@@ -37,7 +45,10 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border hidden md:flex flex-col">
         <div className="p-6 border-b border-border">
-          <h1 className="text-lg font-bold text-foreground">VarkOnline</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <img src="/logo.png" alt="VarkOnline.am" className="h-6 w-auto" />
+            <h1 className="text-lg font-bold text-foreground">VarkOnline</h1>
+          </div>
           <p className="text-xs text-muted-foreground">Admin Panel</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
@@ -53,7 +64,7 @@ export default function AdminLayout() {
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <item.icon className="w-4 h-4" />
@@ -63,7 +74,11 @@ export default function AdminLayout() {
           })}
         </nav>
         <div className="p-3 border-t border-border">
-          <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3"
+            onClick={signOut}
+          >
             <LogOut className="w-4 h-4" />
             Sign Out
           </Button>
@@ -92,7 +107,7 @@ export default function AdminLayout() {
                   "flex items-center gap-2 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors",
                   isActive
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground"
+                    : "border-transparent text-muted-foreground",
                 )}
               >
                 <item.icon className="w-3.5 h-3.5" />

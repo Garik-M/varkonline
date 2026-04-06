@@ -1,22 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { api } from "@/lib/api";
 
-const posts = [
-  { title: "Top 7 Tips to Get Your Loan Approved Faster", excerpt: "Learn the key factors banks look at when reviewing your loan application and how to improve your chances of approval.", categoryKey: "loanTips", date: "Feb 15, 2026", readTime: "5 min read" },
-  { title: "Best Consumer Loan Rates in Armenia — 2026 Comparison", excerpt: "We compared consumer loan rates from 10+ Armenian banks. Here's our detailed breakdown of who offers the best deal.", categoryKey: "bankComparisons", date: "Feb 10, 2026", readTime: "8 min read" },
-  { title: "First-Time Mortgage Buyer's Guide for Armenia", excerpt: "Everything you need to know about getting a mortgage in Armenia — from documentation to down payment strategies.", categoryKey: "mortgageGuides", date: "Feb 5, 2026", readTime: "10 min read" },
-  { title: "Understanding Interest Rates: Fixed vs Variable", excerpt: "What's the difference between fixed and variable interest rates? Which one is better for your loan? We break it down.", categoryKey: "financialEducation", date: "Jan 28, 2026", readTime: "6 min read" },
-  { title: "How to Improve Your Credit Score in Armenia", excerpt: "A practical guide to improving your creditworthiness and unlocking better loan terms from Armenian banks.", categoryKey: "creditScore", date: "Jan 20, 2026", readTime: "7 min read" },
-  { title: "Refinancing Your Loan: When Does It Make Sense?", excerpt: "Should you refinance your existing loan? Learn when refinancing saves you money and when it doesn't.", categoryKey: "loanTips", date: "Jan 15, 2026", readTime: "5 min read" },
+interface BlogPost {
+  id: string;
+  slug: string;
+  title_hy: string;
+  title_en: string;
+  title_ru: string;
+  excerpt_hy: string | null;
+  excerpt_en: string | null;
+  excerpt_ru: string | null;
+  content_hy: string;
+  content_en: string;
+  content_ru: string;
+  image_url: string | null;
+  author: string | null;
+  published: boolean;
+  created_at: string;
+}
+
+const categoryKeys = [
+  "all",
+  "loanTips",
+  "bankComparisons",
+  "financialEducation",
+  "mortgageGuides",
+  "creditScore",
 ];
-
-const categoryKeys = ["all", "loanTips", "bankComparisons", "financialEducation", "mortgageGuides", "creditScore"];
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const { t } = useTranslation();
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { t, lang } = useTranslation();
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const data = await api.getBlogPosts();
+        setPosts(data || []);
+      } catch (error) {
+        console.error("Failed to fetch blog posts:", error);
+      }
+      setLoading(false);
+    };
+    fetchPosts();
+  }, []);
 
   const categoryLabels: Record<string, string> = {
     all: t("blog.all"),
@@ -27,17 +59,61 @@ export default function Blog() {
     creditScore: t("blog.creditScore"),
   };
 
-  const filtered = activeCategory === "all" ? posts : posts.filter((p) => p.categoryKey === activeCategory);
+  const getLocalizedTitle = (post: BlogPost) => {
+    if (lang === "hy") return post.title_hy;
+    if (lang === "ru") return post.title_ru;
+    return post.title_en;
+  };
+
+  const getLocalizedExcerpt = (post: BlogPost) => {
+    if (lang === "hy") return post.excerpt_hy || "";
+    if (lang === "ru") return post.excerpt_ru || "";
+    return post.excerpt_en || "";
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(
+      lang === "hy" ? "hy-AM" : lang === "ru" ? "ru-RU" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      },
+    );
+  };
+
+  const filtered = activeCategory === "all" ? posts : posts;
+
+  if (loading) {
+    return (
+      <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+        <div className="container-tight text-center py-20">
+          <p className="text-muted-foreground">
+            {t("common.loading") || "Loading..."}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
       <div className="container-tight">
-        <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="w-12 h-12 rounded-2xl primary-gradient flex items-center justify-center mx-auto mb-4">
             <BookOpen size={22} className="text-primary-foreground" />
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold mb-3">{t("blog.title")}</h1>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">{t("blog.subtitle")}</p>
+          <h1 className="text-2xl md:text-4xl font-bold mb-3">
+            {t("blog.title")}
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            {t("blog.subtitle")}
+          </p>
         </motion.div>
 
         <div className="flex flex-wrap gap-2 justify-center mb-10">
@@ -56,40 +132,63 @@ export default function Blog() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((post, i) => (
-            <motion.article
-              key={i}
-              className="fintech-card group cursor-pointer flex flex-col"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1 font-medium text-accent">
-                  <Tag size={11} />
-                  {categoryLabels[post.categoryKey]}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar size={11} />
-                  {post.date}
-                </span>
-              </div>
-              <h2 className="text-base font-bold text-foreground mb-2 group-hover:text-accent transition-colors leading-snug">
-                {post.title}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-5 leading-relaxed flex-1">{post.excerpt}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{post.readTime}</span>
-                <div className="flex items-center text-sm font-semibold text-accent group-hover:gap-2 gap-1 transition-all">
-                  <span>{t("blog.readMore")}</span>
-                  <ArrowRight size={14} />
+        {posts.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">
+              {t("blog.noPosts") || "No blog posts available yet."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((post, i) => (
+              <motion.article
+                key={post.id}
+                className="fintech-card group cursor-pointer flex flex-col"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+              >
+                {post.image_url && (
+                  <div className="mb-4 rounded-lg overflow-hidden">
+                    <img
+                      src={post.image_url}
+                      alt={getLocalizedTitle(post)}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
+                  {post.author && (
+                    <span className="flex items-center gap-1 font-medium text-accent">
+                      <Tag size={11} />
+                      {post.author}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Calendar size={11} />
+                    {formatDate(post.created_at)}
+                  </span>
                 </div>
-              </div>
-            </motion.article>
-          ))}
-        </div>
+                <h2 className="text-base font-bold text-foreground mb-2 group-hover:text-accent transition-colors leading-snug">
+                  {getLocalizedTitle(post)}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-5 leading-relaxed flex-1">
+                  {getLocalizedExcerpt(post)}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {post.slug}
+                  </span>
+                  <div className="flex items-center text-sm font-semibold text-accent group-hover:gap-2 gap-1 transition-all">
+                    <span>{t("blog.readMore")}</span>
+                    <ArrowRight size={14} />
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

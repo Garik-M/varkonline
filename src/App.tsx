@@ -25,6 +25,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminBlog from "./pages/admin/AdminBlog";
 
 const queryClient = new QueryClient();
 
@@ -52,55 +53,81 @@ const App = () => (
                 <Route path="leads" element={<AdminLeads />} />
                 <Route path="commissions" element={<AdminCommissions />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="blog" element={<AdminBlog />} />
               </Route>
 
               {/* Public routes */}
-              <Route path="/" element={
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <div className="flex-1"><Index /></div>
-                  <Footer />
-                  <StickyCTA />
-                  <ExitIntentPopup />
-                  <CallbackWidget />
-                </div>
-              } />
-              <Route path="/eligibility" element={
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <div className="flex-1"><Eligibility /></div>
-                  <Footer />
-                  <StickyCTA />
-                  <CallbackWidget />
-                </div>
-              } />
-              <Route path="/compare" element={
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <div className="flex-1"><Compare /></div>
-                  <Footer />
-                  <StickyCTA />
-                  <CallbackWidget />
-                </div>
-              } />
-              <Route path="/calculator" element={
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <div className="flex-1"><Calculator /></div>
-                  <Footer />
-                  <StickyCTA />
-                  <CallbackWidget />
-                </div>
-              } />
-              <Route path="/blog" element={
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <div className="flex-1"><Blog /></div>
-                  <Footer />
-                  <StickyCTA />
-                  <CallbackWidget />
-                </div>
-              } />
+              <Route
+                path="/"
+                element={
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <div className="flex-1">
+                      <Index />
+                    </div>
+                    <Footer />
+                    <StickyCTA />
+                    <ExitIntentPopup />
+                    <CallbackWidget />
+                  </div>
+                }
+              />
+              <Route
+                path="/eligibility"
+                element={
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <div className="flex-1">
+                      <Eligibility />
+                    </div>
+                    <Footer />
+                    <StickyCTA />
+                    <CallbackWidget />
+                  </div>
+                }
+              />
+              <Route
+                path="/compare"
+                element={
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <div className="flex-1">
+                      <Compare />
+                    </div>
+                    <Footer />
+                    <StickyCTA />
+                    <CallbackWidget />
+                  </div>
+                }
+              />
+              <Route
+                path="/calculator"
+                element={
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <div className="flex-1">
+                      <Calculator />
+                    </div>
+                    <Footer />
+                    <StickyCTA />
+                    <CallbackWidget />
+                  </div>
+                }
+              />
+              <Route
+                path="/blog"
+                element={
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <div className="flex-1">
+                      <Blog />
+                    </div>
+                    <Footer />
+                    <StickyCTA />
+                    <CallbackWidget />
+                  </div>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
