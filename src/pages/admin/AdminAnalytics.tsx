@@ -16,6 +16,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventRow {
   id: string;
@@ -32,6 +46,7 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [days, setDays] = useState("7");
+  const { toast } = useToast();
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -55,6 +70,16 @@ export default function AdminAnalytics() {
     events.map((e) => e.session_id).filter(Boolean),
   ).size;
   const eventTypes = [...new Set(events.map((e) => e.event_type))];
+
+  const deleteAll = async () => {
+    try {
+      await api.deleteAllAnalytics();
+      setEvents([]);
+      toast({ title: "All analytics events deleted" });
+    } catch {
+      toast({ title: "Failed to delete events", variant: "destructive" });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -84,6 +109,28 @@ export default function AdminAnalytics() {
               <SelectItem value="form_submit">Form submits</SelectItem>
             </SelectContent>
           </Select>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="w-4 h-4 mr-2" /> Delete All
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete all analytics?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all analytics events. This action
+                  cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteAll}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

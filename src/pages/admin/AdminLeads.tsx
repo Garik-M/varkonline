@@ -11,8 +11,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const STATUSES = ["new", "sent_to_bank", "approved", "funded"] as const;
 const STATUS_COLORS: Record<string, string> = {
@@ -68,6 +79,16 @@ export default function AdminLeads() {
       fetchLeads();
     } catch (error) {
       toast({ title: "Failed to update lead", variant: "destructive" });
+    }
+  };
+
+  const deleteAll = async () => {
+    try {
+      await api.deleteAllLeads();
+      setLeads([]);
+      toast({ title: "All leads deleted" });
+    } catch {
+      toast({ title: "Failed to delete leads", variant: "destructive" });
     }
   };
 
@@ -185,6 +206,28 @@ export default function AdminLeads() {
           <Button variant="outline" onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" /> Export
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="w-4 h-4 mr-2" /> Delete All
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete all leads?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all leads. This action cannot be
+                  undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteAll}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

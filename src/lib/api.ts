@@ -117,6 +117,10 @@ class ApiClient {
     });
   }
 
+  async deleteAllLeads() {
+    return this.request('/leads/all', { method: 'DELETE' });
+  }
+
   // Commissions
   async getCommissions() {
     return this.request('/commissions');
@@ -155,6 +159,10 @@ class ApiClient {
     if (filters?.event_type) params.set('event_type', filters.event_type);
     if (filters?.days) params.set('days', String(filters.days));
     return this.request(`/analytics/events?${params}`);
+  }
+
+  async deleteAllAnalytics() {
+    return this.request('/analytics/events/all', { method: 'DELETE' });
   }
 
   async getDashboardStats() {
