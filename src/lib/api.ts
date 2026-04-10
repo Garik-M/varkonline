@@ -121,6 +121,10 @@ class ApiClient {
     return this.request('/leads/all', { method: 'DELETE' });
   }
 
+  async deleteLead(id: string) {
+    return this.request(`/leads/${id}`, { method: 'DELETE' });
+  }
+
   // Commissions
   async getCommissions() {
     return this.request('/commissions');
@@ -163,6 +167,10 @@ class ApiClient {
 
   async deleteAllAnalytics() {
     return this.request('/analytics/events/all', { method: 'DELETE' });
+  }
+
+  async deleteAnalyticsEvent(id: string) {
+    return this.request(`/analytics/events/${id}`, { method: 'DELETE' });
   }
 
   async getDashboardStats() {

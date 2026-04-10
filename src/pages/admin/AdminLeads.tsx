@@ -92,6 +92,16 @@ export default function AdminLeads() {
     }
   };
 
+  const deleteLead = async (id: string) => {
+    try {
+      await api.deleteLead(id);
+      setLeads((prev) => prev.filter((l) => l.id !== id));
+      toast({ title: "Lead deleted" });
+    } catch {
+      toast({ title: "Failed to delete lead", variant: "destructive" });
+    }
+  };
+
   const exportCSV = () => {
     const headers = [
       "Name",
@@ -275,6 +285,32 @@ export default function AdminLeads() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this lead?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete {lead.full_name}'s lead.
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteLead(lead.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </CardContent>

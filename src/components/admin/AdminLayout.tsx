@@ -47,7 +47,6 @@ export default function AdminLayout() {
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
             <img src="/logo.png" alt="VarkOnline.am" className="h-6 w-auto" />
-            <h1 className="text-lg font-bold text-foreground">VarkOnline</h1>
           </div>
           <p className="text-xs text-muted-foreground">Admin Panel</p>
         </div>

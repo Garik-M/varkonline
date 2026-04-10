@@ -22,6 +22,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { trackPageView, trackCTA } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
+import StructuredData from "@/components/StructuredData";
 
 interface LoanProduct {
   id: string;
@@ -47,7 +48,7 @@ export default function Compare() {
   const [sortBy, setSortBy] = useState<"rate" | "speed">("rate");
   const [products, setProducts] = useState<LoanProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const typeLabels: Record<string, string> = {
     all: t("compare.allTypes"),
@@ -105,6 +106,7 @@ export default function Compare() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <StructuredData type="page" locale={locale} path="/compare" />
       <div className="container-tight">
         <motion.div
           className="text-center mb-12"

@@ -17,17 +17,17 @@ export default function Footer() {
   const loanTypeLinks = t("footer.loanTypeLinks") as unknown as string[];
 
   return (
-    <footer className="bg-primary text-primary-foreground border-t border-primary-foreground/15">
+    <footer className="bg-gray-100 text-gray-900 border-t border-gray-200">
       <div className="container-tight px-4 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src="/logo.png" alt="VarkOnline.am" className="h-7 w-auto" />
             </div>
-            <p className="text-sm text-primary-foreground/60 leading-relaxed mb-5">
+            <p className="text-sm text-gray-500 leading-relaxed mb-5">
               {t("footer.description")}
             </p>
-            <div className="flex items-center gap-4 text-primary-foreground/40">
+            <div className="flex items-center gap-4 text-gray-400">
               <Shield size={16} />
               <Building2 size={16} />
               <Clock size={16} />
@@ -35,7 +35,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary-foreground/80">
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-700">
               {t("footer.services")}
             </h4>
             <div className="flex flex-col gap-2.5">
@@ -44,7 +44,7 @@ export default function Footer() {
                   <Link
                     key={i}
                     to={serviceHrefs[i]}
-                    className="text-sm text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+                    className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {item}
                   </Link>
@@ -54,7 +54,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary-foreground/80">
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-700">
               {t("footer.loanTypes")}
             </h4>
             <div className="flex flex-col gap-2.5">
@@ -63,7 +63,7 @@ export default function Footer() {
                   <Link
                     key={i}
                     to={loanTypeHrefs[i]}
-                    className="text-sm text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+                    className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {item}
                   </Link>
@@ -73,10 +73,10 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary-foreground/80">
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-700">
               {t("footer.contact")}
             </h4>
-            <div className="flex flex-col gap-3 text-sm text-primary-foreground/60">
+            <div className="flex flex-col gap-3 text-sm text-gray-500">
               <div className="flex items-center gap-2.5">
                 <MapPin size={14} className="shrink-0 text-accent" />
                 <span>Yerevan, Armenia</span>
@@ -93,22 +93,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-primary-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-primary-foreground/40">
+        <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">
             &copy; {new Date().getFullYear()} VarkOnline.am &mdash;{" "}
             {t("footer.rights")}
           </p>
-          <div className="flex gap-5 text-xs text-primary-foreground/40">
-            <Link
-              to="#"
-              className="hover:text-primary-foreground transition-colors"
-            >
+          <div className="flex gap-5 text-xs text-gray-400">
+            <Link to="#" className="hover:text-gray-900 transition-colors">
               {t("footer.privacy")}
             </Link>
-            <Link
-              to="#"
-              className="hover:text-primary-foreground transition-colors"
-            >
+            <Link to="#" className="hover:text-gray-900 transition-colors">
               {t("footer.terms")}
             </Link>
           </div>

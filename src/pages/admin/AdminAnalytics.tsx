@@ -81,6 +81,16 @@ export default function AdminAnalytics() {
     }
   };
 
+  const deleteEvent = async (id: string) => {
+    try {
+      await api.deleteAnalyticsEvent(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      toast({ title: "Event deleted" });
+    } catch {
+      toast({ title: "Failed to delete event", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -183,6 +193,7 @@ export default function AdminAnalytics() {
                   <TableHead>Element</TableHead>
                   <TableHead>Page</TableHead>
                   <TableHead>Session</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -205,12 +216,22 @@ export default function AdminAnalytics() {
                     <TableCell className="text-xs text-muted-foreground">
                       {e.session_id?.slice(0, 10) || "—"}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => deleteEvent(e.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {events.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center text-muted-foreground py-8"
                     >
                       No events recorded yet.

@@ -1,21 +1,22 @@
 {
-  "name": "VarkOnline.am - Smart Loan Comparison",
+  "name": "VarkOnline.am - Օնլայն վարկեր",
   "short_name": "VarkOnline",
-  "description": "Compare loan offers from Armenian banks and find the best rates",
+  "description": "Համեմատեք հայկական բանկերի վարկային առաջարկները",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6366f1",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     },
     {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

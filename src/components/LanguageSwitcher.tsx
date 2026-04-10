@@ -1,4 +1,5 @@
-import { useTranslation, Language, languageLabels } from "@/lib/i18n";
+import { useTranslation, languageLabels, type Language } from "@/lib/i18n";
+import { LANG_TO_LOCALE } from "@/lib/locale";
 import { Globe } from "lucide-react";
 import {
   DropdownMenu,
@@ -10,7 +11,7 @@ import {
 const languages: Language[] = ["hy", "en", "ru"];
 
 export default function LanguageSwitcher() {
-  const { lang, setLang } = useTranslation();
+  const { lang, setLocale } = useTranslation();
 
   return (
     <DropdownMenu>
@@ -22,7 +23,7 @@ export default function LanguageSwitcher() {
         {languages.map((l) => (
           <DropdownMenuItem
             key={l}
-            onClick={() => setLang(l)}
+            onClick={() => setLocale(LANG_TO_LOCALE[l])}
             className={`text-sm font-medium cursor-pointer ${lang === l ? "bg-secondary text-foreground" : ""}`}
           >
             {languageLabels[l]}

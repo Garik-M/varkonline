@@ -4,6 +4,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n";
+import { resolveLocaleFromPath } from "@/lib/locale";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const navKeys = [
@@ -13,12 +14,16 @@ const navKeys = [
   "calculator",
   "blog",
 ] as const;
-const navHrefs = ["/", "/eligibility", "/compare", "/calculator", "/blog"];
+const navPaths = ["/", "/eligibility", "/compare", "/calculator", "/blog"];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, lp } = useTranslation();
+
+  // Active check against the normalised path (strips locale prefix)
+  const { normalizedPath } = resolveLocaleFromPath(location.pathname);
+  const navHrefs = navPaths.map((p) => lp(p));
 
   return (
     <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/60">
@@ -33,7 +38,7 @@ export default function Header() {
               key={navHrefs[i]}
               to={navHrefs[i]}
               className={`text-sm font-medium px-3.5 py-2 rounded-lg transition-all duration-200 ${
-                location.pathname === navHrefs[i]
+                normalizedPath === navPaths[i]
                   ? "text-foreground bg-secondary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
               }`}
@@ -50,7 +55,7 @@ export default function Header() {
             className="accent-gradient border-0 text-accent-foreground shadow-sm hover:shadow-md transition-shadow"
             asChild
           >
-            <Link to="/eligibility">
+            <Link to={lp("/eligibility")}>
               {t("cta.checkEligibility")}
               <ArrowRight className="ml-1.5" size={14} />
             </Link>
@@ -85,7 +90,7 @@ export default function Header() {
                   to={navHrefs[i]}
                   onClick={() => setMobileOpen(false)}
                   className={`text-sm font-medium py-3 px-4 rounded-xl transition-colors ${
-                    location.pathname === navHrefs[i]
+                    normalizedPath === navPaths[i]
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted"
                   }`}
@@ -97,7 +102,10 @@ export default function Header() {
                 className="mt-3 accent-gradient border-0 text-accent-foreground py-5 rounded-xl"
                 asChild
               >
-                <Link to="/eligibility" onClick={() => setMobileOpen(false)}>
+                <Link
+                  to={lp("/eligibility")}
+                  onClick={() => setMobileOpen(false)}
+                >
                   {t("cta.checkEligibility")}
                   <ArrowRight className="ml-1.5" size={14} />
                 </Link>

@@ -7,14 +7,19 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import TrustSection from "@/components/TrustSection";
 import FAQSection from "@/components/FAQSection";
 import { trackPageView } from "@/lib/analytics";
+import StructuredData from "@/components/StructuredData";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Index() {
+  const { locale } = useTranslation();
+
   useEffect(() => {
     trackPageView("/");
   }, []);
 
   return (
     <main className="pb-16 md:pb-0">
+      <StructuredData type="home" locale={locale} path="/" />
       <HeroSection />
       <HowItWorks />
       <LoanCalculatorWidget />

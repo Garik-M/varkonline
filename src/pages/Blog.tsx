@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { api } from "@/lib/api";
+import StructuredData from "@/components/StructuredData";
 
 interface BlogPost {
   id: string;
@@ -35,7 +36,7 @@ export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t, lang } = useTranslation();
+  const { t, lang, locale } = useTranslation();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -99,6 +100,7 @@ export default function Blog() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <StructuredData type="blog" locale={locale} path="/blog" />
       <div className="container-tight">
         <motion.div
           className="text-center mb-12"

@@ -1,7 +1,23 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useEffect,
+} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { en } from "@/translations/en";
 import { hy } from "@/translations/hy";
 import { ru } from "@/translations/ru";
+import {
+  Locale,
+  LOCALE_TO_LANG,
+  LANG_TO_LOCALE,
+  localePath,
+  resolveLocaleFromPath,
+  detectBrowserLocale,
+} from "@/lib/locale";
 
 export type Language = "hy" | "en" | "ru";
 
@@ -14,7 +30,6 @@ export const languageLabels: Record<Language, string> = {
 const translations: Record<Language, typeof en> = { en, hy, ru };
 
 type TranslationKeys = typeof en;
-
 type NestedKeyOf<T, Prefix extends string = ""> = T extends object
   ? {
       [K in keyof T & string]: T[K] extends object
@@ -22,12 +37,15 @@ type NestedKeyOf<T, Prefix extends string = ""> = T extends object
         : `${Prefix}${K}`;
     }[keyof T & string]
   : never;
-
 export type TranslationKey = NestedKeyOf<TranslationKeys>;
 
 interface I18nContextType {
   lang: Language;
-  setLang: (lang: Language) => void;
+  locale: Locale;
+  /** Switch locale and navigate to the equivalent URL */
+  setLocale: (locale: Locale) => void;
+  /** Build a locale-aware path for the current locale */
+  lp: (path: string) => string;
   t: (key: string) => any;
 }
 
@@ -39,20 +57,51 @@ function getNestedValue(obj: any, path: string): any {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Language>(() => {
-    const saved = localStorage.getItem("lang");
-    if (saved === "hy" || saved === "en" || saved === "ru") return saved;
-    return "hy";
-  });
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const setLang = useCallback((l: Language) => {
-    setLangState(l);
-    localStorage.setItem("lang", l);
-  }, []);
+  // Derive locale from URL on every render — URL is the source of truth
+  const { locale, normalizedPath, redirect } = resolveLocaleFromPath(
+    location.pathname,
+    location.search,
+  );
+
+  // Handle redirects (trailing slash, /am/... → /...)
+  useEffect(() => {
+    if (redirect) navigate(redirect, { replace: true });
+  }, [redirect, navigate]);
+
+  // Browser-language detection on very first visit (no stored preference)
+  useEffect(() => {
+    const visited = sessionStorage.getItem("locale_detected");
+    if (visited) return;
+    sessionStorage.setItem("locale_detected", "1");
+
+    // Only redirect from the bare root with no explicit locale
+    if (location.pathname !== "/") return;
+
+    const detected = detectBrowserLocale();
+    if (detected && detected !== "am") {
+      navigate(`/${detected}`, { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const lang = LOCALE_TO_LANG[locale];
+
+  const setLocale = useCallback(
+    (next: Locale) => {
+      // Build the equivalent path in the new locale
+      const target = localePath(next, normalizedPath) + location.search;
+      navigate(target, { replace: false });
+    },
+    [navigate, normalizedPath, location.search],
+  );
+
+  const lp = useCallback((path: string) => localePath(locale, path), [locale]);
 
   const t = useCallback(
     (key: string) => getNestedValue(translations[lang], key),
-    [lang]
+    [lang],
   );
 
   useEffect(() => {
@@ -60,7 +109,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   return (
-    <I18nContext.Provider value={{ lang, setLang, t }}>
+    <I18nContext.Provider value={{ lang, locale, setLocale, lp, t }}>
       {children}
     </I18nContext.Provider>
   );
@@ -71,3 +120,6 @@ export function useTranslation() {
   if (!ctx) throw new Error("useTranslation must be used within I18nProvider");
   return ctx;
 }
+
+// Re-export for convenience
+export { localePath, type Locale };

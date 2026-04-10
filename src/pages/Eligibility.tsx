@@ -28,6 +28,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { trackFormSubmit, trackCTA, trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
+import StructuredData from "@/components/StructuredData";
 
 interface LoanProduct {
   id: string;
@@ -61,7 +62,7 @@ export default function Eligibility() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const validPurposes = [
     "consumer",
@@ -402,6 +403,7 @@ export default function Eligibility() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <StructuredData type="page" locale={locale} path="/eligibility" />
       <div className="container-tight max-w-xl">
         <motion.div
           className="text-center mb-10"

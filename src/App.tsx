@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { I18nProvider } from "@/lib/i18n";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -29,110 +35,118 @@ import AdminBlog from "./pages/admin/AdminBlog";
 
 const queryClient = new QueryClient();
 
+/** Wraps a page with the standard public layout */
+function PublicLayout({
+  children,
+  withExit = false,
+}: {
+  children: React.ReactNode;
+  withExit?: boolean;
+}) {
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex-1">{children}</div>
+      <Footer />
+      <StickyCTA />
+      <CallbackWidget />
+      {withExit && <ExitIntentPopup />}
+    </div>
+  );
+}
+
+/** Public routes — rendered under both bare paths and locale-prefixed paths */
+function PublicRoutes() {
+  return (
+    <Routes>
+      <Route
+        index
+        element={
+          <PublicLayout withExit>
+            <Index />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="eligibility"
+        element={
+          <PublicLayout>
+            <Eligibility />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="compare"
+        element={
+          <PublicLayout>
+            <Compare />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="calculator"
+        element={
+          <PublicLayout>
+            <Calculator />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="blog"
+        element={
+          <PublicLayout>
+            <Blog />
+          </PublicLayout>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <I18nProvider>
+      <ScrollToTop />
+      <Routes>
+        {/* Admin routes — not locale-prefixed */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="banks" element={<AdminBanks />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="leads" element={<AdminLeads />} />
+          <Route path="commissions" element={<AdminCommissions />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="blog" element={<AdminBlog />} />
+        </Route>
+
+        {/* Locale-prefixed public routes */}
+        <Route path="/en/*" element={<PublicRoutes />} />
+        <Route path="/ru/*" element={<PublicRoutes />} />
+
+        {/* Default (Armenian) public routes — no prefix */}
+        <Route path="/*" element={<PublicRoutes />} />
+      </Routes>
+    </I18nProvider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <I18nProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <AuthProvider>
-            <ScrollToTop />
-            <Routes>
-              {/* Admin routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="banks" element={<AdminBanks />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="leads" element={<AdminLeads />} />
-                <Route path="commissions" element={<AdminCommissions />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="blog" element={<AdminBlog />} />
-              </Route>
-
-              {/* Public routes */}
-              <Route
-                path="/"
-                element={
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <div className="flex-1">
-                      <Index />
-                    </div>
-                    <Footer />
-                    <StickyCTA />
-                    <ExitIntentPopup />
-                    <CallbackWidget />
-                  </div>
-                }
-              />
-              <Route
-                path="/eligibility"
-                element={
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <div className="flex-1">
-                      <Eligibility />
-                    </div>
-                    <Footer />
-                    <StickyCTA />
-                    <CallbackWidget />
-                  </div>
-                }
-              />
-              <Route
-                path="/compare"
-                element={
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <div className="flex-1">
-                      <Compare />
-                    </div>
-                    <Footer />
-                    <StickyCTA />
-                    <CallbackWidget />
-                  </div>
-                }
-              />
-              <Route
-                path="/calculator"
-                element={
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <div className="flex-1">
-                      <Calculator />
-                    </div>
-                    <Footer />
-                    <StickyCTA />
-                    <CallbackWidget />
-                  </div>
-                }
-              />
-              <Route
-                path="/blog"
-                element={
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <div className="flex-1">
-                      <Blog />
-                    </div>
-                    <Footer />
-                    <StickyCTA />
-                    <CallbackWidget />
-                  </div>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </I18nProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
