@@ -26,7 +26,7 @@ export default function CallbackWidget() {
         loan_purpose: "consumer",
         notes: "Callback widget request",
       });
-      trackFormSubmit("callback_widget", { phone: phone.trim() });
+      trackFormSubmit("callback_widget", "/");
       setSubmitted(true);
       setTimeout(() => {
         setOpen(false);

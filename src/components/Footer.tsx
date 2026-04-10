@@ -2,17 +2,24 @@ import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Shield, Building2, Clock } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
-const serviceHrefs = ["/eligibility", "/compare", "/calculator", "/blog"];
-const loanTypeHrefs = [
-  "/compare?type=consumer",
-  "/compare?type=mortgage",
-  "/compare?type=auto",
-  "/compare?type=business",
-  "/compare?type=refinancing",
+const servicePaths = ["/eligibility", "/compare", "/calculator", "/blog"];
+const loanTypePaths = [
+  "/compare",
+  "/compare",
+  "/compare",
+  "/compare",
+  "/compare",
+];
+const loanTypeQueries = [
+  "?type=consumer",
+  "?type=mortgage",
+  "?type=auto",
+  "?type=business",
+  "?type=refinancing",
 ];
 
 export default function Footer() {
-  const { t } = useTranslation();
+  const { t, lp } = useTranslation();
   const serviceLinks = t("footer.serviceLinks") as unknown as string[];
   const loanTypeLinks = t("footer.loanTypeLinks") as unknown as string[];
 
@@ -43,7 +50,7 @@ export default function Footer() {
                 (item, i) => (
                   <Link
                     key={i}
-                    to={serviceHrefs[i]}
+                    to={lp(servicePaths[i])}
                     className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {item}
@@ -62,7 +69,7 @@ export default function Footer() {
                 (item, i) => (
                   <Link
                     key={i}
-                    to={loanTypeHrefs[i]}
+                    to={lp(loanTypePaths[i]) + loanTypeQueries[i]}
                     className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {item}
