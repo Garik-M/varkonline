@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { api } from "@/lib/api";
@@ -143,51 +144,52 @@ export default function Blog() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((post, i) => (
-              <motion.article
+              <motion.div
                 key={post.id}
-                className="fintech-card group cursor-pointer flex flex-col"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
               >
-                {post.image_url && (
-                  <div className="mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src={post.image_url}
-                      alt={getLocalizedTitle(post)}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
-                <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
-                  {post.author && (
-                    <span className="flex items-center gap-1 font-medium text-accent">
-                      <Tag size={11} />
-                      {post.author}
-                    </span>
+                <Link
+                  to={`/blog/${post.slug}`}
+                  className="fintech-card group flex flex-col h-full block"
+                >
+                  {post.image_url && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <img
+                        src={post.image_url}
+                        alt={getLocalizedTitle(post)}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Calendar size={11} />
-                    {formatDate(post.created_at)}
-                  </span>
-                </div>
-                <h2 className="text-base font-bold text-foreground mb-2 group-hover:text-accent transition-colors leading-snug">
-                  {getLocalizedTitle(post)}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-5 leading-relaxed flex-1">
-                  {getLocalizedExcerpt(post)}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {post.slug}
-                  </span>
-                  <div className="flex items-center text-sm font-semibold text-accent group-hover:gap-2 gap-1 transition-all">
-                    <span>{t("blog.readMore")}</span>
-                    <ArrowRight size={14} />
+                  <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
+                    {post.author && (
+                      <span className="flex items-center gap-1 font-medium text-accent">
+                        <Tag size={11} />
+                        {post.author}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Calendar size={11} />
+                      {formatDate(post.created_at)}
+                    </span>
                   </div>
-                </div>
-              </motion.article>
+                  <h2 className="text-base font-bold text-foreground mb-2 group-hover:text-accent transition-colors leading-snug">
+                    {getLocalizedTitle(post)}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-5 leading-relaxed flex-1">
+                    {getLocalizedExcerpt(post)}
+                  </p>
+                  <div className="flex items-center justify-end">
+                    <div className="flex items-center text-sm font-semibold text-accent group-hover:gap-2 gap-1 transition-all">
+                      <span>{t("blog.readMore")}</span>
+                      <ArrowRight size={14} />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}

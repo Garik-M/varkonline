@@ -22,6 +22,7 @@ import Eligibility from "./pages/Eligibility";
 import Compare from "./pages/Compare";
 import Calculator from "./pages/Calculator";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -96,6 +97,14 @@ function PublicRoutes() {
         element={
           <PublicLayout>
             <Blog />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="blog/:slug"
+        element={
+          <PublicLayout>
+            <BlogPost />
           </PublicLayout>
         }
       />
