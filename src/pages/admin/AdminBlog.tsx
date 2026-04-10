@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Globe, ImagePlus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary";
 
 interface BlogPost {
   id: string;
@@ -57,6 +58,25 @@ export default function AdminBlog() {
     published: false,
   });
   const { toast } = useToast();
+  const [coverUploading, setCoverUploading] = useState(false);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setForm((f) => ({ ...f, image_url: url }));
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : "Cover upload failed",
+        variant: "destructive",
+      });
+    } finally {
+      setCoverUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -174,13 +194,48 @@ export default function AdminBlog() {
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
               />
-              <Input
-                placeholder="Image URL"
-                value={form.image_url}
-                onChange={(e) =>
-                  setForm({ ...form, image_url: e.target.value })
-                }
-              />
+              {/* Cover image upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Cover Image
+                </label>
+                {form.image_url ? (
+                  <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={form.image_url}
+                      alt="Cover"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${coverUploading ? "opacity-50 pointer-events-none" : ""}`}
+                  >
+                    <ImagePlus
+                      size={22}
+                      className="text-muted-foreground mb-1"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {coverUploading
+                        ? "Uploading..."
+                        : "Click to upload cover image"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCoverUpload}
+                    />
+                  </label>
+                )}
+              </div>
               <Input
                 placeholder="Author"
                 value={form.author}
