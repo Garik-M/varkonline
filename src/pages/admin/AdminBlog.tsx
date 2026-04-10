@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import RichTextEditor from "@/components/RichTextEditor";
 
 interface BlogPost {
   id: string;
@@ -218,13 +219,10 @@ export default function AdminBlog() {
                     }
                     rows={3}
                   />
-                  <Textarea
-                    placeholder="Content (Armenian)"
+                  <RichTextEditor
                     value={form.content_hy}
-                    onChange={(e) =>
-                      setForm({ ...form, content_hy: e.target.value })
-                    }
-                    rows={10}
+                    onChange={(val) => setForm({ ...form, content_hy: val })}
+                    placeholder="Content (Armenian)"
                   />
                 </TabsContent>
 
@@ -244,13 +242,10 @@ export default function AdminBlog() {
                     }
                     rows={3}
                   />
-                  <Textarea
-                    placeholder="Content (English)"
+                  <RichTextEditor
                     value={form.content_en}
-                    onChange={(e) =>
-                      setForm({ ...form, content_en: e.target.value })
-                    }
-                    rows={10}
+                    onChange={(val) => setForm({ ...form, content_en: val })}
+                    placeholder="Content (English)"
                   />
                 </TabsContent>
 
@@ -270,13 +265,10 @@ export default function AdminBlog() {
                     }
                     rows={3}
                   />
-                  <Textarea
-                    placeholder="Content (Russian)"
+                  <RichTextEditor
                     value={form.content_ru}
-                    onChange={(e) =>
-                      setForm({ ...form, content_ru: e.target.value })
-                    }
-                    rows={10}
+                    onChange={(val) => setForm({ ...form, content_ru: val })}
+                    placeholder="Content (Russian)"
                   />
                 </TabsContent>
               </Tabs>
