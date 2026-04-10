@@ -111,3 +111,10 @@
     padding: 10px 12px;
   }
 }
+
+/* Scroll offset for anchored headings on the blog post page (accounts for fixed header) */
+.prose h1[id],
+.prose h2[id],
+.prose h3[id] {
+  scroll-margin-top: 96px;
+}
