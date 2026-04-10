@@ -88,7 +88,7 @@ export default function CallbackWidget() {
                   <form onSubmit={handleSubmit} className="flex gap-2">
                     <Input
                       type="tel"
-                      placeholder="+374 XX XXX XXX"
+                      placeholder="+374"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="text-sm"

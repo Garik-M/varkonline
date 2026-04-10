@@ -137,7 +137,7 @@ export const en = {
     fullName: "Full Name",
     namePlaceholder: "Your full name",
     phone: "Phone Number",
-    phonePlaceholder: "+374 XX XXX XXX",
+    phonePlaceholder: "+374",
     emailOptional: "Email (optional)",
     emailPlaceholder: "your@email.com",
     privacyNote: "Your data is encrypted and never shared without your consent.",

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Shield, Building2, Clock } from "lucide-react";
+import { MapPin, Mail, Shield, Building2, Clock } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
 const servicePaths = ["/eligibility", "/compare", "/calculator", "/blog"];
@@ -87,10 +87,6 @@ export default function Footer() {
               <div className="flex items-center gap-2.5">
                 <MapPin size={14} className="shrink-0 text-accent" />
                 <span>Yerevan, Armenia</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Phone size={14} className="shrink-0 text-accent" />
-                <span>+374 XX XXX XXX</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail size={14} className="shrink-0 text-accent" />
