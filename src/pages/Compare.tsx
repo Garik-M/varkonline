@@ -23,6 +23,7 @@ import { api } from "@/lib/api";
 import { trackPageView, trackCTA } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
 import StructuredData from "@/components/StructuredData";
+import PageMeta from "@/components/PageMeta";
 
 interface LoanProduct {
   id: string;
@@ -106,6 +107,11 @@ export default function Compare() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <PageMeta
+        title="Վարկերի Համեմատություն"
+        description="Համեմատեք Հայաստանի բոլոր բանկերի վարկային առաջարկները տոկոսադրույքի, հաստատման արագության և պայմանների համաձայն։"
+        path="/compare"
+      />
       <StructuredData type="page" locale={locale} path="/compare" />
       <div className="container-tight">
         <motion.div

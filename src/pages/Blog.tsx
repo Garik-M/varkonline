@@ -5,6 +5,7 @@ import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import StructuredData from "@/components/StructuredData";
+import PageMeta from "@/components/PageMeta";
 
 interface BlogPost {
   id: string;
@@ -101,6 +102,11 @@ export default function Blog() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <PageMeta
+        title="Բլոգ — Վարկային Ուղեցույցներ"
+        description="Կարդացեք վարկերի, բանկային ծառայությունների և ֆինանսական կրթության մասին հոդվածներ։"
+        path="/blog"
+      />
       <StructuredData type="blog" locale={locale} path="/blog" />
       <div className="container-tight">
         <motion.div

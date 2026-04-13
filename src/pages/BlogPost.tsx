@@ -5,6 +5,7 @@ import { Calendar, Tag, ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
+import PageMeta from "@/components/PageMeta";
 
 interface BlogPostData {
   id: string;
@@ -140,6 +141,13 @@ export default function BlogPost() {
 
   const { html: content, toc } = processContent(sanitizeHtml(rawContent));
 
+  const excerpt =
+    lang === "hy"
+      ? post.excerpt_hy
+      : lang === "ru"
+        ? post.excerpt_ru
+        : post.excerpt_en;
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString(
       lang === "hy" ? "hy-AM" : lang === "ru" ? "ru-RU" : "en-US",
@@ -148,6 +156,13 @@ export default function BlogPost() {
 
   return (
     <main className="section-padding min-h-screen bg-background pb-24 md:pb-16">
+      <PageMeta
+        title={title}
+        description={excerpt || title}
+        path={`/blog/${post.slug}`}
+        ogImage={post.image_url || undefined}
+        ogType="article"
+      />
       {/* Outer wrapper: TOC left + content center */}
       <div className="relative max-w-6xl mx-auto px-4">
         {/* Fixed TOC — only shown when there are headings, only on large screens */}

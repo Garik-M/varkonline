@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { trackFormSubmit, trackCTA, trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
 import StructuredData from "@/components/StructuredData";
+import PageMeta from "@/components/PageMeta";
 
 interface LoanProduct {
   id: string;
@@ -403,6 +404,11 @@ export default function Eligibility() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <PageMeta
+        title="Ստուգեք Ձեր Վարկային Իրավասությունը"
+        description="Լրացրեք 3 քայլ և ստացեք անվճար նախնական հաստատում Հայաստանի բանկերից 3 րոպեում։"
+        path="/eligibility"
+      />
       <StructuredData type="page" locale={locale} path="/eligibility" />
       <div className="container-tight max-w-xl">
         <motion.div

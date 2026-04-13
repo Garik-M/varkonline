@@ -7,6 +7,7 @@ import { trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
 import { useSearchParams } from "react-router-dom";
 import StructuredData from "@/components/StructuredData";
+import PageMeta from "@/components/PageMeta";
 
 export default function Calculator() {
   const [searchParams] = useSearchParams();
@@ -82,6 +83,11 @@ export default function Calculator() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <PageMeta
+        title="Վարկի Հաշվիչ"
+        description="Հաշվեք ձեր ամսական վճարները, ընդհանուր տոկոսները և մարման ժամանակացույցը անվճար վարկի հաշվիչով։"
+        path="/calculator"
+      />
       <StructuredData type="page" locale={locale} path="/calculator" />
       <div className="container-tight max-w-3xl">
         <motion.div
