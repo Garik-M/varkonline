@@ -73,9 +73,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   // Browser-language detection on very first visit (no stored preference)
   useEffect(() => {
-    const visited = sessionStorage.getItem("locale_detected");
+    const visited = localStorage.getItem("locale_detected");
     if (visited) return;
-    sessionStorage.setItem("locale_detected", "1");
+    localStorage.setItem("locale_detected", "1");
 
     // Only redirect from the bare root with no explicit locale
     if (location.pathname !== "/") return;

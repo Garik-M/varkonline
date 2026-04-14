@@ -7,8 +7,8 @@ export const trackEvent = async (
   metadata?: Record<string, any>
 ) => {
   try {
-    const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
-    sessionStorage.setItem('session_id', sessionId);
+    const sessionId = localStorage.getItem('session_id') || crypto.randomUUID();
+    localStorage.setItem('session_id', sessionId);
 
     await api.trackEvent({
       event_type: eventType,
