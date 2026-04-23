@@ -86,6 +86,7 @@ export default function Compare() {
   const [sortBy, setSortBy] = useState<"rate" | "speed">("rate");
   const [products, setProducts] = useState<LoanProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t, locale } = useTranslation();
 
   const typeLabels: Record<string, string> = {
@@ -104,9 +105,9 @@ export default function Compare() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      setError(null);
       try {
         if (typeFilter === "mortgage") {
-          // Use scraped real-time data for mortgages
           const res = await api.getMortgages();
           const items: ScrapedMortgage[] = res?.data ?? res ?? [];
           setProducts(items.map(scrapedToCard));
@@ -116,8 +117,9 @@ export default function Compare() {
           });
           setProducts(data || []);
         }
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
+      } catch (err: any) {
+        console.error("Failed to fetch products:", err);
+        setError(err?.message || "Failed to load data");
       }
       setLoading(false);
     };
@@ -223,6 +225,13 @@ export default function Compare() {
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <p className="text-destructive text-sm font-medium mb-1">
+              Failed to load data
+            </p>
+            <p className="text-muted-foreground text-xs">{error}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -360,9 +369,13 @@ export default function Compare() {
           </div>
         )}
 
-        {!loading && sorted.length === 0 && (
+        {!loading && !error && sorted.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">{t("compare.noProducts")}</p>
+            <p className="text-muted-foreground">
+              {typeFilter === "mortgage"
+                ? "No mortgage data yet. Run the scraper first: npm run scrape"
+                : t("compare.noProducts")}
+            </p>
           </div>
         )}
       </div>
