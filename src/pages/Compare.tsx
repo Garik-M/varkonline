@@ -41,6 +41,43 @@ interface LoanProduct {
   banks: { name: string; institution_type: string } | null;
 }
 
+// Shape returned by /api/mortgages (scraped data)
+interface ScrapedMortgage {
+  id: string;
+  bank_name: string;
+  product_name: string;
+  mortgage_type: string;
+  interest_rate_min: number | null;
+  interest_rate_max: number | null;
+  currency: string;
+  term_min_months: number | null;
+  term_max_months: number | null;
+  min_down_payment_percent: number | null;
+  max_loan_amount: number | null;
+  description: string;
+  source_url: string;
+  last_updated: string;
+}
+
+// Normalise a scraped mortgage into the card shape
+function scrapedToCard(m: ScrapedMortgage): LoanProduct {
+  return {
+    id: m.id,
+    name: m.product_name,
+    loan_type: "mortgage",
+    interest_rate_min: m.interest_rate_min ?? 0,
+    interest_rate_max: m.interest_rate_max ?? 0,
+    min_amount: 0,
+    max_amount: m.max_loan_amount ?? 0,
+    max_duration_months: m.term_max_months ?? 0,
+    approval_time_days: 3,
+    requires_collateral: true,
+    requires_salary_transfer: false,
+    early_repayment: true,
+    banks: { name: m.bank_name, institution_type: "bank" },
+  };
+}
+
 export default function Compare() {
   const [searchParams] = useSearchParams();
   const initialType = searchParams.get("type") || "all";
@@ -68,10 +105,17 @@ export default function Compare() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const data = await api.getProducts({
-          loan_type: typeFilter === "all" ? undefined : typeFilter,
-        });
-        setProducts(data || []);
+        if (typeFilter === "mortgage") {
+          // Use scraped real-time data for mortgages
+          const res = await api.getMortgages();
+          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
+          setProducts(items.map(scrapedToCard));
+        } else {
+          const data = await api.getProducts({
+            loan_type: typeFilter === "all" ? undefined : typeFilter,
+          });
+          setProducts(data || []);
+        }
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
@@ -254,12 +298,16 @@ export default function Compare() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-5">
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                      {t("compare.upTo")} {fmt(loan.max_amount)} AMD
-                    </span>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                      {loan.max_duration_months} {t("calculator.months")}
-                    </span>
+                    {loan.max_amount > 0 && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                        {t("compare.upTo")} {fmt(loan.max_amount)} AMD
+                      </span>
+                    )}
+                    {loan.max_duration_months > 0 && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                        {loan.max_duration_months} {t("calculator.months")}
+                      </span>
+                    )}
                     {loan.requires_collateral && (
                       <span className="text-xs px-2.5 py-1 rounded-full bg-warning/10 text-warning font-medium">
                         {t("compare.collateral")}
@@ -294,10 +342,10 @@ export default function Compare() {
                       className="flex-1 accent-gradient border-0 text-accent-foreground h-10 rounded-xl"
                       asChild
                       onClick={() =>
-                        trackCTA("compare_apply", {
-                          bank: (loan.banks as any)?.name,
-                          product: loan.name,
-                        })
+                        trackCTA(
+                          "compare_apply",
+                          `${(loan.banks as any)?.name} - ${loan.name}`,
+                        )
                       }
                     >
                       <Link to={`/eligibility?type=${loan.loan_type}`}>

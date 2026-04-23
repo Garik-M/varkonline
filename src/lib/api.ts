@@ -70,6 +70,21 @@ class ApiClient {
     });
   }
 
+  // Scraped mortgages
+  async getMortgages(filters?: { bank?: string; type?: string; currency?: string; min_rate?: number; max_rate?: number }) {
+    const params = new URLSearchParams();
+    if (filters?.bank)     params.set('bank', filters.bank);
+    if (filters?.type)     params.set('type', filters.type);
+    if (filters?.currency) params.set('currency', filters.currency);
+    if (filters?.min_rate) params.set('min_rate', String(filters.min_rate));
+    if (filters?.max_rate) params.set('max_rate', String(filters.max_rate));
+    return this.request(`/mortgages?${params}`);
+  }
+
+  async getMortgageBanks() {
+    return this.request('/mortgages/banks');
+  }
+
   // Products
   async getProducts(filters?: { loan_type?: string; bank_id?: string }) {
     const params = new URLSearchParams();
