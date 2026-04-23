@@ -10,6 +10,7 @@ import {
   Clock,
   Percent,
   Shield,
+  Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -31,19 +38,19 @@ import { useTranslation } from "@/lib/i18n";
 import StructuredData from "@/components/StructuredData";
 import PageMeta from "@/components/PageMeta";
 
-interface LoanProduct {
+interface ScrapedLoan {
   id: string;
-  name: string;
-  interest_rate_min: number;
-  interest_rate_max: number;
-  approval_time_days: number;
-  max_amount: number;
-  max_duration_months: number;
+  bank_name: string;
+  product_name: string;
+  loan_category: string;
+  loan_type: string | null;
+  interest_rate_min: number | null;
+  interest_rate_max: number | null;
+  currency: string;
+  term_max_months: number | null;
+  max_loan_amount: number | null;
   requires_collateral: boolean;
-  requires_salary_transfer: boolean;
-  early_repayment: boolean;
-  loan_type: string;
-  banks: { name: string; website: string | null } | null;
+  source_url: string;
 }
 
 interface BankResult {
@@ -51,17 +58,27 @@ interface BankResult {
   productName: string;
   rate: number;
   monthly: number;
-  speed: string;
   probability: "high" | "medium" | "low";
   eligibilityPercent: number;
-  website?: string | null;
+  termMonths: number | null;
+  maxAmount: number | null;
 }
+
+// Map loan purpose to scraped_loans category
+const purposeToCategory: Record<string, string> = {
+  consumer: "consumer",
+  mortgage: "mortgage",
+  auto: "car",
+  business: "business",
+  refinancing: "refinance",
+};
 
 export default function Eligibility() {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [applyBank, setApplyBank] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, locale } = useTranslation();
 
@@ -78,16 +95,13 @@ export default function Eligibility() {
   const [purpose, setPurpose] = useState(
     validPurposes.includes(initialPurpose) ? initialPurpose : "",
   );
-
   const [employment, setEmployment] = useState("");
   const [income, setIncome] = useState("");
   const [existingLoans, setExistingLoans] = useState("");
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-
-  const [products, setProducts] = useState<LoanProduct[]>([]);
+  const [loans, setLoans] = useState<ScrapedLoan[]>([]);
 
   const purposes = [
     { value: "consumer", label: t("eligibility.consumer") },
@@ -110,15 +124,15 @@ export default function Eligibility() {
 
   useEffect(() => {
     if (!purpose) return;
-    const fetchProducts = async () => {
-      try {
-        const data = await api.getProducts({ loan_type: purpose });
-        setProducts(data || []);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      }
-    };
-    fetchProducts();
+    const category = purposeToCategory[purpose] ?? purpose;
+    api
+      .getMortgages({ category })
+      .then((res) => {
+        const items: ScrapedLoan[] = res?.data ?? res ?? [];
+        // Only keep products with at least a rate
+        setLoans(items.filter((l) => l.interest_rate_min !== null));
+      })
+      .catch(() => setLoans([]));
   }, [purpose]);
 
   const canNext = () => {
@@ -131,51 +145,54 @@ export default function Eligibility() {
   const results: BankResult[] = useMemo(() => {
     const inc = parseInt(income) || 300000;
     const ratio = amount / (inc * duration);
+    const baseScore = Math.max(10, Math.min(98, 100 - ratio * 80));
+
     const calcMonthly = (r: number) => {
       const mr = r / 100 / 12;
+      if (mr === 0) return Math.round(amount / duration);
       return Math.round(
         (amount * mr * Math.pow(1 + mr, duration)) /
           (Math.pow(1 + mr, duration) - 1),
       );
     };
 
-    // Higher interest rate = higher approval percentage (banks with higher rates approve more easily)
-    const baseScore = Math.max(10, Math.min(98, 100 - ratio * 80));
     const calcPercent = (rate: number, allRates: number[]) => {
       const minRate = Math.min(...allRates);
       const maxRate = Math.max(...allRates);
-      const rateSpread = maxRate - minRate || 1;
-      const rateBonus = ((rate - minRate) / rateSpread) * 15; // higher rate = higher bonus
-      return Math.round(Math.max(10, Math.min(98, baseScore + rateBonus)));
+      const spread = maxRate - minRate || 1;
+      const bonus = ((rate - minRate) / spread) * 15;
+      return Math.round(Math.max(10, Math.min(98, baseScore + bonus)));
     };
+
     const deriveProb = (pct: number): "high" | "medium" | "low" =>
       pct >= 70 ? "high" : pct >= 40 ? "medium" : "low";
 
-    if (products.length > 0) {
-      const rates = products.map(
-        (p) => (p.interest_rate_min + p.interest_rate_max) / 2,
+    if (loans.length > 0) {
+      const rates = loans.map(
+        (l) =>
+          ((l.interest_rate_min ?? 0) +
+            (l.interest_rate_max ?? l.interest_rate_min ?? 0)) /
+          2,
       );
-      return products
-        .map((p) => {
-          const avgRate = (p.interest_rate_min + p.interest_rate_max) / 2;
-          const eligibilityPercent = calcPercent(avgRate, rates);
+      return loans
+        .map((l, i) => {
+          const rate = rates[i];
+          const pct = calcPercent(rate, rates);
           return {
-            name: (p.banks as any)?.name || "Unknown Bank",
-            productName: p.name,
-            rate: avgRate,
-            monthly: calcMonthly(avgRate),
-            speed:
-              p.approval_time_days <= 1
-                ? t("compare.sameDay")
-                : `${p.approval_time_days} ${t("compare.days")}`,
-            probability: deriveProb(eligibilityPercent),
-            eligibilityPercent,
-            website: (p.banks as any)?.website || null,
+            name: l.bank_name,
+            productName: l.product_name,
+            rate,
+            monthly: calcMonthly(rate),
+            probability: deriveProb(pct),
+            eligibilityPercent: pct,
+            termMonths: l.term_max_months,
+            maxAmount: l.max_loan_amount,
           };
         })
         .sort((a, b) => a.rate - b.rate);
     }
 
+    // Fallback — shown only if scraped data not yet available
     const fallbackRates = [12.5, 13.0, 13.5];
     return [
       {
@@ -183,38 +200,36 @@ export default function Eligibility() {
         productName: "Consumer Loan",
         rate: 12.5,
         monthly: calcMonthly(12.5),
-        speed: "1-2 days",
         probability: deriveProb(calcPercent(12.5, fallbackRates)),
         eligibilityPercent: calcPercent(12.5, fallbackRates),
-        website: "https://www.acba.am",
+        termMonths: null,
+        maxAmount: null,
       },
       {
         name: "Ameriabank",
         productName: "Consumer Loan",
         rate: 13.0,
         monthly: calcMonthly(13.0),
-        speed: t("compare.sameDay"),
         probability: deriveProb(calcPercent(13.0, fallbackRates)),
         eligibilityPercent: calcPercent(13.0, fallbackRates),
-        website: "https://ameriabank.am",
+        termMonths: null,
+        maxAmount: null,
       },
       {
         name: "Ardshinbank",
         productName: "Consumer Loan",
         rate: 13.5,
         monthly: calcMonthly(13.5),
-        speed: "1-3 days",
         probability: deriveProb(calcPercent(13.5, fallbackRates)),
         eligibilityPercent: calcPercent(13.5, fallbackRates),
-        website: "https://ardshinbank.am",
+        termMonths: null,
+        maxAmount: null,
       },
     ];
-  }, [amount, duration, income, products, t]);
+  }, [amount, duration, income, loans]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const bestProb = results[0]?.probability || "medium";
-
     try {
       await api.submitLead({
         full_name: name,
@@ -226,21 +241,18 @@ export default function Eligibility() {
         employment_type: employment,
         monthly_income: parseInt(income) || null,
         existing_loans: parseInt(existingLoans) || 0,
-        approval_probability: bestProb,
+        approval_probability: results[0]?.probability || "medium",
       });
-
       trackFormSubmit("eligibility", "/eligibility");
-      setSubmitting(false);
       setSubmitted(true);
     } catch (err) {
-      console.error("Failed to submit lead:", err);
       toast({
-        title: "Error submitting",
-        description: "Failed to submit your application. Please try again.",
+        title: "Error",
+        description: "Failed to submit. Please try again.",
         variant: "destructive",
       });
-      setSubmitting(false);
     }
+    setSubmitting(false);
   };
 
   const probConfig = {
@@ -303,12 +315,12 @@ export default function Eligibility() {
                   className={`fintech-card ${i === 0 ? "ring-2 ring-accent/40" : ""}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.12 }}
+                  transition={{ delay: i * 0.1 }}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center relative">
+                        <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center">
                           <Building2
                             size={18}
                             className="text-primary-foreground"
@@ -330,14 +342,18 @@ export default function Eligibility() {
                               </Badge>
                             )}
                           </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {bank.productName}
+                          </p>
                           <div
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${prob.bg} ${prob.color} mt-1`}
                           >
                             <prob.icon size={11} />
-                            {prob.label} — {bank.eligibilityPercent}%
+                            {prob.label}
                           </div>
                         </div>
                       </div>
+
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground text-xs mb-0.5">
@@ -345,7 +361,7 @@ export default function Eligibility() {
                           </p>
                           <p className="font-bold text-foreground flex items-center gap-1">
                             <Percent size={12} className="text-accent" />{" "}
-                            {bank.rate}%
+                            {bank.rate.toFixed(1)}%
                           </p>
                         </div>
                         <div>
@@ -361,26 +377,17 @@ export default function Eligibility() {
                             {t("eligibility.approvalSpeed")}
                           </p>
                           <p className="font-bold text-foreground flex items-center gap-1">
-                            <Clock size={12} className="text-info" />{" "}
-                            {bank.speed}
+                            <Clock size={12} className="text-info" /> 1-3 days
                           </p>
                         </div>
                       </div>
                     </div>
+
                     <Button
                       className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
                       onClick={() => {
                         trackCTA("apply_now", bank.name);
-                        if (bank.website) {
-                          window.open(bank.website, "_blank");
-                        } else {
-                          toast({
-                            title: t("eligibility.applicationSent"),
-                            description: (
-                              t("eligibility.applicationSentDesc") as string
-                            ).replace("{bank}", bank.name),
-                          });
-                        }
+                        setApplyBank(bank.name);
                       }}
                     >
                       {t("eligibility.applyNow")}
@@ -398,6 +405,37 @@ export default function Eligibility() {
             </Button>
           </div>
         </div>
+
+        {/* Contact popup */}
+        <Dialog open={!!applyBank} onOpenChange={() => setApplyBank(null)}>
+          <DialogContent className="max-w-sm rounded-2xl text-center">
+            <DialogHeader>
+              <div className="w-14 h-14 rounded-2xl accent-gradient flex items-center justify-center mx-auto mb-3">
+                <Phone size={24} className="text-accent-foreground" />
+              </div>
+              <DialogTitle className="text-xl font-bold">
+                Application Received
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground text-sm mt-1">
+              We will contact you within{" "}
+              <span className="font-semibold text-foreground">24 hours</span>{" "}
+              regarding your{" "}
+              <span className="font-semibold text-foreground">{applyBank}</span>{" "}
+              application.
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              Our team will review your eligibility and reach out to{" "}
+              {phone || "you"} with the best available offer.
+            </p>
+            <Button
+              className="w-full mt-4 accent-gradient border-0 text-accent-foreground rounded-xl h-11"
+              onClick={() => setApplyBank(null)}
+            >
+              Got it
+            </Button>
+          </DialogContent>
+        </Dialog>
       </main>
     );
   }
@@ -432,13 +470,7 @@ export default function Eligibility() {
             <div key={s} className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                    s < step
-                      ? "accent-gradient text-accent-foreground"
-                      : s === step
-                        ? "primary-gradient text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                  }`}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${s < step ? "accent-gradient text-accent-foreground" : s === step ? "primary-gradient text-primary-foreground" : "bg-muted text-muted-foreground"}`}
                 >
                   {s < step ? <CheckCircle size={14} /> : s}
                 </div>
