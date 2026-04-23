@@ -158,11 +158,15 @@ export default function Compare() {
   }, [products, institutionFilter]);
 
   const sorted = useMemo(() => {
+    // Filter out products with no meaningful rate
+    const withRates = filtered.filter(
+      (p) => p.interest_rate_min > 0 && p.interest_rate_max > 0,
+    );
     if (sortBy === "rate")
-      return [...filtered].sort(
+      return [...withRates].sort(
         (a, b) => a.interest_rate_min - b.interest_rate_min,
       );
-    return [...filtered].sort(
+    return [...withRates].sort(
       (a, b) => a.approval_time_days - b.approval_time_days,
     );
   }, [filtered, sortBy]);
@@ -311,7 +315,9 @@ export default function Compare() {
                           {t("compare.interestRate")}
                         </p>
                         <p className="text-sm font-bold text-foreground">
-                          {loan.interest_rate_min}–{loan.interest_rate_max}% APR
+                          {loan.interest_rate_min > 0
+                            ? `${loan.interest_rate_min}–${loan.interest_rate_max}% APR`
+                            : "Contact us"}
                         </p>
                       </div>
                     </div>
