@@ -71,9 +71,10 @@ class ApiClient {
   }
 
   // Scraped mortgages
-  async getMortgages(filters?: { bank?: string; type?: string; currency?: string; min_rate?: number; max_rate?: number }) {
+  async getMortgages(filters?: { bank?: string; type?: string; category?: string; currency?: string; min_rate?: number; max_rate?: number }) {
     const params = new URLSearchParams();
     if (filters?.bank)     params.set('bank', filters.bank);
+    if (filters?.category) params.set('category', filters.category);
     if (filters?.type)     params.set('type', filters.type);
     if (filters?.currency) params.set('currency', filters.currency);
     if (filters?.min_rate) params.set('min_rate', String(filters.min_rate));

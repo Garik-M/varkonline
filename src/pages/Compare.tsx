@@ -64,14 +64,14 @@ function scrapedToCard(m: ScrapedMortgage): LoanProduct {
   return {
     id: m.id,
     name: m.product_name,
-    loan_type: "mortgage",
+    loan_type: (m as any).loan_category ?? "mortgage",
     interest_rate_min: m.interest_rate_min ?? 0,
     interest_rate_max: m.interest_rate_max ?? 0,
     min_amount: 0,
     max_amount: m.max_loan_amount ?? 0,
     max_duration_months: m.term_max_months ?? 0,
     approval_time_days: 3,
-    requires_collateral: true,
+    requires_collateral: (m as any).requires_collateral ?? true,
     requires_salary_transfer: false,
     early_repayment: true,
     banks: { name: m.bank_name, institution_type: "bank" },
@@ -108,9 +108,33 @@ export default function Compare() {
       setError(null);
       try {
         if (typeFilter === "mortgage") {
-          const res = await api.getMortgages();
+          const res = await api.getMortgages({ category: "mortgage" });
           const items: ScrapedMortgage[] = res?.data ?? res ?? [];
           setProducts(items.map(scrapedToCard));
+        } else if (
+          typeFilter === "consumer" ||
+          typeFilter === "auto" ||
+          typeFilter === "business" ||
+          typeFilter === "refinancing"
+        ) {
+          const categoryMap: Record<string, string> = {
+            auto: "car",
+            refinancing: "refinance",
+          };
+          const res = await api.getMortgages({
+            category: categoryMap[typeFilter] ?? typeFilter,
+          });
+          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
+          if (items.length > 0) {
+            setProducts(items.map(scrapedToCard));
+          } else {
+            const data = await api.getProducts({ loan_type: typeFilter });
+            setProducts(data || []);
+          }
+        } else if (typeFilter === "all") {
+          const res = await api.getMortgages();
+          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
+          setProducts(items.length > 0 ? items.map(scrapedToCard) : []);
         } else {
           const data = await api.getProducts({
             loan_type: typeFilter === "all" ? undefined : typeFilter,
