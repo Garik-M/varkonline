@@ -1,4 +1,29 @@
 User-agent: *
 Allow: /
 
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+ 
+User-agent: PerplexityBot
+Allow: /
+
+
+
+Sitemap: https://www.varkonline.am/sitemap.xml
 Sitemap: https://varkonline.am/sitemap.xml
+Sitemap: http://varkonline.am/sitemap.xml
