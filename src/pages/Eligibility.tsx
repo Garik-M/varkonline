@@ -168,15 +168,23 @@ export default function Eligibility() {
       pct >= 70 ? "high" : pct >= 40 ? "medium" : "low";
 
     if (loans.length > 0) {
-      const rates = loans.map(
-        (l) =>
-          ((l.interest_rate_min ?? 0) +
-            (l.interest_rate_max ?? l.interest_rate_min ?? 0)) /
-          2,
+      // Postgres returns DECIMAL as strings — coerce to number first
+      const parsed = loans
+        .map((l) => ({
+          ...l,
+          interest_rate_min: parseFloat(String(l.interest_rate_min)) || 0,
+          interest_rate_max: parseFloat(String(l.interest_rate_max)) || 0,
+        }))
+        .filter((l) => l.interest_rate_min > 0);
+
+      if (parsed.length === 0) return [];
+
+      const rates = parsed.map(
+        (l) => (l.interest_rate_min + l.interest_rate_max) / 2,
       );
-      return loans
+      return parsed
         .map((l, i) => {
-          const rate = rates[i];
+          const rate = Math.round(rates[i] * 100) / 100;
           const pct = calcPercent(rate, rates);
           return {
             name: l.bank_name,
