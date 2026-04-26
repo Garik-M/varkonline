@@ -62,7 +62,7 @@ export default function HeroSection() {
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-4">
           {/* LEFT COLUMN — text content, no animation */}
           <div className="flex-1 text-center lg:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary-foreground leading-[1.1] mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary-foreground leading-[1.3] mb-6">
               {t("hero.title1")}
               <br />
               <span className="text-gradient-accent">{t("hero.title2")}</span>
