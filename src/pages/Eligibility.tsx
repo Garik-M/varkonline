@@ -313,9 +313,9 @@ export default function Eligibility() {
                 <motion.div
                   key={i}
                   className={`fintech-card ${i === 0 ? "ring-2 ring-accent/40" : ""}`}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.12) }}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                     <div className="flex-1">

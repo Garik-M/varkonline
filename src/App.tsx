@@ -49,7 +49,6 @@ function PublicLayout({
       <Header />
       <div className="flex-1">{children}</div>
       <Footer />
-      <StickyCTA />
       <CallbackWidget />
       {withExit && <ExitIntentPopup />}
     </div>

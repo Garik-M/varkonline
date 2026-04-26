@@ -269,10 +269,12 @@ export default function Compare() {
                 <motion.div
                   key={loan.id}
                   className="fintech-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.2,
+                    delay: Math.min(i * 0.03, 0.15),
+                  }}
                 >
                   <div className="flex items-center gap-3 mb-5">
                     <div

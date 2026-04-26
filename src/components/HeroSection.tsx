@@ -58,7 +58,7 @@ export default function HeroSection() {
         backgroundImage: "linear-gradient(hsl(0 0% 100%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 0% 100%) 1px, transparent 1px)",
         backgroundSize: "60px 60px"
       }} />
-      <div className="container-tight px-4 pt-20 md:pt-28 pb-0 relative z-10">
+      <div className="container-tight px-4 pt-20 md:pt-28 pb-0 relative z-10 min-h-[600px]">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-4">
           {/* LEFT COLUMN — text content, no animation */}
           <div className="flex-1 text-center lg:text-left">
