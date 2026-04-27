@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowDownToLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const LOAN_TYPES = [
@@ -80,6 +80,7 @@ export default function AdminProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState(defaultForm);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   const fetch = async () => {
@@ -142,6 +143,24 @@ export default function AdminProducts() {
     }
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await api.syncScrapedToProducts();
+      toast({
+        title: `Synced ${res.banks} banks and ${res.products} products`,
+      });
+      fetch();
+    } catch (err: any) {
+      toast({
+        title: "Sync failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+    setSyncing(false);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this product?")) return;
     try {
@@ -159,152 +178,166 @@ export default function AdminProducts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Loan Products</h2>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew}>
-              <Plus className="w-4 h-4 mr-2" /> Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editing ? "Edit Product" : "Add Product"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Select
-                value={form.bank_id}
-                onValueChange={(v) => setForm({ ...form, bank_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  {banks.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.name} (
-                      {b.institution_type === "credit_organization"
-                        ? "CO"
-                        : "Bank"}
-                      )
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={form.loan_type}
-                onValueChange={(v) => setForm({ ...form, loan_type: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOAN_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Product name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="number"
-                  placeholder="Min rate %"
-                  value={form.interest_rate_min}
-                  onChange={(e) =>
-                    setForm({ ...form, interest_rate_min: +e.target.value })
-                  }
-                />
-                <Input
-                  type="number"
-                  placeholder="Max rate %"
-                  value={form.interest_rate_max}
-                  onChange={(e) =>
-                    setForm({ ...form, interest_rate_max: +e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="number"
-                  placeholder="Min amount"
-                  value={form.min_amount}
-                  onChange={(e) =>
-                    setForm({ ...form, min_amount: +e.target.value })
-                  }
-                />
-                <Input
-                  type="number"
-                  placeholder="Max amount"
-                  value={form.max_amount}
-                  onChange={(e) =>
-                    setForm({ ...form, max_amount: +e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="number"
-                  placeholder="Min months"
-                  value={form.min_duration_months}
-                  onChange={(e) =>
-                    setForm({ ...form, min_duration_months: +e.target.value })
-                  }
-                />
-                <Input
-                  type="number"
-                  placeholder="Max months"
-                  value={form.max_duration_months}
-                  onChange={(e) =>
-                    setForm({ ...form, max_duration_months: +e.target.value })
-                  }
-                />
-              </div>
-              <Input
-                type="number"
-                placeholder="Approval time (days)"
-                value={form.approval_time_days}
-                onChange={(e) =>
-                  setForm({ ...form, approval_time_days: +e.target.value })
-                }
-              />
-              <Input
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
-              <div className="space-y-2">
-                {[
-                  { label: "Requires collateral", key: "requires_collateral" },
-                  {
-                    label: "Requires salary transfer",
-                    key: "requires_salary_transfer",
-                  },
-                  { label: "Early repayment allowed", key: "early_repayment" },
-                  { label: "Active", key: "active" },
-                ].map(({ label, key }) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Switch
-                      checked={(form as any)[key]}
-                      onCheckedChange={(v) => setForm({ ...form, [key]: v })}
-                    />
-                    <span className="text-sm">{label}</span>
-                  </div>
-                ))}
-              </div>
-              <Button onClick={handleSave} className="w-full">
-                {editing ? "Update" : "Create"}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleSync} disabled={syncing}>
+            <ArrowDownToLine
+              className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
+            {syncing ? "Syncing..." : "Sync from Scraped"}
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openNew}>
+                <Plus className="w-4 h-4 mr-2" /> Add Product
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editing ? "Edit Product" : "Add Product"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Select
+                  value={form.bank_id}
+                  onValueChange={(v) => setForm({ ...form, bank_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {banks.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name} (
+                        {b.institution_type === "credit_organization"
+                          ? "CO"
+                          : "Bank"}
+                        )
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={form.loan_type}
+                  onValueChange={(v) => setForm({ ...form, loan_type: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOAN_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Product name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    type="number"
+                    placeholder="Min rate %"
+                    value={form.interest_rate_min}
+                    onChange={(e) =>
+                      setForm({ ...form, interest_rate_min: +e.target.value })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Max rate %"
+                    value={form.interest_rate_max}
+                    onChange={(e) =>
+                      setForm({ ...form, interest_rate_max: +e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    type="number"
+                    placeholder="Min amount"
+                    value={form.min_amount}
+                    onChange={(e) =>
+                      setForm({ ...form, min_amount: +e.target.value })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Max amount"
+                    value={form.max_amount}
+                    onChange={(e) =>
+                      setForm({ ...form, max_amount: +e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    type="number"
+                    placeholder="Min months"
+                    value={form.min_duration_months}
+                    onChange={(e) =>
+                      setForm({ ...form, min_duration_months: +e.target.value })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Max months"
+                    value={form.max_duration_months}
+                    onChange={(e) =>
+                      setForm({ ...form, max_duration_months: +e.target.value })
+                    }
+                  />
+                </div>
+                <Input
+                  type="number"
+                  placeholder="Approval time (days)"
+                  value={form.approval_time_days}
+                  onChange={(e) =>
+                    setForm({ ...form, approval_time_days: +e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Description"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                />
+                <div className="space-y-2">
+                  {[
+                    {
+                      label: "Requires collateral",
+                      key: "requires_collateral",
+                    },
+                    {
+                      label: "Requires salary transfer",
+                      key: "requires_salary_transfer",
+                    },
+                    {
+                      label: "Early repayment allowed",
+                      key: "early_repayment",
+                    },
+                    { label: "Active", key: "active" },
+                  ].map(({ label, key }) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={(form as any)[key]}
+                        onCheckedChange={(v) => setForm({ ...form, [key]: v })}
+                      />
+                      <span className="text-sm">{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={handleSave} className="w-full">
+                  {editing ? "Update" : "Create"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -339,9 +372,17 @@ export default function AdminProducts() {
           </Card>
         ))}
         {products.length === 0 && (
-          <p className="text-muted-foreground text-center py-8">
-            No products yet. Add banks first, then create products.
-          </p>
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="font-medium mb-2">No products yet.</p>
+            <p className="text-sm mb-4">
+              Click "Sync from Scraped" to import all loan products from scraped
+              data.
+            </p>
+            <Button variant="outline" onClick={handleSync} disabled={syncing}>
+              <ArrowDownToLine className="w-4 h-4 mr-2" />
+              {syncing ? "Syncing..." : "Sync from Scraped"}
+            </Button>
+          </div>
         )}
       </div>
     </div>

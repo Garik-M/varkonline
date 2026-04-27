@@ -25,6 +25,7 @@ import {
   Percent,
   ChevronDown,
   ChevronUp,
+  ArrowDownToLine,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -86,6 +87,7 @@ export default function AdminScrapedLoans() {
   const [banks, setBanks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [scraping, setScraping] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [bankFilter, setBankFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [expandedBank, setExpandedBank] = useState<string | null>(null);
@@ -125,6 +127,23 @@ export default function AdminScrapedLoans() {
   useEffect(() => {
     fetchLoans();
   }, [fetchLoans]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await api.syncScrapedToProducts();
+      toast({
+        title: `Sync complete — ${res.banks} banks, ${res.products} products synced`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Sync failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+    setSyncing(false);
+  };
 
   const handleScrape = async (bank?: string) => {
     setScraping(true);
@@ -187,7 +206,7 @@ export default function AdminScrapedLoans() {
             {totalBanks} banks · {totalLoans} products · {withRates} with rates
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -198,6 +217,17 @@ export default function AdminScrapedLoans() {
               className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
             />
             Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            <ArrowDownToLine
+              className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
+            {syncing ? "Syncing..." : "Sync to Banks & Products"}
           </Button>
           <Button size="sm" onClick={() => handleScrape()} disabled={scraping}>
             <RefreshCw

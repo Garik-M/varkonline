@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowDownToLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Bank {
@@ -36,6 +36,7 @@ export default function AdminBanks() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Bank | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [form, setForm] = useState({
     name: "",
     logo_url: "",
@@ -108,6 +109,24 @@ export default function AdminBanks() {
     }
   };
 
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await api.syncScrapedToProducts();
+      toast({
+        title: `Synced ${res.banks} banks and ${res.products} products from scraped data`,
+      });
+      fetchBanks();
+    } catch (err: any) {
+      toast({
+        title: "Sync failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+    setSyncing(false);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this institution and all its products?")) return;
     try {
@@ -125,68 +144,82 @@ export default function AdminBanks() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Institutions</h2>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew}>
-              <Plus className="w-4 h-4 mr-2" /> Add Institution
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editing ? "Edit Institution" : "Add Institution"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Institution name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <Select
-                value={form.institution_type}
-                onValueChange={(v) => setForm({ ...form, institution_type: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Institution type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bank">Bank</SelectItem>
-                  <SelectItem value="credit_organization">
-                    Credit Organization
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Logo URL"
-                value={form.logo_url}
-                onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-              />
-              <Input
-                placeholder="Website"
-                value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-              />
-              <Input
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.active}
-                  onCheckedChange={(v) => setForm({ ...form, active: v })}
-                />
-                <span className="text-sm">Active</span>
-              </div>
-              <Button onClick={handleSave} className="w-full">
-                {editing ? "Update" : "Create"}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleSync} disabled={syncing}>
+            <ArrowDownToLine
+              className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
+            {syncing ? "Syncing..." : "Sync from Scraped"}
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openNew}>
+                <Plus className="w-4 h-4 mr-2" /> Add Institution
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editing ? "Edit Institution" : "Add Institution"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Institution name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+                <Select
+                  value={form.institution_type}
+                  onValueChange={(v) =>
+                    setForm({ ...form, institution_type: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Institution type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="credit_organization">
+                      Credit Organization
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Logo URL"
+                  value={form.logo_url}
+                  onChange={(e) =>
+                    setForm({ ...form, logo_url: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Website"
+                  value={form.website}
+                  onChange={(e) =>
+                    setForm({ ...form, website: e.target.value })
+                  }
+                />
+                <Input
+                  placeholder="Description"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                />
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={form.active}
+                    onCheckedChange={(v) => setForm({ ...form, active: v })}
+                  />
+                  <span className="text-sm">Active</span>
+                </div>
+                <Button onClick={handleSave} className="w-full">
+                  {editing ? "Update" : "Create"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -236,9 +269,17 @@ export default function AdminBanks() {
           </Card>
         ))}
         {banks.length === 0 && (
-          <p className="text-muted-foreground text-center py-8">
-            No institutions yet. Add your first institution.
-          </p>
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="font-medium mb-2">No institutions yet.</p>
+            <p className="text-sm mb-4">
+              Click "Sync from Scraped" to import all banks from scraped loan
+              data.
+            </p>
+            <Button variant="outline" onClick={handleSync} disabled={syncing}>
+              <ArrowDownToLine className="w-4 h-4 mr-2" />
+              {syncing ? "Syncing..." : "Sync from Scraped"}
+            </Button>
+          </div>
         )}
       </div>
     </div>

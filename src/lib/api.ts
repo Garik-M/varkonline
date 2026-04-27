@@ -109,6 +109,10 @@ class ApiClient {
     });
   }
 
+  async syncScrapedToProducts() {
+    return this.request('/products/sync-from-scraped', { method: 'POST' });
+  }
+
   // Products
   async getProducts(filters?: { loan_type?: string; bank_id?: string }) {
     const params = new URLSearchParams();
