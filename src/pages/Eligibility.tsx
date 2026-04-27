@@ -11,6 +11,7 @@ import {
   Percent,
   Shield,
   Phone,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,10 @@ export default function Eligibility() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [applyBank, setApplyBank] = useState<string | null>(null);
+  const [maxRateFilter, setMaxRateFilter] = useState<number>(30);
+  const [probFilter, setProbFilter] = useState<
+    "all" | "high" | "medium" | "low"
+  >("all");
   const { toast } = useToast();
   const { t, locale } = useTranslation();
 
@@ -316,97 +321,153 @@ export default function Eligibility() {
             </div>
           </motion.div>
 
-          <div className="space-y-4">
-            {results.map((bank, i) => {
-              const prob = probConfig[bank.probability];
-              return (
-                <motion.div
-                  key={i}
-                  className={`fintech-card ${i === 0 ? "ring-2 ring-accent/40" : ""}`}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i * 0.04, 0.12) }}
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 mb-2 p-3 bg-muted/40 rounded-xl">
+            <SlidersHorizontal
+              size={15}
+              className="text-muted-foreground shrink-0"
+            />
+            <div className="flex items-center gap-2 flex-1 min-w-[160px]">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Max rate:
+              </span>
+              <input
+                type="range"
+                min={5}
+                max={30}
+                step={0.5}
+                value={maxRateFilter}
+                onChange={(e) => setMaxRateFilter(parseFloat(e.target.value))}
+                className="flex-1 accent-primary"
+              />
+              <span className="text-xs font-semibold w-10 text-right">
+                {maxRateFilter}%
+              </span>
+            </div>
+            <div className="flex gap-1">
+              {(["all", "high", "medium", "low"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setProbFilter(p)}
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+                    probFilter === p
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center">
-                          <Building2
-                            size={18}
-                            className="text-primary-foreground"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-foreground">
-                              {bank.name}
-                            </h3>
-                            <span
-                              className={`text-sm font-extrabold ${prob.color}`}
+                  {p === "all" ? "All" : p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {results
+              .filter(
+                (b) =>
+                  b.rate <= maxRateFilter &&
+                  (probFilter === "all" || b.probability === probFilter),
+              )
+              .map((bank, i) => {
+                const prob = probConfig[bank.probability];
+                return (
+                  <motion.div
+                    key={i}
+                    className={`fintech-card ${i === 0 ? "ring-2 ring-accent/40" : ""}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.04, 0.12) }}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center">
+                            <Building2
+                              size={18}
+                              className="text-primary-foreground"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-bold text-foreground">
+                                {bank.name}
+                              </h3>
+                              <span
+                                className={`text-sm font-extrabold ${prob.color}`}
+                              >
+                                {bank.eligibilityPercent}%
+                              </span>
+                              {i === 0 && (
+                                <Badge className="bg-accent/15 text-accent border-accent/30 text-[10px] px-1.5 py-0">
+                                  🏆 Best Offer
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {bank.productName}
+                            </p>
+                            <div
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${prob.bg} ${prob.color} mt-1`}
                             >
-                              {bank.eligibilityPercent}%
-                            </span>
-                            {i === 0 && (
-                              <Badge className="bg-accent/15 text-accent border-accent/30 text-[10px] px-1.5 py-0">
-                                🏆 Best Offer
-                              </Badge>
-                            )}
+                              <prob.icon size={11} />
+                              {prob.label}
+                            </div>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {bank.productName}
-                          </p>
-                          <div
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${prob.bg} ${prob.color} mt-1`}
-                          >
-                            <prob.icon size={11} />
-                            {prob.label}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground text-xs mb-0.5">
+                              {t("eligibility.interestRate")}
+                            </p>
+                            <p className="font-bold text-foreground flex items-center gap-1">
+                              <Percent size={12} className="text-accent" />{" "}
+                              {bank.rate.toFixed(1)}%
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs mb-0.5">
+                              {t("eligibility.monthlyPayment")}
+                            </p>
+                            <p className="font-bold text-foreground">
+                              {bank.monthly.toLocaleString()} AMD
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs mb-0.5">
+                              {t("eligibility.approvalSpeed")}
+                            </p>
+                            <p className="font-bold text-foreground flex items-center gap-1">
+                              <Clock size={12} className="text-info" /> 1-3 days
+                            </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground text-xs mb-0.5">
-                            {t("eligibility.interestRate")}
-                          </p>
-                          <p className="font-bold text-foreground flex items-center gap-1">
-                            <Percent size={12} className="text-accent" />{" "}
-                            {bank.rate.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs mb-0.5">
-                            {t("eligibility.monthlyPayment")}
-                          </p>
-                          <p className="font-bold text-foreground">
-                            {bank.monthly.toLocaleString()} AMD
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs mb-0.5">
-                            {t("eligibility.approvalSpeed")}
-                          </p>
-                          <p className="font-bold text-foreground flex items-center gap-1">
-                            <Clock size={12} className="text-info" /> 1-3 days
-                          </p>
-                        </div>
-                      </div>
+                      <Button
+                        className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
+                        onClick={() => {
+                          trackCTA("apply_now", bank.name);
+                          setApplyBank(bank.name);
+                        }}
+                      >
+                        {t("eligibility.applyNow")}
+                        <ArrowRight size={14} className="ml-1.5" />
+                      </Button>
                     </div>
-
-                    <Button
-                      className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
-                      onClick={() => {
-                        trackCTA("apply_now", bank.name);
-                        setApplyBank(bank.name);
-                      }}
-                    >
-                      {t("eligibility.applyNow")}
-                      <ArrowRight size={14} className="ml-1.5" />
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            {results.filter(
+              (b) =>
+                b.rate <= maxRateFilter &&
+                (probFilter === "all" || b.probability === probFilter),
+            ).length === 0 && (
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                No results match your filters. Try adjusting the rate or
+                probability.
+              </p>
+            )}
           </div>
 
           <div className="text-center mt-8">
