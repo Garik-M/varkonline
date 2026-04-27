@@ -86,6 +86,29 @@ class ApiClient {
     return this.request('/mortgages/banks');
   }
 
+  // Admin: scraped loans management
+  async getScrapedLoans(filters?: { bank?: string; category?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.bank) params.set('bank', filters.bank);
+    if (filters?.category) params.set('category', filters.category);
+    return this.request(`/mortgages?${params}`);
+  }
+
+  async getScrapedBanks() {
+    return this.request('/mortgages/banks');
+  }
+
+  async getRateHistory(bank: string, product: string) {
+    return this.request(`/mortgages/history/${encodeURIComponent(bank)}/${encodeURIComponent(product)}`);
+  }
+
+  async triggerScrape(bank?: string) {
+    return this.request('/mortgages/scrape', {
+      method: 'POST',
+      body: JSON.stringify({ bank }),
+    });
+  }
+
   // Products
   async getProducts(filters?: { loan_type?: string; bank_id?: string }) {
     const params = new URLSearchParams();

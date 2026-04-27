@@ -10,6 +10,7 @@ import {
   Loader2,
   BarChart3,
   FileText,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ const navItems = [
   { path: "/admin/leads", label: "Leads", icon: Users },
   { path: "/admin/commissions", label: "Commissions", icon: DollarSign },
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/admin/scraped-loans", label: "Scraped Loans", icon: Database },
   { path: "/admin/blog", label: "Blog", icon: FileText },
 ];
 
