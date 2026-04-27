@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search, Trash2 } from "lucide-react";
+import { Download, Search, Trash2, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ interface Lead {
   approval_probability: string | null;
   notes: string | null;
   created_at: string;
+  visitor_id: string | null;
 }
 
 export default function AdminLeads() {
@@ -57,6 +59,7 @@ export default function AdminLeads() {
   const [dateFilter, setDateFilter] = useState("all");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchLeads = async () => {
     try {
@@ -265,6 +268,11 @@ export default function AdminLeads() {
                   <div className="text-xs text-muted-foreground">
                     {new Date(lead.created_at).toLocaleString()}
                   </div>
+                  {lead.visitor_id && (
+                    <div className="text-xs text-muted-foreground font-mono">
+                      ID: {lead.visitor_id.slice(0, 16)}…
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className={STATUS_COLORS[lead.status]}>
@@ -285,6 +293,19 @@ export default function AdminLeads() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {lead.visitor_id && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="View visitor activity"
+                      onClick={() =>
+                        navigate(`/admin/analytics?session=${lead.visitor_id}`)
+                      }
+                    >
+                      <Activity className="w-4 h-4" />
+                    </Button>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button

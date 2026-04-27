@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,7 +29,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventRow {
@@ -46,7 +48,15 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [days, setDays] = useState("7");
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Pre-fill session filter if navigated from a lead
+  useEffect(() => {
+    const s = searchParams.get("session");
+    if (s) setSessionSearch(s);
+  }, []);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -71,6 +81,11 @@ export default function AdminAnalytics() {
   ).size;
   const eventTypes = [...new Set(events.map((e) => e.event_type))];
 
+  // Client-side session filter
+  const displayed = sessionSearch
+    ? events.filter((e) => e.session_id === sessionSearch)
+    : events;
+
   const deleteAll = async () => {
     try {
       await api.deleteAllAnalytics();
@@ -94,8 +109,35 @@ export default function AdminAnalytics() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold">Analytics</h2>
-        <div className="flex gap-2">
+        <div>
+          <h2 className="text-2xl font-bold">Analytics</h2>
+          {sessionSearch && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Filtered by visitor:{" "}
+              <span className="font-mono text-foreground">
+                {sessionSearch.slice(0, 20)}…
+              </span>
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter by visitor ID…"
+              value={sessionSearch}
+              onChange={(e) => setSessionSearch(e.target.value)}
+              className="pl-9 w-52 text-xs"
+            />
+            {sessionSearch && (
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setSessionSearch("")}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <Select value={days} onValueChange={setDays}>
             <SelectTrigger className="w-28">
               <SelectValue />
@@ -179,7 +221,11 @@ export default function AdminAnalytics() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Events</CardTitle>
+          <CardTitle>
+            {sessionSearch
+              ? `Visitor Activity (${displayed.length} events)`
+              : "Recent Events"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -197,8 +243,11 @@ export default function AdminAnalytics() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {events.slice(0, 50).map((e) => (
-                  <TableRow key={e.id}>
+                {displayed.slice(0, 100).map((e) => (
+                  <TableRow
+                    key={e.id}
+                    className={sessionSearch ? "bg-primary/5" : ""}
+                  >
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(e.created_at).toLocaleString()}
                     </TableCell>
@@ -213,7 +262,7 @@ export default function AdminAnalytics() {
                     <TableCell className="text-muted-foreground">
                       {e.page || "—"}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-xs text-muted-foreground font-mono">
                       {e.session_id?.slice(0, 10) || "—"}
                     </TableCell>
                     <TableCell>
@@ -228,13 +277,15 @@ export default function AdminAnalytics() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {events.length === 0 && (
+                {displayed.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={6}
                       className="text-center text-muted-foreground py-8"
                     >
-                      No events recorded yet.
+                      {sessionSearch
+                        ? "No events found for this visitor."
+                        : "No events recorded yet."}
                     </TableCell>
                   </TableRow>
                 )}

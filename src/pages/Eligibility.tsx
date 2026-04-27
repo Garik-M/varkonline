@@ -239,6 +239,7 @@ export default function Eligibility() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      const sessionId = localStorage.getItem("session_id") || undefined;
       await api.submitLead({
         full_name: name,
         phone,
@@ -250,6 +251,7 @@ export default function Eligibility() {
         monthly_income: parseInt(income) || null,
         existing_loans: parseInt(existingLoans) || 0,
         approval_probability: results[0]?.probability || "medium",
+        visitor_id: sessionId,
       });
       trackFormSubmit("eligibility", "/eligibility");
       setSubmitted(true);
