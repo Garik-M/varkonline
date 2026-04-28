@@ -198,114 +198,175 @@ export default function AdminProducts() {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <Select
-                  value={form.bank_id}
-                  onValueChange={(v) => setForm({ ...form, bank_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select bank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {banks.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name} (
-                        {b.institution_type === "credit_organization"
-                          ? "CO"
-                          : "Bank"}
-                        )
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={form.loan_type}
-                  onValueChange={(v) => setForm({ ...form, loan_type: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOAN_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Product name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-                <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Bank
+                  </label>
+                  <Select
+                    value={form.bank_id}
+                    onValueChange={(v) => setForm({ ...form, bank_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select bank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {banks.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} (
+                          {b.institution_type === "credit_organization"
+                            ? "CO"
+                            : "Bank"}
+                          )
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Loan Type
+                  </label>
+                  <Select
+                    value={form.loan_type}
+                    onValueChange={(v) => setForm({ ...form, loan_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOAN_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Product Name
+                  </label>
                   <Input
-                    type="number"
-                    placeholder="Min rate %"
-                    value={form.interest_rate_min}
-                    onChange={(e) =>
-                      setForm({ ...form, interest_rate_min: +e.target.value })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max rate %"
-                    value={form.interest_rate_max}
-                    onChange={(e) =>
-                      setForm({ ...form, interest_rate_max: +e.target.value })
-                    }
+                    placeholder="Product name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    type="number"
-                    placeholder="Min amount"
-                    value={form.min_amount}
-                    onChange={(e) =>
-                      setForm({ ...form, min_amount: +e.target.value })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max amount"
-                    value={form.max_amount}
-                    onChange={(e) =>
-                      setForm({ ...form, max_amount: +e.target.value })
-                    }
-                  />
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Min Rate %
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Min rate %"
+                      value={form.interest_rate_min}
+                      onChange={(e) =>
+                        setForm({ ...form, interest_rate_min: +e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Max Rate %
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Max rate %"
+                      value={form.interest_rate_max}
+                      onChange={(e) =>
+                        setForm({ ...form, interest_rate_max: +e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Min Amount
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Min amount"
+                      value={form.min_amount}
+                      onChange={(e) =>
+                        setForm({ ...form, min_amount: +e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Max Amount
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Max amount"
+                      value={form.max_amount}
+                      onChange={(e) =>
+                        setForm({ ...form, max_amount: +e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Min Months
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Min months"
+                      value={form.min_duration_months}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          min_duration_months: +e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Max Months
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Max months"
+                      value={form.max_duration_months}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          max_duration_months: +e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Approval Time (days)
+                  </label>
                   <Input
                     type="number"
-                    placeholder="Min months"
-                    value={form.min_duration_months}
+                    placeholder="Approval time (days)"
+                    value={form.approval_time_days}
                     onChange={(e) =>
-                      setForm({ ...form, min_duration_months: +e.target.value })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max months"
-                    value={form.max_duration_months}
-                    onChange={(e) =>
-                      setForm({ ...form, max_duration_months: +e.target.value })
+                      setForm({ ...form, approval_time_days: +e.target.value })
                     }
                   />
                 </div>
-                <Input
-                  type="number"
-                  placeholder="Approval time (days)"
-                  value={form.approval_time_days}
-                  onChange={(e) =>
-                    setForm({ ...form, approval_time_days: +e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Description"
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                />
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Description
+                  </label>
+                  <Input
+                    placeholder="Description"
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                  />
+                </div>
                 <div className="space-y-2">
                   {[
                     {
@@ -323,11 +384,17 @@ export default function AdminProducts() {
                     { label: "Active", key: "active" },
                   ].map(({ label, key }) => (
                     <div key={key} className="flex items-center gap-2">
-                      <Switch
-                        checked={(form as any)[key]}
-                        onCheckedChange={(v) => setForm({ ...form, [key]: v })}
-                      />
-                      <span className="text-sm">{label}</span>
+                      <div className="flex flex-col">
+                        <label className="text-xs font-medium text-muted-foreground mb-0.5">
+                          {label}
+                        </label>
+                        <Switch
+                          checked={(form as any)[key]}
+                          onCheckedChange={(v) =>
+                            setForm({ ...form, [key]: v })
+                          }
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
