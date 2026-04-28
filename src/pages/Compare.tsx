@@ -92,9 +92,9 @@ export default function Compare() {
   }, [products, institutionFilter]);
 
   const sorted = useMemo(() => {
-    // Filter out products with no meaningful rate
+    // Filter out products with no meaningful rate (both must be 0)
     const withRates = filtered.filter(
-      (p) => p.interest_rate_min > 0 && p.interest_rate_max > 0,
+      (p) => p.interest_rate_min > 0 || p.interest_rate_max > 0,
     );
     if (sortBy === "rate")
       return [...withRates].sort(
@@ -251,9 +251,12 @@ export default function Compare() {
                           {t("compare.interestRate")}
                         </p>
                         <p className="text-sm font-bold text-foreground">
-                          {loan.interest_rate_min > 0
+                          {loan.interest_rate_min > 0 &&
+                          loan.interest_rate_max > 0
                             ? `${loan.interest_rate_min}–${loan.interest_rate_max}% APR`
-                            : "Contact us"}
+                            : loan.interest_rate_min > 0
+                              ? `Սկսած ${loan.interest_rate_min}% APR`
+                              : `Մինչև ${loan.interest_rate_max}% APR`}
                         </p>
                       </div>
                     </div>
@@ -275,7 +278,14 @@ export default function Compare() {
                   <div className="flex flex-wrap gap-2 mb-5">
                     {loan.max_amount > 0 && (
                       <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                        {t("compare.upTo")} {fmt(loan.max_amount)} AMD
+                        {loan.min_amount > 0
+                          ? `${t("compare.from")} ${fmt(loan.min_amount)} AMD`
+                          : `${t("compare.upTo")} ${fmt(loan.max_amount)} AMD`}
+                      </span>
+                    )}
+                    {loan.min_amount > 0 && loan.max_amount === 0 && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                        {t("compare.from")} {fmt(loan.min_amount)} AMD
                       </span>
                     )}
                     {loan.max_duration_months > 0 && (
