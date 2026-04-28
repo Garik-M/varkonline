@@ -38,44 +38,8 @@ interface LoanProduct {
   requires_collateral: boolean;
   requires_salary_transfer: boolean;
   early_repayment: boolean;
-  banks: { name: string; institution_type: string } | null;
-}
-
-// Shape returned by /api/mortgages (scraped data)
-interface ScrapedMortgage {
-  id: string;
-  bank_name: string;
-  product_name: string;
-  mortgage_type: string;
-  interest_rate_min: number | null;
-  interest_rate_max: number | null;
-  currency: string;
-  term_min_months: number | null;
-  term_max_months: number | null;
-  min_down_payment_percent: number | null;
-  max_loan_amount: number | null;
-  description: string;
-  source_url: string;
-  last_updated: string;
-}
-
-// Normalise a scraped mortgage into the card shape
-function scrapedToCard(m: ScrapedMortgage): LoanProduct {
-  return {
-    id: m.id,
-    name: m.product_name,
-    loan_type: (m as any).loan_category ?? "mortgage",
-    interest_rate_min: parseFloat(String(m.interest_rate_min)) || 0,
-    interest_rate_max: parseFloat(String(m.interest_rate_max)) || 0,
-    min_amount: 0,
-    max_amount: parseFloat(String(m.max_loan_amount)) || 0,
-    max_duration_months: parseInt(String(m.term_max_months)) || 0,
-    approval_time_days: 3,
-    requires_collateral: (m as any).requires_collateral ?? true,
-    requires_salary_transfer: false,
-    early_repayment: true,
-    banks: { name: m.bank_name, institution_type: "bank" },
-  };
+  bank_name?: string;
+  institution_type?: string;
 }
 
 export default function Compare() {
@@ -107,40 +71,10 @@ export default function Compare() {
       setLoading(true);
       setError(null);
       try {
-        if (typeFilter === "mortgage") {
-          const res = await api.getMortgages({ category: "mortgage" });
-          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
-          setProducts(items.map(scrapedToCard));
-        } else if (
-          typeFilter === "consumer" ||
-          typeFilter === "auto" ||
-          typeFilter === "business" ||
-          typeFilter === "refinancing"
-        ) {
-          const categoryMap: Record<string, string> = {
-            auto: "car",
-            refinancing: "refinance",
-          };
-          const res = await api.getMortgages({
-            category: categoryMap[typeFilter] ?? typeFilter,
-          });
-          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
-          if (items.length > 0) {
-            setProducts(items.map(scrapedToCard));
-          } else {
-            const data = await api.getProducts({ loan_type: typeFilter });
-            setProducts(data || []);
-          }
-        } else if (typeFilter === "all") {
-          const res = await api.getMortgages();
-          const items: ScrapedMortgage[] = res?.data ?? res ?? [];
-          setProducts(items.length > 0 ? items.map(scrapedToCard) : []);
-        } else {
-          const data = await api.getProducts({
-            loan_type: typeFilter === "all" ? undefined : typeFilter,
-          });
-          setProducts(data || []);
-        }
+        const data = await api.getProducts({
+          loan_type: typeFilter === "all" ? undefined : typeFilter,
+        });
+        setProducts(data || []);
       } catch (err: any) {
         console.error("Failed to fetch products:", err);
         setError(err?.message || "Failed to load data");
@@ -153,7 +87,7 @@ export default function Compare() {
   const filtered = useMemo(() => {
     if (institutionFilter === "all") return products;
     return products.filter(
-      (p) => (p.banks as any)?.institution_type === institutionFilter,
+      (p) => (p.institution_type || "bank") === institutionFilter,
     );
   }, [products, institutionFilter]);
 
@@ -264,7 +198,7 @@ export default function Compare() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {sorted.map((loan, i) => {
-              const instType = (loan.banks as any)?.institution_type || "bank";
+              const instType = loan.institution_type || "bank";
               return (
                 <motion.div
                   key={loan.id}
@@ -291,7 +225,7 @@ export default function Compare() {
                     </div>
                     <div>
                       <h3 className="font-bold text-foreground">
-                        {(loan.banks as any)?.name || "Unknown"}
+                        {loan.bank_name || "Unknown"}
                       </h3>
                       <div className="flex items-center gap-2">
                         <span
@@ -385,7 +319,7 @@ export default function Compare() {
                       onClick={() =>
                         trackCTA(
                           "compare_apply",
-                          `${(loan.banks as any)?.name} - ${loan.name}`,
+                          `${loan.bank_name || "Unknown"} - ${loan.name}`,
                         )
                       }
                     >
