@@ -127,6 +127,26 @@ export default function AdminProducts() {
   };
 
   const handleSave = async () => {
+    // Validate that at least one rate field is filled
+    if (!form.interest_rate_min && !form.interest_rate_max) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one interest rate",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate that at least one amount field is filled
+    if (!form.min_amount && !form.max_amount) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one loan amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const payload = { ...form, description: form.description || null };
       if (editing) {
@@ -255,12 +275,18 @@ export default function AdminProducts() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Min Rate %
+                      {form.interest_rate_min && !form.interest_rate_max
+                        ? `Սկսած ${form.interest_rate_min}%`
+                        : form.interest_rate_max && !form.interest_rate_min
+                          ? `Մինչև ${form.interest_rate_max}%`
+                          : form.interest_rate_min && form.interest_rate_max
+                            ? `${form.interest_rate_min}–${form.interest_rate_max}%`
+                            : "Min Rate %"}
                     </label>
                     <Input
                       type="number"
                       placeholder="Min rate %"
-                      value={form.interest_rate_min}
+                      value={form.interest_rate_min || ""}
                       onChange={(e) =>
                         setForm({ ...form, interest_rate_min: +e.target.value })
                       }
@@ -268,12 +294,18 @@ export default function AdminProducts() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Max Rate %
+                      {form.interest_rate_max && !form.interest_rate_min
+                        ? `Մինչև ${form.interest_rate_max}%`
+                        : form.interest_rate_min && !form.interest_rate_max
+                          ? `Սկսած ${form.interest_rate_min}%`
+                          : form.interest_rate_min && form.interest_rate_max
+                            ? `${form.interest_rate_min}–${form.interest_rate_max}%`
+                            : "Max Rate %"}
                     </label>
                     <Input
                       type="number"
                       placeholder="Max rate %"
-                      value={form.interest_rate_max}
+                      value={form.interest_rate_max || ""}
                       onChange={(e) =>
                         setForm({ ...form, interest_rate_max: +e.target.value })
                       }
@@ -283,12 +315,18 @@ export default function AdminProducts() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Min Amount
+                      {form.min_amount && !form.max_amount
+                        ? `Սկսած ${Number(form.min_amount).toLocaleString()} AMD`
+                        : form.max_amount && !form.min_amount
+                          ? `Մինչև ${Number(form.max_amount).toLocaleString()} AMD`
+                          : form.min_amount && form.max_amount
+                            ? `${Number(form.min_amount).toLocaleString()}–${Number(form.max_amount).toLocaleString()} AMD`
+                            : "Min Amount"}
                     </label>
                     <Input
                       type="number"
                       placeholder="Min amount"
-                      value={form.min_amount}
+                      value={form.min_amount || ""}
                       onChange={(e) =>
                         setForm({ ...form, min_amount: +e.target.value })
                       }
@@ -296,12 +334,18 @@ export default function AdminProducts() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Max Amount
+                      {form.max_amount && !form.min_amount
+                        ? `Մինչև ${Number(form.max_amount).toLocaleString()} AMD`
+                        : form.min_amount && !form.max_amount
+                          ? `Սկսած ${Number(form.min_amount).toLocaleString()} AMD`
+                          : form.min_amount && form.max_amount
+                            ? `${Number(form.min_amount).toLocaleString()}–${Number(form.max_amount).toLocaleString()} AMD`
+                            : "Max Amount"}
                     </label>
                     <Input
                       type="number"
                       placeholder="Max amount"
-                      value={form.max_amount}
+                      value={form.max_amount || ""}
                       onChange={(e) =>
                         setForm({ ...form, max_amount: +e.target.value })
                       }
