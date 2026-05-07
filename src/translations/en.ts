@@ -281,7 +281,9 @@ export const en = {
       "We implement industry-standard technical and organizational measures to protect your personal data against unauthorized access, loss, or disclosure, including SSL/TLS encryption for all data transmissions.",
     contact: "Contact",
     checkboxLabel:
-      "I have read and agree to the Privacy Policy and consent to the processing of my personal data",
+      "I have read and agree to the",
+    consentDescription:
+      "By submitting your data you agree that VarkOnline.am may process your personal information to match you with loan offers from partner banks. Your data is encrypted and never sold to third parties.",
     acceptBtn: "Accept and Continue",
     close: "Close",
   },

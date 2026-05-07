@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/lib/i18n";
 import { api } from "@/lib/api";
-import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
 type PartnerType = "bank" | "institution";
 
@@ -60,7 +59,6 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
     Partial<Record<keyof FormState, string>>
   >({});
   const [submitting, setSubmitting] = useState(false);
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   // Reset on open
   useEffect(() => {
@@ -349,16 +347,15 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
                         </div>
                         <span className="text-xs text-muted-foreground leading-snug">
                           {t("partner.privacyLabel")}{" "}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setPrivacyModalOpen(true);
-                            }}
+                          <a
+                            href="/privacy_policy.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-accent underline underline-offset-2 hover:text-accent/80"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             {t("privacy.title")}
-                          </button>
+                          </a>
                         </span>
                       </label>
                     </motion.div>
@@ -429,12 +426,6 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Nested privacy policy modal */}
-      <PrivacyPolicyModal
-        open={privacyModalOpen}
-        onClose={() => setPrivacyModalOpen(false)}
-      />
     </>
   );
 }
