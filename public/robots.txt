@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /privacy_policy.pdf
 
 User-agent: Googlebot
 Allow: /

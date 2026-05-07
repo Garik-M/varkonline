@@ -1,4 +1,12 @@
 {
+  "headers": [
+    {
+      "source": "/privacy_policy.pdf",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
