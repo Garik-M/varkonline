@@ -39,6 +39,7 @@ interface LoanProduct {
   requires_salary_transfer: boolean;
   early_repayment: boolean;
   bank_name?: string;
+  bank_logo?: string | null;
   institution_type?: string;
 }
 
@@ -212,9 +213,15 @@ export default function Compare() {
                 >
                   <div className="flex items-center gap-3 mb-5">
                     <div
-                      className={`w-11 h-11 rounded-xl flex items-center justify-center ${instType === "credit_organization" ? "bg-info/10" : "primary-gradient"}`}
+                      className={`w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden ${loan.bank_logo ? "bg-white border border-border" : instType === "credit_organization" ? "bg-info/10" : "primary-gradient"}`}
                     >
-                      {instType === "credit_organization" ? (
+                      {loan.bank_logo ? (
+                        <img
+                          src={loan.bank_logo}
+                          alt={loan.bank_name || "Bank logo"}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      ) : instType === "credit_organization" ? (
                         <Landmark size={18} className="text-info" />
                       ) : (
                         <Building2

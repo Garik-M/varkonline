@@ -97,6 +97,7 @@ export const en = {
     rights: "All rights reserved.",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
+    becomePartner: "Become a partner",
   },
   exitPopup: {
     title: "Wait! Don't Miss Out",
@@ -225,5 +226,63 @@ export const en = {
   },
   common: {
     loading: "Loading...",
+  },
+  partner: {
+    modalTitle: "Partner Application",
+    whoAreYou: "Who are you?",
+    typeBank: "Bank",
+    typeInstitution: "Financial Institution",
+    orgName: "Organization Name",
+    orgNamePlaceholder: "e.g. ACBA Bank",
+    website: "Website",
+    websitePlaceholder: "https://example.am",
+    contactName: "Contact Person Name",
+    contactNamePlaceholder: "Full name",
+    phone: "Phone Number",
+    phonePlaceholder: "+374",
+    privacyLabel: "I agree to the Privacy Policy and consent to personal data processing",
+    submit: "Submit Application",
+    submitting: "Submitting...",
+    back: "Back",
+    successTitle: "Thank you!",
+    successText: "We will contact you within 24 hours.",
+    successClose: "Close",
+    invalidUrl: "Please enter a valid URL (starting with http:// or https://)",
+    invalidPhone: "Please enter a valid phone number",
+  },
+  privacy: {
+    title: "Privacy Policy",
+    lastUpdated: "Last updated: January 1, 2025 · Version 1.0",
+    s1Title: "General Information",
+    s1Text:
+      "VarkOnline.am (hereinafter 'we', 'us', or 'the Platform') is committed to protecting your personal data. This Privacy Policy explains what data we collect, how we use it, and your rights as a data subject.",
+    s2Title: "Data We Collect",
+    s2Text: "When you use our services, we may collect the following personal data:",
+    s2Items: [
+      "Full name and contact details (phone number, email address)",
+      "Financial information: loan amount, duration, purpose, monthly income, existing loan obligations",
+      "Employment type",
+      "Technical data: IP address, browser type, pages visited, session identifiers",
+    ],
+    s3Title: "Purpose of Processing",
+    s3Text:
+      "Your personal data is processed solely for the purpose of providing loan comparison and eligibility assessment services, connecting you with partner banks, improving our platform, and complying with applicable legal requirements. We do not sell your data to third parties.",
+    s4Title: "Data Sharing",
+    s4Text:
+      "We may share your data with our partner banks and credit organizations only to the extent necessary to process your loan application. All partners are bound by confidentiality obligations and applicable data protection laws.",
+    s5Title: "Data Retention",
+    s5Text:
+      "We retain your personal data for as long as necessary to fulfill the purposes described in this policy, or as required by law. You may request deletion of your data at any time by contacting us.",
+    s6Title: "Your Rights",
+    s6Text:
+      "You have the right to access, correct, or delete your personal data; to withdraw consent at any time; to object to processing; and to lodge a complaint with the relevant supervisory authority. To exercise these rights, contact us at info@varkonline.am.",
+    s7Title: "Security",
+    s7Text:
+      "We implement industry-standard technical and organizational measures to protect your personal data against unauthorized access, loss, or disclosure, including SSL/TLS encryption for all data transmissions.",
+    contact: "Contact",
+    checkboxLabel:
+      "I have read and agree to the Privacy Policy and consent to the processing of my personal data",
+    acceptBtn: "Accept and Continue",
+    close: "Close",
   },
 };

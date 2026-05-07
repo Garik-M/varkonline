@@ -11,6 +11,7 @@ import {
   BarChart3,
   FileText,
   Database,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const navItems = [
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/admin/scraped-loans", label: "Scraped Loans", icon: Database },
   { path: "/admin/blog", label: "Blog", icon: FileText },
+  { path: "/admin/partners", label: "Partners", icon: Handshake },
 ];
 
 export default function AdminLayout() {

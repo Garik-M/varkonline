@@ -34,6 +34,7 @@ import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminScrapedLoans from "./pages/admin/AdminScrapedLoans";
+import AdminPartners from "./pages/admin/AdminPartners";
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,7 @@ function AppRoutes() {
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="scraped-loans" element={<AdminScrapedLoans />} />
           <Route path="blog" element={<AdminBlog />} />
+          <Route path="partners" element={<AdminPartners />} />
         </Route>
 
         {/* Locale-prefixed public routes */}

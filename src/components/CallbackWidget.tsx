@@ -7,15 +7,18 @@ import { AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { trackFormSubmit, trackCTA } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
+import { usePrivacyPolicy } from "@/hooks/usePrivacyPolicy";
 
 export default function CallbackWidget() {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const { t } = useTranslation();
+  const { privacyOpen, closePrivacy, onPrivacyAccepted, requireAcceptance } =
+    usePrivacyPolicy();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doSubmit = async () => {
     if (!phone.trim()) return;
     try {
       await api.submitLead({
@@ -36,6 +39,12 @@ export default function CallbackWidget() {
     } catch (error) {
       console.error("Failed to submit callback request:", error);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    requireAcceptance(doSubmit);
   };
 
   return (
@@ -107,6 +116,11 @@ export default function CallbackWidget() {
           </motion.div>
         )}
       </AnimatePresence>
+      <PrivacyPolicyModal
+        open={privacyOpen}
+        onClose={closePrivacy}
+        onAccepted={onPrivacyAccepted}
+      />
     </>
   );
 }

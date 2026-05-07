@@ -38,6 +38,8 @@ import { trackFormSubmit, trackCTA, trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
 import StructuredData from "@/components/StructuredData";
 import PageMeta from "@/components/PageMeta";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
+import { usePrivacyPolicy } from "@/hooks/usePrivacyPolicy";
 
 interface ScrapedLoan {
   id: string;
@@ -86,6 +88,8 @@ export default function Eligibility() {
   >("all");
   const { toast } = useToast();
   const { t, locale } = useTranslation();
+  const { privacyOpen, closePrivacy, onPrivacyAccepted, requireAcceptance } =
+    usePrivacyPolicy();
 
   const validPurposes = [
     "consumer",
@@ -754,7 +758,7 @@ export default function Eligibility() {
             </Button>
           ) : (
             <Button
-              onClick={handleSubmit}
+              onClick={() => requireAcceptance(handleSubmit)}
               disabled={!canNext() || submitting}
               className="flex-1 h-12 rounded-xl accent-gradient border-0 text-accent-foreground"
             >
@@ -766,6 +770,11 @@ export default function Eligibility() {
           )}
         </div>
       </div>
+      <PrivacyPolicyModal
+        open={privacyOpen}
+        onClose={closePrivacy}
+        onAccepted={onPrivacyAccepted}
+      />
     </main>
   );
 }

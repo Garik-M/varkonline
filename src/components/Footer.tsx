@@ -1,6 +1,16 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Mail, Shield, Building2, Clock } from "lucide-react";
+import {
+  MapPin,
+  Mail,
+  Shield,
+  Building2,
+  Clock,
+  Handshake,
+} from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
+import PartnerModal from "@/components/PartnerModal";
 
 const servicePaths = ["/eligibility", "/compare", "/calculator", "/blog"];
 const loanTypePaths = [
@@ -22,6 +32,8 @@ export default function Footer() {
   const { t, lp } = useTranslation();
   const serviceLinks = t("footer.serviceLinks") as unknown as string[];
   const loanTypeLinks = t("footer.loanTypeLinks") as unknown as string[];
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [partnerOpen, setPartnerOpen] = useState(false);
 
   return (
     <footer className="bg-gray-100 text-gray-900 border-t border-gray-200">
@@ -101,16 +113,31 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} VarkOnline.am &mdash;{" "}
             {t("footer.rights")}
           </p>
-          <div className="flex gap-5 text-xs text-gray-400">
-            <Link to="#" className="hover:text-gray-900 transition-colors">
+          <div className="flex flex-wrap items-center gap-5 text-xs text-gray-400">
+            <button
+              onClick={() => setPartnerOpen(true)}
+              className="flex items-center gap-1.5 text-accent font-semibold hover:text-accent/80 transition-colors"
+            >
+              <Handshake size={13} />
+              {t("footer.becomePartner")}
+            </button>
+            <button
+              onClick={() => setPrivacyOpen(true)}
+              className="hover:text-gray-900 transition-colors"
+            >
               {t("footer.privacy")}
-            </Link>
+            </button>
             <Link to="#" className="hover:text-gray-900 transition-colors">
               {t("footer.terms")}
             </Link>
           </div>
         </div>
       </div>
+      <PrivacyPolicyModal
+        open={privacyOpen}
+        onClose={() => setPrivacyOpen(false)}
+      />
+      <PartnerModal open={partnerOpen} onClose={() => setPartnerOpen(false)} />
     </footer>
   );
 }

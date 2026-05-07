@@ -252,6 +252,28 @@ class ApiClient {
       method: 'DELETE'
     });
   }
+
+  // Partner applications
+  async submitPartnerApplication(data: {
+    type: 'bank' | 'institution';
+    organization_name: string;
+    website: string;
+    contact_name: string;
+    phone: string;
+  }) {
+    return this.request('/partners', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getPartnerApplications() {
+    return this.request('/partners');
+  }
+
+  async deletePartnerApplication(id: string) {
+    return this.request(`/partners/${id}`, { method: 'DELETE' });
+  }
 }
 
 export const api = new ApiClient();
