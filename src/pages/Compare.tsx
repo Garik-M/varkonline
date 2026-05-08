@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import Pagination from "@/components/ui/Pagination";
+import Pagination from "@/components/ui/PaginationControl";
 import {
   Building2,
   Percent,

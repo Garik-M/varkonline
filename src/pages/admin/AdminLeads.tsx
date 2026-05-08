@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
-import Pagination from "@/components/ui/Pagination";
+import Pagination from "@/components/ui/PaginationControl";
 import {
   Select,
   SelectContent,
