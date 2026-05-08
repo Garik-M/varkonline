@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Pagination from "@/components/ui/Pagination";
 import {
   Select,
   SelectContent,
@@ -96,10 +97,13 @@ export default function AdminScrapedLoans() {
   );
   const [history, setHistory] = useState<RateHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
   const { toast } = useToast();
 
   const fetchLoans = useCallback(async () => {
     setLoading(true);
+    setPage(1);
     try {
       const filters: any = {};
       if (bankFilter !== "all") filters.bank = bankFilter;
@@ -195,6 +199,13 @@ export default function AdminScrapedLoans() {
       l.interest_rate_min !== null &&
       parseFloat(String(l.interest_rate_min)) > 0,
   ).length;
+
+  const groupEntries = Object.entries(grouped);
+  const totalBankPages = Math.ceil(groupEntries.length / PAGE_SIZE);
+  const paginatedGroups = groupEntries.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
 
   return (
     <div className="space-y-6">
@@ -313,155 +324,170 @@ export default function AdminScrapedLoans() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {Object.entries(grouped).map(([bankName, bankLoans]) => {
-            const isExpanded = expandedBank === bankName;
-            const avgRate = bankLoans
-              .filter((l) => l.interest_rate_min !== null)
-              .map((l) => parseFloat(String(l.interest_rate_min)))
-              .filter((r) => r > 0);
-            const minRate = avgRate.length ? Math.min(...avgRate) : null;
+        <>
+          <div className="space-y-3">
+            {paginatedGroups.map(([bankName, bankLoans]) => {
+              const isExpanded = expandedBank === bankName;
+              const avgRate = bankLoans
+                .filter((l) => l.interest_rate_min !== null)
+                .map((l) => parseFloat(String(l.interest_rate_min)))
+                .filter((r) => r > 0);
+              const minRate = avgRate.length ? Math.min(...avgRate) : null;
 
-            return (
-              <Card key={bankName} className="overflow-hidden">
-                {/* Bank header row */}
-                <button
-                  className="w-full text-left"
-                  onClick={() => setExpandedBank(isExpanded ? null : bankName)}
-                >
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Building2 className="w-5 h-5 text-primary" />
+              return (
+                <Card key={bankName} className="overflow-hidden">
+                  {/* Bank header row */}
+                  <button
+                    className="w-full text-left"
+                    onClick={() =>
+                      setExpandedBank(isExpanded ? null : bankName)
+                    }
+                  >
+                    <CardContent className="flex items-center justify-between py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Building2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{bankName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {bankLoans.length} products
+                            {minRate ? ` · from ${minRate}%` : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold">{bankName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {bankLoans.length} products
-                          {minRate ? ` · from ${minRate}%` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleScrape(bankName);
-                        }}
-                        disabled={scraping}
-                        className="text-xs h-7"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" /> Re-scrape
-                      </Button>
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </CardContent>
-                </button>
-
-                {/* Expanded loan list */}
-                {isExpanded && (
-                  <div className="border-t border-border divide-y divide-border">
-                    {bankLoans.map((loan) => {
-                      const rateMin =
-                        loan.interest_rate_min !== null
-                          ? parseFloat(String(loan.interest_rate_min))
-                          : null;
-                      const rateMax =
-                        loan.interest_rate_max !== null
-                          ? parseFloat(String(loan.interest_rate_max))
-                          : null;
-                      return (
-                        <div
-                          key={loan.id}
-                          className="px-4 py-3 flex items-start justify-between gap-4 hover:bg-muted/30 transition-colors"
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleScrape(bankName);
+                          }}
+                          disabled={scraping}
+                          className="text-xs h-7"
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <span className="font-medium text-sm truncate">
-                                {loan.product_name}
-                              </span>
-                              <Badge
-                                className={`text-[10px] px-1.5 py-0 ${categoryColor[loan.loan_category] || categoryColor.other}`}
-                              >
-                                {loan.loan_category}
-                              </Badge>
-                              {loan.requires_collateral && (
+                          <RefreshCw className="w-3 h-3 mr-1" /> Re-scrape
+                        </Button>
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </CardContent>
+                  </button>
+
+                  {/* Expanded loan list */}
+                  {isExpanded && (
+                    <div className="border-t border-border divide-y divide-border">
+                      {bankLoans.map((loan) => {
+                        const rateMin =
+                          loan.interest_rate_min !== null
+                            ? parseFloat(String(loan.interest_rate_min))
+                            : null;
+                        const rateMax =
+                          loan.interest_rate_max !== null
+                            ? parseFloat(String(loan.interest_rate_max))
+                            : null;
+                        return (
+                          <div
+                            key={loan.id}
+                            className="px-4 py-3 flex items-start justify-between gap-4 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-medium text-sm truncate">
+                                  {loan.product_name}
+                                </span>
                                 <Badge
-                                  variant="outline"
-                                  className="text-[10px] px-1.5 py-0"
+                                  className={`text-[10px] px-1.5 py-0 ${categoryColor[loan.loan_category] || categoryColor.other}`}
                                 >
-                                  collateral
+                                  {loan.loan_category}
                                 </Badge>
-                              )}
+                                {loan.requires_collateral && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] px-1.5 py-0"
+                                  >
+                                    collateral
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                                {rateMin !== null && rateMin > 0 && (
+                                  <span className="font-semibold text-foreground">
+                                    {rateMin === rateMax
+                                      ? `${rateMin}%`
+                                      : `${rateMin}–${rateMax}%`}
+                                  </span>
+                                )}
+                                {loan.max_loan_amount && (
+                                  <span>
+                                    up to {fmt(loan.max_loan_amount)}{" "}
+                                    {loan.currency}
+                                  </span>
+                                )}
+                                {loan.term_max_months && (
+                                  <span>
+                                    up to {loan.term_max_months} months
+                                  </span>
+                                )}
+                                {loan.min_down_payment_percent && (
+                                  <span>
+                                    {loan.min_down_payment_percent}% down
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Updated{" "}
+                                {new Date(
+                                  loan.last_updated,
+                                ).toLocaleDateString()}
+                              </p>
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                              {rateMin !== null && rateMin > 0 && (
-                                <span className="font-semibold text-foreground">
-                                  {rateMin === rateMax
-                                    ? `${rateMin}%`
-                                    : `${rateMin}–${rateMax}%`}
-                                </span>
-                              )}
-                              {loan.max_loan_amount && (
-                                <span>
-                                  up to {fmt(loan.max_loan_amount)}{" "}
-                                  {loan.currency}
-                                </span>
-                              )}
-                              {loan.term_max_months && (
-                                <span>up to {loan.term_max_months} months</span>
-                              )}
-                              {loan.min_down_payment_percent && (
-                                <span>
-                                  {loan.min_down_payment_percent}% down
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Updated{" "}
-                              {new Date(loan.last_updated).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              title="Rate history"
-                              onClick={() => openHistory(loan)}
-                            >
-                              <TrendingUp className="w-3.5 h-3.5" />
-                            </Button>
-                            <a
-                              href={loan.source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
+                            <div className="flex items-center gap-1 shrink-0">
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7"
-                                title="Source"
+                                title="Rate history"
+                                onClick={() => openHistory(loan)}
                               >
-                                <ExternalLink className="w-3.5 h-3.5" />
+                                <TrendingUp className="w-3.5 h-3.5" />
                               </Button>
-                            </a>
+                              <a
+                                href={loan.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  title="Source"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </Button>
+                              </a>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+          <Pagination
+            page={page}
+            totalPages={totalBankPages}
+            onPage={setPage}
+            totalItems={groupEntries.length}
+            pageSize={PAGE_SIZE}
+          />
+        </>
       )}
 
       {/* Rate history dialog */}

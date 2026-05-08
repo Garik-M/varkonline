@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import Pagination from "@/components/ui/Pagination";
 import {
   Building2,
   Percent,
@@ -52,6 +53,8 @@ export default function Compare() {
   const [products, setProducts] = useState<LoanProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
   const { t, locale } = useTranslation();
 
   const typeLabels: Record<string, string> = {
@@ -71,6 +74,7 @@ export default function Compare() {
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
+      setPage(1);
       try {
         const data = await api.getProducts({
           loan_type: typeFilter === "all" ? undefined : typeFilter,
@@ -86,6 +90,7 @@ export default function Compare() {
   }, [typeFilter]);
 
   const filtered = useMemo(() => {
+    setPage(1);
     if (institutionFilter === "all") return products;
     return products.filter(
       (p) => (p.institution_type || "bank") === institutionFilter,
@@ -97,14 +102,19 @@ export default function Compare() {
     const withRates = filtered.filter(
       (p) => p.interest_rate_min > 0 || p.interest_rate_max > 0,
     );
-    if (sortBy === "rate")
-      return [...withRates].sort(
-        (a, b) => a.interest_rate_min - b.interest_rate_min,
-      );
-    return [...withRates].sort(
-      (a, b) => a.approval_time_days - b.approval_time_days,
-    );
+    // Primary: banks before credit_organizations
+    // Secondary: sort by selected criterion
+    return [...withRates].sort((a, b) => {
+      const aIsBank = (a.institution_type || "bank") === "bank" ? 0 : 1;
+      const bIsBank = (b.institution_type || "bank") === "bank" ? 0 : 1;
+      if (aIsBank !== bIsBank) return aIsBank - bIsBank;
+      if (sortBy === "rate") return a.interest_rate_min - b.interest_rate_min;
+      return a.approval_time_days - b.approval_time_days;
+    });
   }, [filtered, sortBy]);
+
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const fmt = (v: number) => new Intl.NumberFormat("en-US").format(v);
 
@@ -197,159 +207,174 @@ export default function Compare() {
             <p className="text-muted-foreground text-xs">{error}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {sorted.map((loan, i) => {
-              const instType = loan.institution_type || "bank";
-              return (
-                <motion.div
-                  key={loan.id}
-                  className="fintech-card"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    delay: Math.min(i * 0.03, 0.15),
-                  }}
-                >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div
-                      className={`w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden ${loan.bank_logo ? "bg-white border border-border" : instType === "credit_organization" ? "bg-info/10" : "primary-gradient"}`}
-                    >
-                      {loan.bank_logo ? (
-                        <img
-                          src={loan.bank_logo}
-                          alt={loan.bank_name || "Bank logo"}
-                          className="w-full h-full object-contain p-1"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {paginated.map((loan, i) => {
+                const instType = loan.institution_type || "bank";
+                return (
+                  <motion.div
+                    key={loan.id}
+                    className="fintech-card"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: Math.min(i * 0.03, 0.15),
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden ${loan.bank_logo ? "bg-white border border-border" : instType === "credit_organization" ? "bg-info/10" : "primary-gradient"}`}
+                      >
+                        {loan.bank_logo ? (
+                          <img
+                            src={loan.bank_logo}
+                            alt={loan.bank_name || "Bank logo"}
+                            className="w-full h-full object-contain p-1"
+                          />
+                        ) : instType === "credit_organization" ? (
+                          <Landmark size={18} className="text-info" />
+                        ) : (
+                          <Building2
+                            size={18}
+                            className="text-primary-foreground"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-foreground">
+                          {loan.bank_name || "Unknown"}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${instType === "credit_organization" ? "bg-info/10 text-info" : "bg-accent/10 text-accent"}`}
+                          >
+                            {getInstitutionLabel(instType)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {loan.name}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-5">
+                      <div className="flex items-start gap-2.5">
+                        <Percent
+                          size={14}
+                          className="text-accent mt-0.5 shrink-0"
                         />
-                      ) : instType === "credit_organization" ? (
-                        <Landmark size={18} className="text-info" />
-                      ) : (
-                        <Building2
-                          size={18}
-                          className="text-primary-foreground"
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            {t("compare.interestRate")}
+                          </p>
+                          <p className="text-sm font-bold text-foreground">
+                            {loan.interest_rate_min > 0 &&
+                            loan.interest_rate_max > 0
+                              ? `${loan.interest_rate_min}–${loan.interest_rate_max}% APR`
+                              : loan.interest_rate_min > 0
+                                ? `Սկսած ${loan.interest_rate_min}% APR`
+                                : `Մինչև ${loan.interest_rate_max}% APR`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <Clock
+                          size={14}
+                          className="text-info mt-0.5 shrink-0"
                         />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            {t("compare.approvalTime")}
+                          </p>
+                          <p className="text-sm font-bold text-foreground">
+                            {loan.approval_time_days <= 1
+                              ? t("compare.sameDay")
+                              : `${loan.approval_time_days} ${t("compare.days")}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-5">
+                      {loan.max_amount > 0 && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                          {loan.min_amount > 0
+                            ? `${t("compare.from")} ${fmt(loan.min_amount)} AMD`
+                            : `${t("compare.upTo")} ${fmt(loan.max_amount)} AMD`}
+                        </span>
+                      )}
+                      {loan.min_amount > 0 && loan.max_amount === 0 && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                          {t("compare.from")} {fmt(loan.min_amount)} AMD
+                        </span>
+                      )}
+                      {loan.max_duration_months > 0 && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
+                          {loan.max_duration_months} {t("calculator.months")}
+                        </span>
+                      )}
+                      {loan.requires_collateral && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-warning/10 text-warning font-medium">
+                          {t("compare.collateral")}
+                        </span>
+                      )}
+                      {loan.requires_salary_transfer && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-info/10 text-info font-medium">
+                          {t("compare.salaryTransfer")}
+                        </span>
+                      )}
+                      {loan.early_repayment && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
+                          {t("compare.earlyRepayment")}
+                        </span>
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">
-                        {loan.bank_name || "Unknown"}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${instType === "credit_organization" ? "bg-info/10 text-info" : "bg-accent/10 text-accent"}`}
-                        >
-                          {getInstitutionLabel(instType)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {loan.name}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-5">
-                    <div className="flex items-start gap-2.5">
-                      <Percent
-                        size={14}
-                        className="text-accent mt-0.5 shrink-0"
-                      />
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {t("compare.interestRate")}
-                        </p>
-                        <p className="text-sm font-bold text-foreground">
-                          {loan.interest_rate_min > 0 &&
-                          loan.interest_rate_max > 0
-                            ? `${loan.interest_rate_min}–${loan.interest_rate_max}% APR`
-                            : loan.interest_rate_min > 0
-                              ? `Սկսած ${loan.interest_rate_min}% APR`
-                              : `Մինչև ${loan.interest_rate_max}% APR`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <Clock size={14} className="text-info mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {t("compare.approvalTime")}
-                        </p>
-                        <p className="text-sm font-bold text-foreground">
-                          {loan.approval_time_days <= 1
-                            ? t("compare.sameDay")
-                            : `${loan.approval_time_days} ${t("compare.days")}`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {loan.max_amount > 0 && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                        {loan.min_amount > 0
-                          ? `${t("compare.from")} ${fmt(loan.min_amount)} AMD`
-                          : `${t("compare.upTo")} ${fmt(loan.max_amount)} AMD`}
-                      </span>
-                    )}
-                    {loan.min_amount > 0 && loan.max_amount === 0 && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                        {t("compare.from")} {fmt(loan.min_amount)} AMD
-                      </span>
-                    )}
-                    {loan.max_duration_months > 0 && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium">
-                        {loan.max_duration_months} {t("calculator.months")}
-                      </span>
-                    )}
-                    {loan.requires_collateral && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-warning/10 text-warning font-medium">
-                        {t("compare.collateral")}
-                      </span>
-                    )}
-                    {loan.requires_salary_transfer && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-info/10 text-info font-medium">
-                        {t("compare.salaryTransfer")}
-                      </span>
-                    )}
-                    {loan.early_repayment && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
-                        {t("compare.earlyRepayment")}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-10 rounded-xl"
-                      asChild
-                    >
-                      <Link
-                        to={`/calculator?rate=${loan.interest_rate_min}&amount=${loan.max_amount}&months=${loan.max_duration_months}`}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-10 rounded-xl"
+                        asChild
                       >
-                        <Calculator size={14} className="mr-1.5" />
-                        {t("compare.calculate") || "Calculate"}
-                      </Link>
-                    </Button>
-                    <Button
-                      className="flex-1 accent-gradient border-0 text-accent-foreground h-10 rounded-xl"
-                      asChild
-                      onClick={() =>
-                        trackCTA(
-                          "compare_apply",
-                          `${loan.bank_name || "Unknown"} - ${loan.name}`,
-                        )
-                      }
-                    >
-                      <Link to={`/eligibility?type=${loan.loan_type}`}>
-                        {t("compare.applyNow")}
-                        <ArrowRight size={14} className="ml-1.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                        <Link
+                          to={`/calculator?rate=${loan.interest_rate_min}&amount=${loan.max_amount}&months=${loan.max_duration_months}`}
+                        >
+                          <Calculator size={14} className="mr-1.5" />
+                          {t("compare.calculate") || "Calculate"}
+                        </Link>
+                      </Button>
+                      <Button
+                        className="flex-1 accent-gradient border-0 text-accent-foreground h-10 rounded-xl"
+                        asChild
+                        onClick={() =>
+                          trackCTA(
+                            "compare_apply",
+                            `${loan.bank_name || "Unknown"} - ${loan.name}`,
+                          )
+                        }
+                      >
+                        <Link to={`/eligibility?type=${loan.loan_type}`}>
+                          {t("compare.applyNow")}
+                          <ArrowRight size={14} className="ml-1.5" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPage={(p) => {
+                setPage(p);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              totalItems={sorted.length}
+              pageSize={PAGE_SIZE}
+            />
+          </>
         )}
 
         {!loading && !error && sorted.length === 0 && (

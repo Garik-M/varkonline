@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
+import Pagination from "@/components/ui/Pagination";
 import {
   Select,
   SelectContent,
@@ -58,6 +59,8 @@ export default function AdminLeads() {
   const [filter, setFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -175,6 +178,9 @@ export default function AdminLeads() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   if (loading) return <div className="text-muted-foreground">Loading...</div>;
 
   return (
@@ -187,11 +193,20 @@ export default function AdminLeads() {
             <Input
               placeholder="Search..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="pl-9 w-48"
             />
           </div>
-          <Select value={filter} onValueChange={setFilter}>
+          <Select
+            value={filter}
+            onValueChange={(v) => {
+              setFilter(v);
+              setPage(1);
+            }}
+          >
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -204,7 +219,13 @@ export default function AdminLeads() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
+          <Select
+            value={dateFilter}
+            onValueChange={(v) => {
+              setDateFilter(v);
+              setPage(1);
+            }}
+          >
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Date" />
             </SelectTrigger>
@@ -245,7 +266,7 @@ export default function AdminLeads() {
       </div>
 
       <div className="grid gap-3">
-        {filtered.map((lead) => (
+        {paginated.map((lead) => (
           <Card key={lead.id}>
             <CardContent className="py-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -343,6 +364,13 @@ export default function AdminLeads() {
           </p>
         )}
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPage={setPage}
+        totalItems={filtered.length}
+        pageSize={PAGE_SIZE}
+      />
     </div>
   );
 }

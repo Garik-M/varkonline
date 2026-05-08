@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import Pagination from "@/components/ui/Pagination";
 import {
   Dialog,
   DialogContent,
@@ -81,6 +82,8 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState(defaultForm);
   const [syncing, setSyncing] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
   const { toast } = useToast();
 
   const fetch = async () => {
@@ -193,6 +196,9 @@ export default function AdminProducts() {
   };
 
   if (loading) return <div className="text-muted-foreground">Loading...</div>;
+
+  const totalPages = Math.ceil(products.length / PAGE_SIZE);
+  const paginated = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -452,7 +458,7 @@ export default function AdminProducts() {
       </div>
 
       <div className="grid gap-4">
-        {products.map((p) => (
+        {paginated.map((p) => (
           <Card key={p.id}>
             <CardContent className="flex items-center justify-between py-4">
               <div>
@@ -496,6 +502,13 @@ export default function AdminProducts() {
           </div>
         )}
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPage={setPage}
+        totalItems={products.length}
+        pageSize={PAGE_SIZE}
+      />
     </div>
   );
 }
