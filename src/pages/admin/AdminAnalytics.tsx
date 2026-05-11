@@ -83,7 +83,7 @@ export default function AdminAnalytics() {
 
   // Client-side session filter
   const displayed = sessionSearch
-    ? events.filter((e) => e.session_id === sessionSearch)
+    ? events.filter((e) => e.session_id.includes(sessionSearch))
     : events;
 
   const deleteAll = async () => {
