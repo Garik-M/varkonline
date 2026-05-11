@@ -2,10 +2,10 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Calculator } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 
 export default function LoanCalculatorWidget() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [amount, setAmount] = useState(3000000);
   const [months, setMonths] = useState(36);
   const rate = 13.5;
