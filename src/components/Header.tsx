@@ -28,7 +28,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/60">
       <div className="container-tight flex items-center justify-between h-16 px-4">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={lp("/")} className="flex items-center gap-2">
           <img src="/logo.png" alt="VarkOnline.am" className="h-8 w-auto" />
         </Link>
 

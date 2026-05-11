@@ -2,8 +2,10 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Calculator } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export default function LoanCalculatorWidget() {
+  const { t } = useI18n();
   const [amount, setAmount] = useState(3000000);
   const [months, setMonths] = useState(36);
   const rate = 13.5;
@@ -30,10 +32,14 @@ export default function LoanCalculatorWidget() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <p className="text-sm font-semibold text-accent uppercase tracking-widest mb-3">Quick Estimate</p>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Loan Calculator</h2>
+          <p className="text-sm font-semibold text-accent uppercase tracking-widest mb-3">
+            {t("calculator.badge")}
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            {t("calculator.title")}
+          </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Estimate your monthly payment and total cost before applying.
+            {t("calculator.subtitle")}
           </p>
         </motion.div>
 
@@ -48,16 +54,24 @@ export default function LoanCalculatorWidget() {
               <Calculator size={20} className="text-accent" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Smart Calculator</p>
-              <p className="text-xs text-muted-foreground">Average rate: {rate}% APR</p>
+              <p className="text-sm font-semibold text-foreground">
+                {t("calculator.smartCalc")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("calculator.avgRate").replace("{rate}", String(rate))}
+              </p>
             </div>
           </div>
 
           <div className="space-y-8">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-foreground">Loan Amount</label>
-                <span className="text-base font-bold text-primary tabular-nums">{fmt(amount)}</span>
+                <label className="text-sm font-medium text-foreground">
+                  {t("calculator.loanAmount")}
+                </label>
+                <span className="text-base font-bold text-primary tabular-nums">
+                  {fmt(amount)}
+                </span>
               </div>
               <Slider
                 value={[amount]}
@@ -74,8 +88,12 @@ export default function LoanCalculatorWidget() {
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-foreground">Duration</label>
-                <span className="text-base font-bold text-primary tabular-nums">{months} months</span>
+                <label className="text-sm font-medium text-foreground">
+                  {t("calculator.duration")}
+                </label>
+                <span className="text-base font-bold text-primary tabular-nums">
+                  {months} {t("calculator.months")}
+                </span>
               </div>
               <Slider
                 value={[months]}
@@ -93,18 +111,32 @@ export default function LoanCalculatorWidget() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10 pt-8 border-t border-border">
             <div className="rounded-xl bg-accent/8 border border-accent/15 p-4 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">Monthly Payment</p>
-              <p className="text-2xl md:text-3xl font-extrabold text-accent tabular-nums leading-tight">{new Intl.NumberFormat("en-US").format(monthly)}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">AMD / month</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                {t("calculator.monthlyPayment")}
+              </p>
+              <p className="text-2xl md:text-3xl font-extrabold text-accent tabular-nums leading-tight">
+                {new Intl.NumberFormat("en-US").format(monthly)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {t("calculator.amdPerMonth")}
+              </p>
             </div>
             <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">Total Repayment</p>
-              <p className="text-2xl md:text-3xl font-extrabold text-foreground tabular-nums leading-tight">{new Intl.NumberFormat("en-US").format(total)}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                {t("calculator.totalRepayment")}
+              </p>
+              <p className="text-2xl md:text-3xl font-extrabold text-foreground tabular-nums leading-tight">
+                {new Intl.NumberFormat("en-US").format(total)}
+              </p>
               <p className="text-[11px] text-muted-foreground mt-1">AMD</p>
             </div>
             <div className="rounded-xl bg-destructive/6 border border-destructive/12 p-4 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">Total Interest</p>
-              <p className="text-2xl md:text-3xl font-extrabold text-destructive tabular-nums leading-tight">{new Intl.NumberFormat("en-US").format(totalInterest)}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                {t("calculator.totalInterest")}
+              </p>
+              <p className="text-2xl md:text-3xl font-extrabold text-destructive tabular-nums leading-tight">
+                {new Intl.NumberFormat("en-US").format(totalInterest)}
+              </p>
               <p className="text-[11px] text-muted-foreground mt-1">AMD</p>
             </div>
           </div>
