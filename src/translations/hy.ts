@@ -250,7 +250,7 @@ export const hy = {
     orgName: "Կազմակերպության անվանումը",
     orgNamePlaceholder: "օր. ACBA Bank",
     website: "Կայք",
-    websitePlaceholder: "https://example.am",
+    websitePlaceholder: "ameriabank.am",
     contactName: "Կոնտակտային անձի անունը",
     contactNamePlaceholder: "Լիարժեք անուն",
     phone: "Հեռախոսահամար",
@@ -262,7 +262,7 @@ export const hy = {
     successTitle: "Շնորհակալություն!",
     successText: "Մենք ձեզ հետ կապ կհաստատենք 24 ժամվա ընթացքում։",
     successClose: "Փակել",
-    invalidUrl: "Խնդրում ենք մուտքագրել վավեր URL (սկսած http:// կամ https://)",
+    invalidUrl: "Խնդրում ենք մուտքագրել վավեր կայք (օր. ameriabank.am)",
     invalidPhone: "Խնդրում ենք մուտքագրել վավեր հեռախոսահամար",
   },
   privacy: {

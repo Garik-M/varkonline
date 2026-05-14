@@ -250,7 +250,7 @@ export const ru = {
     orgName: "Название организации",
     orgNamePlaceholder: "напр. ACBA Bank",
     website: "Веб-сайт",
-    websitePlaceholder: "https://example.am",
+    websitePlaceholder: "ameriabank.am",
     contactName: "Имя контактного лица",
     contactNamePlaceholder: "Полное имя",
     phone: "Номер телефона",
@@ -262,7 +262,7 @@ export const ru = {
     successTitle: "Спасибо!",
     successText: "Мы свяжемся с вами в течение 24 часов.",
     successClose: "Закрыть",
-    invalidUrl: "Пожалуйста, введите корректный URL (начиная с http:// или https://)",
+    invalidUrl: "Пожалуйста, введите корректный сайт (напр. ameriabank.am)",
     invalidPhone: "Пожалуйста, введите корректный номер телефона",
   },
   privacy: {

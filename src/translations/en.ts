@@ -239,7 +239,7 @@ export const en = {
     orgName: "Organization Name",
     orgNamePlaceholder: "e.g. ACBA Bank",
     website: "Website",
-    websitePlaceholder: "https://example.am",
+    websitePlaceholder: "ameriabank.am",
     contactName: "Contact Person Name",
     contactNamePlaceholder: "Full name",
     phone: "Phone Number",
@@ -251,7 +251,7 @@ export const en = {
     successTitle: "Thank you!",
     successText: "We will contact you within 24 hours.",
     successClose: "Close",
-    invalidUrl: "Please enter a valid URL (starting with http:// or https://)",
+    invalidUrl: "Please enter a valid website (e.g. ameriabank.am)",
     invalidPhone: "Please enter a valid phone number",
   },
   privacy: {

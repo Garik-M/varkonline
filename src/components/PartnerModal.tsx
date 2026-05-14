@@ -37,13 +37,11 @@ const INITIAL_FORM: FormState = {
   privacyAccepted: false,
 };
 
-function isValidUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
+function isValidDomain(value: string): boolean {
+  // Strip optional protocol prefix before validating
+  const stripped = value.trim().replace(/^https?:\/\//i, "");
+  // Must match: something.tld (tld = 2+ chars), optional path/port
+  return /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/.test(stripped);
 }
 
 function isValidPhone(value: string): boolean {
@@ -81,7 +79,7 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
     if (!form.orgName.trim()) newErrors.orgName = "Required";
     if (!form.website.trim()) {
       newErrors.website = "Required";
-    } else if (!isValidUrl(form.website.trim())) {
+    } else if (!isValidDomain(form.website.trim())) {
       newErrors.website = t("partner.invalidUrl") as string;
     }
     if (!form.contactName.trim()) newErrors.contactName = "Required";
@@ -98,7 +96,7 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
   const canSubmit =
     form.orgName.trim() &&
     form.website.trim() &&
-    isValidUrl(form.website.trim()) &&
+    isValidDomain(form.website.trim()) &&
     form.contactName.trim() &&
     form.phone.trim() &&
     isValidPhone(form.phone) &&
@@ -108,10 +106,14 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
     if (!validate() || !partnerType) return;
     setSubmitting(true);
     try {
+      const websiteValue = form.website.trim();
+      const normalizedWebsite = /^https?:\/\//i.test(websiteValue)
+        ? websiteValue
+        : `https://${websiteValue}`;
       await api.submitPartnerApplication({
         type: partnerType,
         organization_name: form.orgName.trim(),
-        website: form.website.trim(),
+        website: normalizedWebsite,
         contact_name: form.contactName.trim(),
         phone: form.phone.trim(),
       });
