@@ -10,17 +10,17 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const navKeys = [
   "home",
   "eligibility",
+  "affordability",
   "compare",
   "calculator",
-  "affordability",
   "blog",
 ] as const;
 const navPaths = [
   "/",
   "/eligibility",
+  "/affordability",
   "/compare",
   "/calculator",
-  "/affordability",
   "/blog",
 ];
 
