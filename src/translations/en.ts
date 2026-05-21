@@ -274,6 +274,7 @@ export const en = {
     openCalculator: "Open Calculator",
     disclaimer: "This is an estimate only. Actual loan amounts depend on the bank's assessment, credit history, and other factors.",
   },
+  privacy: {
     title: "Privacy Policy",
     consentDescription:
       "By submitting your data you agree that VarkOnline.am may process your personal information to match you with loan offers from partner banks.",
