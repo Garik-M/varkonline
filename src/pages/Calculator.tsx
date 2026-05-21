@@ -120,12 +120,12 @@ export default function Calculator() {
               value={[amount]}
               onValueChange={([v]) => setAmount(v)}
               min={100000}
-              max={50000000}
+              max={200000000}
               step={100000}
             />
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
               <span>100K</span>
-              <span>50M</span>
+              <span>200M</span>
             </div>
           </div>
           <div>

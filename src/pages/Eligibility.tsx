@@ -99,8 +99,10 @@ export default function Eligibility() {
     "refinancing",
   ];
   const initialPurpose = searchParams.get("type") || "";
-  const [amount, setAmount] = useState(2000000);
-  const [duration, setDuration] = useState(36);
+  const initialAmount = Number(searchParams.get("amount")) || 2000000;
+  const initialDuration = Number(searchParams.get("months")) || 36;
+  const [amount, setAmount] = useState(initialAmount);
+  const [duration, setDuration] = useState(initialDuration);
   const [purpose, setPurpose] = useState(
     validPurposes.includes(initialPurpose) ? initialPurpose : "",
   );
@@ -587,13 +589,15 @@ export default function Eligibility() {
                   <span className="text-sm font-bold text-primary tabular-nums">
                     {amount.toLocaleString()} AMD
                   </span>
-                  <span className="text-xs text-muted-foreground">30M AMD</span>
+                  <span className="text-xs text-muted-foreground">
+                    200M AMD
+                  </span>
                 </div>
                 <Slider
                   value={[amount]}
                   onValueChange={([v]) => setAmount(v)}
                   min={100000}
-                  max={30000000}
+                  max={200000000}
                   step={100000}
                 />
               </div>
@@ -606,13 +610,13 @@ export default function Eligibility() {
                   <span className="text-sm font-bold text-primary tabular-nums">
                     {duration} {t("eligibility.months")}
                   </span>
-                  <span className="text-xs text-muted-foreground">120</span>
+                  <span className="text-xs text-muted-foreground">360</span>
                 </div>
                 <Slider
                   value={[duration]}
                   onValueChange={([v]) => setDuration(v)}
                   min={3}
-                  max={120}
+                  max={360}
                   step={1}
                 />
               </div>

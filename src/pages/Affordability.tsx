@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
 import PageMeta from "@/components/PageMeta";
@@ -21,6 +21,7 @@ const DTI_RATIO = 0.5; // max share of income that can go to all loan payments
 
 export default function Affordability() {
   const { t, lp } = useTranslation();
+  const navigate = useNavigate();
   const [income, setIncome] = useState<string>("300000");
   const [existingPayments, setExistingPayments] = useState<string>("0");
   const [rate, setRate] = useState<number>(13);
@@ -131,7 +132,7 @@ export default function Affordability() {
                 value={[duration]}
                 onValueChange={([v]) => setDuration(v)}
                 min={3}
-                max={120}
+                max={360}
                 step={1}
               />
             </div>
@@ -215,24 +216,28 @@ export default function Affordability() {
             </div>
 
             <Button
-              asChild
               className="w-full h-12 rounded-xl accent-gradient border-0 text-accent-foreground"
+              onClick={() =>
+                navigate(
+                  `${lp("/eligibility")}?amount=${maxLoan}&months=${duration}`,
+                )
+              }
             >
-              <Link to={lp("/eligibility")}>
-                {t("affordability.checkEligibility")}
-                <ArrowRight size={16} className="ml-2" />
-              </Link>
+              {t("affordability.checkEligibility")}
+              <ArrowRight size={16} className="ml-2" />
             </Button>
 
             <Button
-              asChild
               variant="outline"
               className="w-full h-11 rounded-xl"
+              onClick={() =>
+                navigate(
+                  `${lp("/calculator")}?amount=${maxLoan}&months=${duration}&rate=${rate}`,
+                )
+              }
             >
-              <Link to={lp("/calculator")}>
-                <CalcIcon size={14} className="mr-2" />
-                {t("affordability.openCalculator")}
-              </Link>
+              <CalcIcon size={14} className="mr-2" />
+              {t("affordability.openCalculator")}
             </Button>
           </motion.div>
         </div>

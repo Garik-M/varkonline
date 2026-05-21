@@ -77,12 +77,12 @@ export default function LoanCalculatorWidget() {
                 value={[amount]}
                 onValueChange={([v]) => setAmount(v)}
                 min={100000}
-                max={30000000}
+                max={200000000}
                 step={100000}
               />
               <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                 <span>100K</span>
-                <span>30M AMD</span>
+                <span>200M AMD</span>
               </div>
             </div>
 
@@ -99,12 +99,12 @@ export default function LoanCalculatorWidget() {
                 value={[months]}
                 onValueChange={([v]) => setMonths(v)}
                 min={3}
-                max={120}
+                max={360}
                 step={1}
               />
               <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                 <span>3 mo</span>
-                <span>120 mo</span>
+                <span>360 mo</span>
               </div>
             </div>
           </div>
