@@ -35,7 +35,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/60">
       {/* Full-width bar — logo flush left, CTA flush right */}
-      <div className="w-full flex items-center justify-between h-16 px-4">
+      <div className="w-full flex items-center justify-between h-16 px-8">
         {/* Logo — flush left */}
         <Link to={lp("/")} className="flex items-center gap-2 shrink-0">
           <img src="/logo.png" alt="VarkOnline.am" className="h-8 w-auto" />
