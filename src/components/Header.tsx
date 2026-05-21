@@ -29,23 +29,25 @@ export default function Header() {
   const location = useLocation();
   const { t, lp } = useTranslation();
 
-  // Active check against the normalised path (strips locale prefix)
   const { normalizedPath } = resolveLocaleFromPath(location.pathname);
   const navHrefs = navPaths.map((p) => lp(p));
 
   return (
     <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/60">
-      <div className="container-tight flex items-center justify-between h-16 px-4">
-        <Link to={lp("/")} className="flex items-center gap-2">
+      {/* Full-width bar — logo flush left, CTA flush right */}
+      <div className="w-full flex items-center justify-between h-16 px-4">
+        {/* Logo — flush left */}
+        <Link to={lp("/")} className="flex items-center gap-2 shrink-0">
           <img src="/logo.png" alt="VarkOnline.am" className="h-8 w-auto" />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        {/* Desktop nav — centered */}
+        <nav className="hidden nav:flex items-center gap-1 mx-4">
           {navKeys.map((key, i) => (
             <Link
               key={navHrefs[i]}
               to={navHrefs[i]}
-              className={`text-sm font-medium px-3.5 py-2 rounded-lg transition-all duration-200 ${
+              className={`text-sm font-medium px-3.5 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
                 normalizedPath === navPaths[i]
                   ? "text-foreground bg-secondary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -56,7 +58,8 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-2">
+        {/* Desktop right side — language + CTA flush right */}
+        <div className="hidden nav:flex items-center gap-2 shrink-0">
           <LanguageSwitcher />
           <Button
             size="sm"
@@ -70,7 +73,8 @@ export default function Header() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        {/* Mobile right side — language + hamburger */}
+        <div className="flex items-center gap-2 nav:hidden">
           <LanguageSwitcher />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -82,6 +86,7 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Mobile dropdown */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -89,7 +94,7 @@ export default function Header() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="lg:hidden overflow-hidden border-t border-border bg-card"
+            className="nav:hidden overflow-hidden border-t border-border bg-card"
           >
             <nav className="flex flex-col p-4 gap-1">
               {navKeys.map((key, i) => (

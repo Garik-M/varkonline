@@ -13,6 +13,9 @@ export default {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      screens: {
+        nav: "1150px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
