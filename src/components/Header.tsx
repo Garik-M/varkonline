@@ -12,9 +12,17 @@ const navKeys = [
   "eligibility",
   "compare",
   "calculator",
+  "affordability",
   "blog",
 ] as const;
-const navPaths = ["/", "/eligibility", "/compare", "/calculator", "/blog"];
+const navPaths = [
+  "/",
+  "/eligibility",
+  "/compare",
+  "/calculator",
+  "/affordability",
+  "/blog",
+];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);

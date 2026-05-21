@@ -4,6 +4,7 @@ export const en = {
     eligibility: "Check Eligibility",
     compare: "Compare Loans",
     calculator: "Calculator",
+    affordability: "How Much Can I Get?",
     blog: "Blog",
   },
   cta: {
@@ -12,7 +13,7 @@ export const en = {
   },
   hero: {
     title1: "Check Eligibility",
-    title2: "Without ARCA Request",
+    title2: "Without ACRA Request",
     subtitle: "Compare offers from Armenian banks and find the best loan option for you. No commitment required.",
   },
   howItWorks: {
@@ -254,7 +255,25 @@ export const en = {
     invalidUrl: "Please enter a valid website (e.g. ameriabank.am)",
     invalidPhone: "Please enter a valid phone number",
   },
-  privacy: {
+  affordability: {
+    title: "How Much Can I Get?",
+    subtitle: "Enter your income and loan details to estimate your maximum loan amount.",
+    income: "Monthly Income (AMD)",
+    incomeHint: "Your net monthly income after taxes.",
+    existingPayments: "Existing Monthly Loan Payments (AMD)",
+    existingHint: "Total of all current loan repayments per month.",
+    duration: "Loan Duration",
+    months: "months",
+    rate: "Interest Rate",
+    maxLoan: "Maximum Loan Amount",
+    basedOn: "Based on a 50% debt-to-income ratio.",
+    maxMonthly: "Max Monthly Payment",
+    totalRepayment: "Total Repayment",
+    totalInterest: "Total Interest",
+    checkEligibility: "Check My Eligibility",
+    openCalculator: "Open Calculator",
+    disclaimer: "This is an estimate only. Actual loan amounts depend on the bank's assessment, credit history, and other factors.",
+  },
     title: "Privacy Policy",
     consentDescription:
       "By submitting your data you agree that VarkOnline.am may process your personal information to match you with loan offers from partner banks.",

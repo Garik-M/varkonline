@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import StickyCTA from "@/components/StickyCTA";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import CallbackWidget from "@/components/CallbackWidget";
+import Affordability from "./pages/Affordability";
 import Index from "./pages/Index";
 import Eligibility from "./pages/Eligibility";
 import Compare from "./pages/Compare";
@@ -90,6 +91,14 @@ function PublicRoutes() {
         element={
           <PublicLayout>
             <Calculator />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="affordability"
+        element={
+          <PublicLayout>
+            <Affordability />
           </PublicLayout>
         }
       />
