@@ -10,6 +10,7 @@ interface PageMetaProps {
   path: string;
   ogImage?: string;
   ogType?: "website" | "article";
+  noindex?: boolean;
 }
 
 export default function PageMeta({
@@ -18,6 +19,7 @@ export default function PageMeta({
   path,
   ogImage = DEFAULT_OG,
   ogType = "website",
+  noindex = false,
 }: PageMetaProps) {
   const url = `${SITE}${path}`;
   const fullTitle = `${title} — ${SITE_NAME}`;
@@ -26,6 +28,7 @@ export default function PageMeta({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       <link rel="canonical" href={url} />
 
       <meta property="og:title" content={fullTitle} />

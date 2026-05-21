@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { Link } from "react-router-dom";
 import { trackPageView } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n";
+import PageMeta from "@/components/PageMeta";
 
 const DTI_RATIO = 0.5; // max share of income that can go to all loan payments
 
@@ -53,6 +54,12 @@ export default function Affordability() {
 
   return (
     <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
+      <PageMeta
+        title={t("affordability.title") as string}
+        description={t("affordability.subtitle") as string}
+        path="/affordability"
+        noindex
+      />
       <div className="container-tight max-w-3xl">
         <motion.div
           className="text-center mb-10"
