@@ -65,6 +65,7 @@ interface BankResult {
   eligibilityPercent: number;
   termMonths: number | null;
   maxAmount: number | null;
+  sourceUrl?: string;
 }
 
 // Map loan purpose to scraped_loans category
@@ -206,6 +207,7 @@ export default function Eligibility() {
             eligibilityPercent: pct,
             termMonths: l.term_max_months,
             maxAmount: l.max_loan_amount,
+            sourceUrl: l.source_url,
           };
         })
         .sort((a, b) => a.rate - b.rate);
@@ -223,6 +225,7 @@ export default function Eligibility() {
         eligibilityPercent: calcPercent(12.5, fallbackRates),
         termMonths: null,
         maxAmount: null,
+        sourceUrl: "https://www.acba.am",
       },
       {
         name: "Ameriabank",
@@ -233,6 +236,7 @@ export default function Eligibility() {
         eligibilityPercent: calcPercent(13.0, fallbackRates),
         termMonths: null,
         maxAmount: null,
+        sourceUrl: "https://www.ameriabank.am",
       },
       {
         name: "Ardshinbank",
@@ -243,6 +247,7 @@ export default function Eligibility() {
         eligibilityPercent: calcPercent(13.5, fallbackRates),
         termMonths: null,
         maxAmount: null,
+        sourceUrl: "https://www.ardshinbank.am",
       },
     ];
   }, [amount, duration, income, loans]);
@@ -454,7 +459,13 @@ export default function Eligibility() {
                         className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
                         onClick={() => {
                           trackCTA("apply_now", bank.name);
-                          setApplyBank(bank.name);
+                          // For fallback banks, show the dialog
+                          // For scraped loans, redirect to source_url
+                          if (bank.sourceUrl) {
+                            window.open(bank.sourceUrl, "_blank");
+                          } else {
+                            setApplyBank(bank.name);
+                          }
                         }}
                       >
                         {t("eligibility.applyNow")}

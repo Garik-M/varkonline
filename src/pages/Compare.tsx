@@ -42,6 +42,7 @@ interface LoanProduct {
   bank_name?: string;
   bank_logo?: string | null;
   institution_type?: string;
+  source_url?: string;
 }
 
 export default function Compare() {
@@ -346,18 +347,16 @@ export default function Compare() {
                       </Button>
                       <Button
                         className="flex-1 accent-gradient border-0 text-accent-foreground h-10 rounded-xl"
-                        asChild
-                        onClick={() =>
+                        onClick={() => {
                           trackCTA(
                             "compare_apply",
                             `${loan.bank_name || "Unknown"} - ${loan.name}`,
-                          )
-                        }
+                          );
+                          window.open(loan.source_url || "#", "_blank");
+                        }}
                       >
-                        <Link to={`/eligibility?type=${loan.loan_type}`}>
-                          {t("compare.applyNow")}
-                          <ArrowRight size={14} className="ml-1.5" />
-                        </Link>
+                        {t("compare.applyNow")}
+                        <ArrowRight size={14} className="ml-1.5" />
                       </Button>
                     </div>
                   </motion.div>
