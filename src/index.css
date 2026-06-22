@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -91,10 +91,19 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply tracking-tight font-bold text-foreground;
   }
 }
@@ -102,15 +111,25 @@
 @layer components {
   .fintech-card {
     @apply bg-card rounded-2xl border border-border p-6 transition-all duration-300;
-    box-shadow: 0 1px 3px 0 hsl(220 50% 12% / 0.04), 0 1px 2px -1px hsl(220 50% 12% / 0.04);
+    box-shadow:
+      0 1px 3px 0 hsl(220 50% 12% / 0.04),
+      0 1px 2px -1px hsl(220 50% 12% / 0.04);
   }
+
   .fintech-card:hover {
-    box-shadow: 0 10px 30px -8px hsl(220 50% 12% / 0.08), 0 4px 6px -4px hsl(220 50% 12% / 0.04);
+    box-shadow:
+      0 10px 30px -8px hsl(220 50% 12% / 0.08),
+      0 4px 6px -4px hsl(220 50% 12% / 0.04);
     @apply -translate-y-0.5;
   }
 
   .hero-gradient {
-    background: linear-gradient(160deg, hsl(218, 58%, 12%) 0%, hsl(218, 52%, 22%) 50%, hsl(215, 45%, 30%) 100%);
+    background: linear-gradient(
+      160deg,
+      hsl(218, 58%, 12%) 0%,
+      hsl(218, 52%, 22%) 50%,
+      hsl(215, 45%, 30%) 100%
+    );
   }
 
   .accent-gradient {
@@ -153,26 +172,29 @@
   .selected-loan-card::after {
     content: "";
     position: absolute;
+    inset: -4px;
     border-radius: 1.25rem;
-    z-index: -1;
-    inset: -5px;
+    z-index: 1;
+
     background: repeating-conic-gradient(
       from var(--a),
-      hsl(155, 60%, 40%) 0%,
-      hsl(155, 60%, 40%) 5%,
-      transparent 13%,
-      transparent 40%,
-      hsl(38, 92%, 50%) 50%
+      transparent 0deg,
+      #22c55e 40deg,
+      #facc15 80deg,
+
+      transparent 120deg,
+      transparent 180deg
     );
-    animation: animate 7s linear infinite;
+
+    animation: animate-border 4s linear infinite;
   }
 
   .selected-loan-card::before {
     content: "";
     position: absolute;
-    border-radius: 1rem;
-    background-color: hsl(var(--card));
     inset: 0;
+    border-radius: 1rem;
+    background: hsl(var(--card));
     z-index: 2;
   }
 
@@ -182,10 +204,11 @@
     initial-value: 0deg;
   }
 
-  @keyframes animate {
+  @keyframes animate-border {
     0% {
       --a: 0deg;
     }
+
     100% {
       --a: 360deg;
     }
