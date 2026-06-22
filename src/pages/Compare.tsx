@@ -347,16 +347,20 @@ export default function Compare() {
                       </Button>
                       <Button
                         className="flex-1 accent-gradient border-0 text-accent-foreground h-10 rounded-xl"
+                        asChild
                         onClick={() => {
                           trackCTA(
                             "compare_apply",
                             `${loan.bank_name || "Unknown"} - ${loan.name}`,
                           );
-                          window.open(loan.source_url || "#", "_blank");
                         }}
                       >
-                        {t("compare.applyNow")}
-                        <ArrowRight size={14} className="ml-1.5" />
+                        <Link
+                          to={`/eligibility?amount=${loan.max_amount}&minAmount=${loan.min_amount}&months=${loan.max_duration_months}&type=${loan.loan_type}&collateral=${loan.requires_collateral}`}
+                        >
+                          {t("compare.applyNow")}
+                          <ArrowRight size={14} className="ml-1.5" />
+                        </Link>
                       </Button>
                     </div>
                   </motion.div>

@@ -101,12 +101,18 @@ export default function Eligibility() {
   ];
   const initialPurpose = searchParams.get("type") || "";
   const initialAmount = Number(searchParams.get("amount")) || 2000000;
+  const initialMinAmount = Number(searchParams.get("minAmount")) || 100000;
   const initialDuration = Number(searchParams.get("months")) || 36;
+  const initialCollateral = searchParams.get("collateral") === "true";
   const [amount, setAmount] = useState(initialAmount);
   const [duration, setDuration] = useState(initialDuration);
   const [purpose, setPurpose] = useState(
     validPurposes.includes(initialPurpose) ? initialPurpose : "",
   );
+  const [minAmount, setMinAmount] = useState(initialMinAmount);
+  const [collateral, setCollateral] = useState(initialCollateral);
+  const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
+  const [showAllLoans, setShowAllLoans] = useState(false);
   const [employment, setEmployment] = useState("");
   const [income, setIncome] = useState("");
   const [existingLoans, setExistingLoans] = useState("");
@@ -270,6 +276,10 @@ export default function Eligibility() {
         visitor_id: sessionId,
       });
       trackFormSubmit("eligibility", "/eligibility");
+      // Set selected loan based on the parameters passed from Compare page
+      if (initialPurpose && initialAmount) {
+        setSelectedLoanId(`${initialPurpose}-${initialAmount}-${initialDuration}`);
+      }
       setSubmitted(true);
     } catch (err) {
       toast({
@@ -370,15 +380,42 @@ export default function Eligibility() {
                 </button>
               ))}
             </div>
+            {selectedLoanId && !showAllLoans && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllLoans(true)}
+                className="text-xs h-8 px-3"
+              >
+                Show All
+              </Button>
+            )}
           </div>
 
           <div className="space-y-4">
             {results
-              .filter(
-                (b) =>
-                  b.rate <= maxRateFilter &&
-                  (probFilter === "all" || b.probability === probFilter),
-              )
+              .filter((b) => {
+                const rateFilter = b.rate <= maxRateFilter;
+                const probFilterMatch = probFilter === "all" || b.probability === probFilter;
+                
+                // If we have a selected loan and haven't clicked "Show All", filter to only show matching loan
+                if (selectedLoanId && !showAllLoans) {
+                  // Match based on the loan parameters from Compare page
+                  const category = purposeToCategory[initialPurpose] || initialPurpose;
+                  const currentCategory = purposeToCategory[purpose] || purpose;
+                  
+                  const matchesPurpose = initialPurpose === "" || category === currentCategory;
+                  const matchesAmount = initialAmount === 0 || b.maxAmount === null || 
+                    (b.maxAmount >= initialAmount * 0.9 && b.maxAmount <= initialAmount * 1.1);
+                  const matchesDuration = initialDuration === 0 || b.termMonths === null ||
+                    (b.termMonths >= initialDuration * 0.9 && b.termMonths <= initialDuration * 1.1);
+                  
+                  const matchesLoan = matchesPurpose && matchesAmount && matchesDuration;
+                  return rateFilter && probFilterMatch && matchesLoan;
+                }
+                
+                return rateFilter && probFilterMatch;
+              })
               .map((bank, i) => {
                 const prob = probConfig[bank.probability];
                 return (
@@ -475,14 +512,31 @@ export default function Eligibility() {
                   </motion.div>
                 );
               })}
-            {results.filter(
-              (b) =>
-                b.rate <= maxRateFilter &&
-                (probFilter === "all" || b.probability === probFilter),
-            ).length === 0 && (
+            {results
+              .filter((b) => {
+                const rateFilter = b.rate <= maxRateFilter;
+                const probFilterMatch = probFilter === "all" || b.probability === probFilter;
+                
+                if (selectedLoanId && !showAllLoans) {
+                  const category = purposeToCategory[initialPurpose] || initialPurpose;
+                  const currentCategory = purposeToCategory[purpose] || purpose;
+                  
+                  const matchesPurpose = initialPurpose === "" || category === currentCategory;
+                  const matchesAmount = initialAmount === 0 || b.maxAmount === null || 
+                    (b.maxAmount >= initialAmount * 0.9 && b.maxAmount <= initialAmount * 1.1);
+                  const matchesDuration = initialDuration === 0 || b.termMonths === null ||
+                    (b.termMonths >= initialDuration * 0.9 && b.termMonths <= initialDuration * 1.1);
+                  
+                  const matchesLoan = matchesPurpose && matchesAmount && matchesDuration;
+                  return rateFilter && probFilterMatch && matchesLoan;
+                }
+                
+                return rateFilter && probFilterMatch;
+              }).length === 0 && (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No results match your filters. Try adjusting the rate or
-                probability.
+                {selectedLoanId && !showAllLoans
+                  ? "No matching loan found for your selection. Click 'Show All' to see all available loans."
+                  : "No results match your filters. Try adjusting the rate or probability."}
               </p>
             )}
           </div>
@@ -595,20 +649,20 @@ export default function Eligibility() {
                 </Label>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-muted-foreground">
-                    100K AMD
+                    {minAmount.toLocaleString()} AMD
                   </span>
                   <span className="text-sm font-bold text-primary tabular-nums">
                     {amount.toLocaleString()} AMD
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    200M AMD
+                    {initialAmount.toLocaleString()} AMD
                   </span>
                 </div>
                 <Slider
                   value={[amount]}
                   onValueChange={([v]) => setAmount(v)}
-                  min={100000}
-                  max={200000000}
+                  min={minAmount}
+                  max={initialAmount}
                   step={100000}
                 />
               </div>
@@ -621,13 +675,13 @@ export default function Eligibility() {
                   <span className="text-sm font-bold text-primary tabular-nums">
                     {duration} {t("eligibility.months")}
                   </span>
-                  <span className="text-xs text-muted-foreground">360</span>
+                  <span className="text-xs text-muted-foreground">{initialDuration}</span>
                 </div>
                 <Slider
                   value={[duration]}
                   onValueChange={([v]) => setDuration(v)}
                   min={3}
-                  max={360}
+                  max={initialDuration}
                   step={1}
                 />
               </div>
