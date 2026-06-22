@@ -398,20 +398,9 @@ export default function Eligibility() {
                 const rateFilter = b.rate <= maxRateFilter;
                 const probFilterMatch = probFilter === "all" || b.probability === probFilter;
                 
-                // If we have a selected loan and haven't clicked "Show All", filter to only show matching loan
+                // If we have a selected loan and haven't clicked "Show All", show only the first result (best match)
                 if (selectedLoanId && !showAllLoans) {
-                  // Match based on the loan parameters from Compare page
-                  const category = purposeToCategory[initialPurpose] || initialPurpose;
-                  const currentCategory = purposeToCategory[purpose] || purpose;
-                  
-                  const matchesPurpose = initialPurpose === "" || category === currentCategory;
-                  const matchesAmount = initialAmount === 0 || b.maxAmount === null || 
-                    (b.maxAmount >= initialAmount * 0.9 && b.maxAmount <= initialAmount * 1.1);
-                  const matchesDuration = initialDuration === 0 || b.termMonths === null ||
-                    (b.termMonths >= initialDuration * 0.9 && b.termMonths <= initialDuration * 1.1);
-                  
-                  const matchesLoan = matchesPurpose && matchesAmount && matchesDuration;
-                  return rateFilter && probFilterMatch && matchesLoan;
+                  return rateFilter && probFilterMatch && i === 0;
                 }
                 
                 return rateFilter && probFilterMatch;
