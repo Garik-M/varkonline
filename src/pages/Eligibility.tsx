@@ -278,7 +278,9 @@ export default function Eligibility() {
       trackFormSubmit("eligibility", "/eligibility");
       // Set selected loan based on the parameters passed from Compare page
       if (initialPurpose && initialAmount) {
-        setSelectedLoanId(`${initialPurpose}-${initialAmount}-${initialDuration}`);
+        setSelectedLoanId(
+          `${initialPurpose}-${initialAmount}-${initialDuration}`,
+        );
       }
       setSubmitted(true);
     } catch (err) {
@@ -393,141 +395,124 @@ export default function Eligibility() {
           </div>
 
           <div className="space-y-4">
-            {results
-              .filter((b) => {
+            {(() => {
+              const filtered = results.filter((b) => {
                 const rateFilter = b.rate <= maxRateFilter;
-                const probFilterMatch = probFilter === "all" || b.probability === probFilter;
-                
-                // If we have a selected loan and haven't clicked "Show All", show only the first result (best match)
-                if (selectedLoanId && !showAllLoans) {
-                  return rateFilter && probFilterMatch && i === 0;
-                }
-                
+                const probFilterMatch =
+                  probFilter === "all" || b.probability === probFilter;
                 return rateFilter && probFilterMatch;
-              })
-              .map((bank, i) => {
-                const prob = probConfig[bank.probability];
-                const isSelectedLoan = selectedLoanId && !showAllLoans && i === 0;
-                const isFirstSelected = selectedLoanId && showAllLoans && i === 0;
-                return (
-                  <motion.div
-                    key={i}
-                    className={`fintech-card relative ${isSelectedLoan || isFirstSelected ? "selected-loan-card" : ""} ${i === 0 && !isSelectedLoan && !isFirstSelected ? "ring-2 ring-accent/40" : ""}`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.04, 0.12) }}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center">
-                            <Building2
-                              size={18}
-                              className="text-primary-foreground"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-bold text-foreground">
-                                {bank.name}
-                              </h3>
-                              <span
-                                className={`text-sm font-extrabold ${prob.color}`}
-                              >
-                                {bank.eligibilityPercent}%
-                              </span>
-                              {i === 0 && (
-                                <Badge className="bg-accent/15 text-accent border-accent/30 text-[10px] px-1.5 py-0">
-                                  🏆 Best Offer
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {bank.productName}
-                            </p>
-                            <div
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${prob.bg} ${prob.color} mt-1`}
-                            >
-                              <prob.icon size={11} />
-                              {prob.label}
-                            </div>
-                          </div>
+              });
+              // If coming from Compare with a selected loan and haven't clicked "Show All", show only the best match
+              return selectedLoanId && !showAllLoans
+                ? filtered.slice(0, 1)
+                : filtered;
+            })().map((bank, i) => {
+              const prob = probConfig[bank.probability];
+              const isSelectedLoan = selectedLoanId && !showAllLoans && i === 0;
+              const isFirstSelected = selectedLoanId && showAllLoans && i === 0;
+              return (
+                <motion.div
+                  key={i}
+                  className={`fintech-card relative ${isSelectedLoan || isFirstSelected ? "selected-loan-card" : ""} ${i === 0 && !isSelectedLoan && !isFirstSelected ? "ring-2 ring-accent/40" : ""}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.12) }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-11 h-11 rounded-xl primary-gradient flex items-center justify-center">
+                          <Building2
+                            size={18}
+                            className="text-primary-foreground"
+                          />
                         </div>
-
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-muted-foreground text-xs mb-0.5">
-                              {t("eligibility.interestRate")}
-                            </p>
-                            <p className="font-bold text-foreground flex items-center gap-1">
-                              <Percent size={12} className="text-accent" />{" "}
-                              {bank.rate.toFixed(1)}%
-                            </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-foreground">
+                              {bank.name}
+                            </h3>
+                            <span
+                              className={`text-sm font-extrabold ${prob.color}`}
+                            >
+                              {bank.eligibilityPercent}%
+                            </span>
+                            {i === 0 && (
+                              <Badge className="bg-accent/15 text-accent border-accent/30 text-[10px] px-1.5 py-0">
+                                🏆 Best Offer
+                              </Badge>
+                            )}
                           </div>
-                          <div>
-                            <p className="text-muted-foreground text-xs mb-0.5">
-                              {t("eligibility.monthlyPayment")}
-                            </p>
-                            <p className="font-bold text-foreground">
-                              {bank.monthly.toLocaleString()} AMD
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground text-xs mb-0.5">
-                              {t("eligibility.approvalSpeed")}
-                            </p>
-                            <p className="font-bold text-foreground flex items-center gap-1">
-                              <Clock size={12} className="text-info" /> 1-3 days
-                            </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {bank.productName}
+                          </p>
+                          <div
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${prob.bg} ${prob.color} mt-1`}
+                          >
+                            <prob.icon size={11} />
+                            {prob.label}
                           </div>
                         </div>
                       </div>
 
-                      <Button
-                        className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
-                        onClick={() => {
-                          trackCTA("apply_now", bank.name);
-                          // For fallback banks, show the dialog
-                          // For scraped loans, redirect to source_url
-                          if (bank.sourceUrl) {
-                            window.open(bank.sourceUrl, "_blank");
-                          } else {
-                            setApplyBank(bank.name);
-                          }
-                        }}
-                      >
-                        {t("eligibility.applyNow")}
-                        <ArrowRight size={14} className="ml-1.5" />
-                      </Button>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-0.5">
+                            {t("eligibility.interestRate")}
+                          </p>
+                          <p className="font-bold text-foreground flex items-center gap-1">
+                            <Percent size={12} className="text-accent" />{" "}
+                            {bank.rate.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-0.5">
+                            {t("eligibility.monthlyPayment")}
+                          </p>
+                          <p className="font-bold text-foreground">
+                            {bank.monthly.toLocaleString()} AMD
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-0.5">
+                            {t("eligibility.approvalSpeed")}
+                          </p>
+                          <p className="font-bold text-foreground flex items-center gap-1">
+                            <Clock size={12} className="text-info" /> 1-3 days
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-            {results
-              .filter((b) => {
-                const rateFilter = b.rate <= maxRateFilter;
-                const probFilterMatch = probFilter === "all" || b.probability === probFilter;
-                
-                if (selectedLoanId && !showAllLoans) {
-                  const category = purposeToCategory[initialPurpose] || initialPurpose;
-                  const currentCategory = purposeToCategory[purpose] || purpose;
-                  
-                  const matchesPurpose = initialPurpose === "" || category === currentCategory;
-                  const matchesAmount = initialAmount === 0 || b.maxAmount === null || 
-                    (b.maxAmount >= initialAmount * 0.9 && b.maxAmount <= initialAmount * 1.1);
-                  const matchesDuration = initialDuration === 0 || b.termMonths === null ||
-                    (b.termMonths >= initialDuration * 0.9 && b.termMonths <= initialDuration * 1.1);
-                  
-                  const matchesLoan = matchesPurpose && matchesAmount && matchesDuration;
-                  return rateFilter && probFilterMatch && matchesLoan;
-                }
-                
-                return rateFilter && probFilterMatch;
-              }).length === 0 && (
+
+                    <Button
+                      className="accent-gradient border-0 text-accent-foreground shrink-0 h-11 px-6 rounded-xl"
+                      onClick={() => {
+                        trackCTA("apply_now", bank.name);
+                        // For fallback banks, show the dialog
+                        // For scraped loans, redirect to source_url
+                        if (bank.sourceUrl) {
+                          window.open(bank.sourceUrl, "_blank");
+                        } else {
+                          setApplyBank(bank.name);
+                        }
+                      }}
+                    >
+                      {t("eligibility.applyNow")}
+                      <ArrowRight size={14} className="ml-1.5" />
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
+            {results.filter((b) => {
+              const rateFilter = b.rate <= maxRateFilter;
+              const probFilterMatch =
+                probFilter === "all" || b.probability === probFilter;
+              return rateFilter && probFilterMatch;
+            }).length === 0 && (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                {selectedLoanId && !showAllLoans
-                  ? "No matching loan found for your selection. Click 'Show All' to see all available loans."
-                  : "No results match your filters. Try adjusting the rate or probability."}
+                No results match your filters. Try adjusting the rate or
+                probability.
               </p>
             )}
           </div>
@@ -666,7 +651,9 @@ export default function Eligibility() {
                   <span className="text-sm font-bold text-primary tabular-nums">
                     {duration} {t("eligibility.months")}
                   </span>
-                  <span className="text-xs text-muted-foreground">{initialDuration}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {initialDuration}
+                  </span>
                 </div>
                 <Slider
                   value={[duration]}
