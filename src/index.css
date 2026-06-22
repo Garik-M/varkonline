@@ -139,4 +139,55 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .selected-loan-card {
+    position: relative;
+    border-radius: 1rem;
+  }
+
+  .selected-loan-card > * {
+    position: relative;
+    z-index: 3;
+  }
+
+  .selected-loan-card::after {
+    content: "";
+    position: absolute;
+    border-radius: 1.25rem;
+    z-index: -1;
+    inset: -5px;
+    background: repeating-conic-gradient(
+      from var(--a),
+      hsl(155, 60%, 40%) 0%,
+      hsl(155, 60%, 40%) 5%,
+      transparent 13%,
+      transparent 40%,
+      hsl(38, 92%, 50%) 50%
+    );
+    animation: animate 7s linear infinite;
+  }
+
+  .selected-loan-card::before {
+    content: "";
+    position: absolute;
+    border-radius: 1rem;
+    background-color: hsl(var(--card));
+    inset: 0;
+    z-index: 2;
+  }
+
+  @property --a {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+  }
+
+  @keyframes animate {
+    0% {
+      --a: 0deg;
+    }
+    100% {
+      --a: 360deg;
+    }
+  }
 }

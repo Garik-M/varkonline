@@ -418,10 +418,12 @@ export default function Eligibility() {
               })
               .map((bank, i) => {
                 const prob = probConfig[bank.probability];
+                const isSelectedLoan = selectedLoanId && !showAllLoans && i === 0;
+                const isFirstSelected = selectedLoanId && showAllLoans && i === 0;
                 return (
                   <motion.div
                     key={i}
-                    className={`fintech-card ${i === 0 ? "ring-2 ring-accent/40" : ""}`}
+                    className={`fintech-card relative ${isSelectedLoan || isFirstSelected ? "selected-loan-card" : ""} ${i === 0 && !isSelectedLoan && !isFirstSelected ? "ring-2 ring-accent/40" : ""}`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(i * 0.04, 0.12) }}
