@@ -100,11 +100,11 @@ export default function Eligibility() {
     "refinancing",
   ];
   const initialPurpose = searchParams.get("type") || "";
-  const initialAmount = Number(searchParams.get("amount")) || 2000000;
+  const initialAmount = Number(searchParams.get("amount")) || 100000000;
   const initialMinAmount = Number(searchParams.get("minAmount")) || 100000;
   const initialDuration = Number(searchParams.get("months")) || 36;
   const initialCollateral = searchParams.get("collateral") === "true";
-  const [amount, setAmount] = useState(initialAmount);
+  const [amount, setAmount] = useState(initialMinAmount);
   const [duration, setDuration] = useState(initialDuration);
   const [purpose, setPurpose] = useState(
     validPurposes.includes(initialPurpose) ? initialPurpose : "",
