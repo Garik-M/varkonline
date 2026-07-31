@@ -570,7 +570,7 @@ export default function Eligibility() {
         path="/eligibility"
       />
       <StructuredData type="page" locale={locale} path="/eligibility" />
-      <AdLayout leftSlot="ELIGIBILITY_LEFT" rightSlot="ELIGIBILITY_RIGHT">
+      <AdLayout leftSlot="HOME_LEFT" rightSlot="HOME_RIGHT">
         <div className="container-tight max-w-xl">
         <motion.div
           className="text-center mb-10"

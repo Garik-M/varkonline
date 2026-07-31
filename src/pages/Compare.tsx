@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import RowBanner from "@/components/RowBanner";
+import MobileInlineBanner from "@/components/MobileInlineBanner";
 import Pagination from "@/components/ui/PaginationControl";
 import {
   Building2,
@@ -197,7 +197,7 @@ export default function Compare() {
           </Select>
         </div>
 
-        <RowBanner slot="HOME_MOBILE_ROW" className="mb-8" />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="mb-8" />
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
@@ -383,7 +383,7 @@ export default function Compare() {
           </>
         )}
 
-        <RowBanner slot="HOME_MOBILE_ROW" className="mt-8" />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="mt-8" />
 
         {!loading && !error && sorted.length === 0 && (
           <div className="text-center py-16">
