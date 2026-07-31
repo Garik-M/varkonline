@@ -5,7 +5,8 @@ import { useIsDesktop } from "@/hooks/useBreakpoint";
 
 interface AdData {
   id: string;
-  slot: string;
+  pages: string[];
+  positions: string[];
   destination_url: string;
   open_in_new_tab: boolean;
   image_desktop: string;
@@ -16,7 +17,8 @@ interface AdData {
 // Module-level cache — prevents re-fetching the same slot across remounts.
 const cache = new Map<string, AdData | null>();
 
-function selectImage(ad: AdData, isMobile: boolean, isDesktop: boolean | undefined): string {
+function selectImage(ad: AdData, isMobile: boolean, isDesktop: boolean | undefined, forceMobile: boolean = false): string {
+  if (forceMobile) return ad.image_mobile ?? ad.image_desktop;
   if (isMobile) return ad.image_mobile ?? ad.image_desktop;
   if (isDesktop === false) return ad.image_tablet ?? ad.image_desktop; // tablet
   return ad.image_desktop;
@@ -25,9 +27,10 @@ function selectImage(ad: AdData, isMobile: boolean, isDesktop: boolean | undefin
 interface Props {
   slot: string;
   className?: string;
+  forceMobile?: boolean;
 }
 
-export default function Advertisement({ slot, className }: Props) {
+export default function Advertisement({ slot, className, forceMobile = false }: Props) {
   const [ad, setAd] = useState<AdData | null | undefined>(
     cache.has(slot) ? cache.get(slot) : undefined
   );
@@ -83,7 +86,7 @@ export default function Advertisement({ slot, className }: Props) {
   // Not yet loaded or no ad — render nothing, take no space
   if (ad === undefined || ad === null) return null;
 
-  const src = selectImage(ad, isMobile, isDesktop);
+  const src = selectImage(ad, isMobile, isDesktop, forceMobile);
   // All navigation goes through the backend click endpoint which increments the
   // counter and redirects to the stored destination URL — client never supplies
   // the destination URL directly.

@@ -197,7 +197,7 @@ export default function Compare() {
           </Select>
         </div>
 
-        <RowBanner slot="compare_top" className="mb-8" />
+        <RowBanner slot="compare_top" className="mb-8" forceMobile={true} />
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
