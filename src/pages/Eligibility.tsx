@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import MobileInlineBanner from "@/components/MobileInlineBanner";
+import AdLayout from "@/components/AdLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -320,7 +321,8 @@ export default function Eligibility() {
     const overallConfig = probConfig[overallProb];
     return (
       <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
-        <div className="container-tight max-w-3xl">
+        <AdLayout leftSlot="ELIGIBILITY_LEFT" rightSlot="ELIGIBILITY_RIGHT">
+          <div className="container-tight max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -523,7 +525,8 @@ export default function Eligibility() {
               <Link to="/compare">{t("eligibility.compareAll")}</Link>
             </Button>
           </div>
-        </div>
+          </div>
+        </AdLayout>
 
         {/* Contact popup */}
         <Dialog open={!!applyBank} onOpenChange={() => setApplyBank(null)}>
@@ -567,7 +570,8 @@ export default function Eligibility() {
         path="/eligibility"
       />
       <StructuredData type="page" locale={locale} path="/eligibility" />
-      <div className="container-tight max-w-xl">
+      <AdLayout leftSlot="ELIGIBILITY_LEFT" rightSlot="ELIGIBILITY_RIGHT">
+        <div className="container-tight max-w-xl">
         <motion.div
           className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
@@ -610,7 +614,7 @@ export default function Eligibility() {
           ))}
         </div>
 
-        <MobileInlineBanner className="py-3" />
+        <MobileInlineBanner slot="ELIGIBILITY_MOBILE_ROW" className="py-3" />
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -785,6 +789,7 @@ export default function Eligibility() {
           )}
         </AnimatePresence>
 
+        <MobileInlineBanner slot="ELIGIBILITY_MOBILE_ROW" className="py-3" />
         <div className="flex gap-3 mt-6">
           {step > 1 && (
             <Button
@@ -819,6 +824,7 @@ export default function Eligibility() {
           )}
         </div>
       </div>
+      </AdLayout>
       <PrivacyPolicyModal
         open={privacyOpen}
         onClose={closePrivacy}

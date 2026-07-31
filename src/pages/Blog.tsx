@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import MobileInlineBanner from "@/components/MobileInlineBanner";
+import AdLayout from "@/components/AdLayout";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
@@ -109,7 +110,8 @@ export default function Blog() {
         path="/blog"
       />
       <StructuredData type="blog" locale={locale} path="/blog" />
-      <div className="container-tight">
+      <AdLayout leftSlot="BLOG_LEFT" rightSlot="BLOG_RIGHT">
+        <div className="container-tight">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -142,7 +144,7 @@ export default function Blog() {
           ))}
         </div>
 
-        <MobileInlineBanner className="mb-6" />
+        <MobileInlineBanner slot="BLOG_MOBILE_ROW" className="mb-6" />
         {posts.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground">
@@ -201,8 +203,9 @@ export default function Blog() {
             ))}
           </div>
         )}
-        <MobileInlineBanner className="mt-8" />
+        <MobileInlineBanner slot="BLOG_MOBILE_ROW" className="mt-8" />
       </div>
+      </AdLayout>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import MobileInlineBanner from "@/components/MobileInlineBanner";
+import AdLayout from "@/components/AdLayout";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -90,7 +91,8 @@ export default function Calculator() {
         path="/calculator"
       />
       <StructuredData type="page" locale={locale} path="/calculator" />
-      <div className="container-tight max-w-3xl">
+      <AdLayout leftSlot="CALCULATOR_LEFT" rightSlot="CALCULATOR_RIGHT">
+        <div className="container-tight max-w-3xl">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -203,7 +205,7 @@ export default function Calculator() {
           </div>
         </div>
 
-        <MobileInlineBanner className="py-3" />
+        <MobileInlineBanner slot="CALCULATOR_MOBILE_ROW" className="py-3" />
         <Tabs defaultValue="schedule" className="w-full">
           <TabsList className="w-full grid grid-cols-2 mb-5 h-11">
             <TabsTrigger value="schedule" className="text-sm gap-1.5">
@@ -407,6 +409,7 @@ export default function Calculator() {
           </TabsContent>
         </Tabs>
       </div>
+      </AdLayout>
     </main>
   );
 }

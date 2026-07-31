@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import MobileInlineBanner from "@/components/MobileInlineBanner";
+import AdLayout from "@/components/AdLayout";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -62,7 +63,8 @@ export default function Affordability() {
         path="/affordability"
         noindex
       />
-      <div className="container-tight max-w-3xl">
+      <AdLayout leftSlot="AFFORDABILITY_LEFT" rightSlot="AFFORDABILITY_RIGHT">
+        <div className="container-tight max-w-3xl">
         <motion.div
           className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
@@ -243,11 +245,12 @@ export default function Affordability() {
           </motion.div>
         </div>
 
-        <MobileInlineBanner className="mt-6" />
+        <MobileInlineBanner slot="AFFORDABILITY_MOBILE_ROW" className="mt-6" />
         <p className="text-xs text-muted-foreground text-center mt-4 max-w-xl mx-auto">
           {t("affordability.disclaimer")}
         </p>
       </div>
+      </AdLayout>
     </main>
   );
 }

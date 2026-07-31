@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import RowBanner from "@/components/RowBanner";
 import Pagination from "@/components/ui/PaginationControl";
 import {
   Building2,
@@ -196,6 +197,8 @@ export default function Compare() {
           </Select>
         </div>
 
+        <RowBanner slot="COMPARE_ROW" className="mb-8" />
+
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -379,6 +382,8 @@ export default function Compare() {
             />
           </>
         )}
+
+        <RowBanner slot="COMPARE_ROW" className="mt-8" />
 
         {!loading && !error && sorted.length === 0 && (
           <div className="text-center py-16">
