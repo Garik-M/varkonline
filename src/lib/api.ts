@@ -274,6 +274,60 @@ class ApiClient {
   async deletePartnerApplication(id: string) {
     return this.request(`/partners/${id}`, { method: 'DELETE' });
   }
+
+  // Advertisements (multipart/form-data — backend handles Cloudinary uploads)
+  private async requestFormData(endpoint: string, method: string, body: FormData) {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(error.error || 'Request failed');
+    }
+    return response.json();
+  }
+
+  async getAdvertisements() {
+    return this.request('/advertisements');
+  }
+
+  async createAdvertisement(data: FormData) {
+    return this.requestFormData('/advertisements', 'POST', data);
+  }
+
+  async updateAdvertisement(id: string, data: FormData) {
+    return this.requestFormData(`/advertisements/${id}`, 'PATCH', data);
+  }
+
+  async deleteAdvertisement(id: string) {
+    return this.request(`/advertisements/${id}`, { method: 'DELETE' });
+  }
+
+  async bulkAdvertisements(ids: string[], action: 'enable' | 'disable' | 'delete') {
+    return this.request('/advertisements/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ ids, action }),
+    });
+  }
+
+  // Public — no auth required
+  async getPublicAdvertisement(slot: string) {
+    return this.request(`/public/advertisements?slot=${encodeURIComponent(slot)}`);
+  }
+
+  async trackAdImpression(id: string): Promise<void> {
+    // Fire-and-forget — never throw
+    fetch(`${API_URL}/public/advertisements/${id}/impression`, {
+      method: 'POST',
+    }).catch(() => {});
+  }
+
+  getAdClickUrl(id: string): string {
+    return `${API_URL}/public/advertisements/${id}/click`;
+  }
 }
 
 export const api = new ApiClient();

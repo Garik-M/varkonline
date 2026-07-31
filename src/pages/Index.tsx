@@ -10,29 +10,40 @@ import { trackPageView } from "@/lib/analytics";
 import StructuredData from "@/components/StructuredData";
 import { useTranslation } from "@/lib/i18n";
 import PageMeta from "@/components/PageMeta";
+import HomepageAdLayout from "@/components/HomepageAdLayout";
+import Advertisement from "@/components/Advertisement";
+import { useIsDesktop } from "@/hooks/useBreakpoint";
 
 export default function Index() {
   const { locale } = useTranslation();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     trackPageView("/");
   }, []);
 
   return (
-    <main className="pb-16 md:pb-0">
-      <PageMeta
-        title="Վարկերի Համեմատություն Հայաստանում"
-        description="Համեմատեք հայկական բանկերի վարկային առաջարկները, ստուգեք ձեր իրավասությունը 3 րոպեում և գտեք լավագույն տոկոսադրույքները։"
-        path="/"
-      />
-      <StructuredData type="home" locale={locale} path="/" />
-      <HeroSection />
-      <HowItWorks />
-      <LoanCalculatorWidget />
-      <LoanCategories />
-      <TestimonialsSection />
-      <TrustSection />
-      <FAQSection />
-    </main>
+    <HomepageAdLayout>
+      <main className="pb-16 md:pb-0">
+        <PageMeta
+          title="Վարկերի Համեմատություն Հայաստանում"
+          description="Համեմատեք հայկական բանկերի վարկային առաջարկները, ստուգեք ձեր իրավասությունը 3 րոպեում և գտեք լավագույն տոկոսադրույքները։"
+          path="/"
+        />
+        <StructuredData type="home" locale={locale} path="/" />
+        <HeroSection />
+        {isDesktop === false && (
+          <div className="container-tight px-4 py-4">
+            <Advertisement slot="HOME_MOBILE_ROW" />
+          </div>
+        )}
+        <HowItWorks />
+        <LoanCalculatorWidget />
+        <LoanCategories />
+        <TestimonialsSection />
+        <TrustSection />
+        <FAQSection />
+      </main>
+    </HomepageAdLayout>
   );
 }

@@ -12,6 +12,7 @@ import {
   FileText,
   Database,
   Handshake,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const navItems = [
   { path: "/admin/scraped-loans", label: "Scraped Loans", icon: Database },
   { path: "/admin/blog", label: "Blog", icon: FileText },
   { path: "/admin/partners", label: "Partners", icon: Handshake },
+  { path: "/admin/advertisements", label: "Advertisements", icon: Megaphone },
 ];
 
 export default function AdminLayout() {
