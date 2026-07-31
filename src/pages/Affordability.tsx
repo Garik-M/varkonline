@@ -63,7 +63,7 @@ export default function Affordability() {
         path="/affordability"
         noindex
       />
-      <AdLayout leftSlot="LEFT" rightSlot="RIGHT">
+      <AdLayout leftSlot="HOME_LEFT" rightSlot="HOME_RIGHT">
         <div className="container-tight max-w-3xl">
         <motion.div
           className="text-center mb-10"
@@ -245,7 +245,7 @@ export default function Affordability() {
           </motion.div>
         </div>
 
-        <MobileInlineBanner slot="MOBILE_ROW" className="mt-6" />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="mt-6" />
         <p className="text-xs text-muted-foreground text-center mt-4 max-w-xl mx-auto">
           {t("affordability.disclaimer")}
         </p>

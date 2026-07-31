@@ -110,7 +110,7 @@ export default function Blog() {
         path="/blog"
       />
       <StructuredData type="blog" locale={locale} path="/blog" />
-      <AdLayout leftSlot="LEFT" rightSlot="RIGHT">
+      <AdLayout leftSlot="HOME_LEFT" rightSlot="HOME_RIGHT">
         <div className="container-tight">
         <motion.div
           className="text-center mb-12"
@@ -144,7 +144,7 @@ export default function Blog() {
           ))}
         </div>
 
-        <MobileInlineBanner slot="MOBILE_ROW" className="mb-6" />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="mb-6" />
         {posts.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground">
@@ -203,7 +203,7 @@ export default function Blog() {
             ))}
           </div>
         )}
-        <MobileInlineBanner slot="MOBILE_ROW" className="mt-8" />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="mt-8" />
       </div>
       </AdLayout>
     </main>
