@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { AD_SLOTS, SLOT_LABELS, type AdSlot } from "@/lib/adSlots";
+import { AD_SLOTS, SLOT_LABELS, PAGES, POSITIONS, PAGE_LABELS, POSITION_LABELS, type AdSlot, type Page, type Position, slotFromPageAndPosition } from "@/lib/adSlots";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -278,7 +278,8 @@ function ImageUploadField({ label, required, icon, field, onChange, error }: Ima
 
 const emptyForm = {
   title: "",
-  slot: "" as AdSlot | "",
+  page: "" as Page | "",
+  position: "" as Position | "",
   destinationUrl: "",
   openInNewTab: true,
   priority: 0,
@@ -406,9 +407,12 @@ export default function AdminAdvertisements() {
 
   const openEdit = (ad: Advertisement) => {
     setEditing(ad);
+    // Parse slot into page and position
+    const [page, position] = ad.slot.split('_') as [Page, Position];
     setForm({
       title: ad.title,
-      slot: ad.slot as AdSlot,
+      page,
+      position,
       destinationUrl: ad.destination_url,
       openInNewTab: ad.open_in_new_tab,
       priority: ad.priority,
@@ -435,7 +439,8 @@ export default function AdminAdvertisements() {
   const validate = (): boolean => {
     const next: typeof errors = {};
     if (!form.title.trim()) next.title = "Title is required";
-    if (!form.slot) next.slot = "Slot is required";
+    if (!form.page) next.page = "Page is required";
+    if (!form.position) next.position = "Position is required";
     if (!form.destinationUrl.trim()) {
       next.destinationUrl = "Destination URL is required";
     } else if (!isValidHttpsUrl(form.destinationUrl)) {
@@ -460,7 +465,9 @@ export default function AdminAdvertisements() {
     try {
       const data = new FormData();
       data.append("title", form.title.trim());
-      data.append("slot", form.slot);
+      // Convert page+position to slot
+      const slot = slotFromPageAndPosition(form.page as Page, form.position as Position);
+      data.append("slot", slot);
       data.append("destinationUrl", form.destinationUrl.trim());
       data.append("openInNewTab", String(form.openInNewTab));
       data.append("priority", String(form.priority));
@@ -1028,30 +1035,56 @@ export default function AdminAdvertisements() {
               {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
             </div>
 
-            {/* Slot */}
+            {/* Page */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                Slot <span className="text-destructive">*</span>
+                Page <span className="text-destructive">*</span>
               </label>
               <Select
-                value={form.slot}
+                value={form.page}
                 onValueChange={(v) => {
-                  setForm({ ...form, slot: v as AdSlot });
-                  if (errors.slot) setErrors({ ...errors, slot: undefined });
+                  setForm({ ...form, page: v as Page });
+                  if (errors.page) setErrors({ ...errors, page: undefined });
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a slot" />
+                  <SelectValue placeholder="Select a page" />
                 </SelectTrigger>
                 <SelectContent>
-                  {AD_SLOTS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {SLOT_LABELS[s]}
+                  {PAGES.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {PAGE_LABELS[p]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.slot && <p className="text-xs text-destructive">{errors.slot}</p>}
+              {errors.page && <p className="text-xs text-destructive">{errors.page}</p>}
+            </div>
+
+            {/* Position */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">
+                Position <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={form.position}
+                onValueChange={(v) => {
+                  setForm({ ...form, position: v as Position });
+                  if (errors.position) setErrors({ ...errors, position: undefined });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a position" />
+                </SelectTrigger>
+                <SelectContent>
+                  {POSITIONS.map((pos) => (
+                    <SelectItem key={pos} value={pos}>
+                      {POSITION_LABELS[pos]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.position && <p className="text-xs text-destructive">{errors.position}</p>}
             </div>
 
             {/* Destination URL */}

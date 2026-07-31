@@ -91,7 +91,7 @@ export default function Calculator() {
         path="/calculator"
       />
       <StructuredData type="page" locale={locale} path="/calculator" />
-      <AdLayout leftSlot="HOME_LEFT" rightSlot="HOME_RIGHT">
+      <AdLayout leftSlot="calculator_left" rightSlot="calculator_right">
         <div className="container-tight max-w-3xl">
         <motion.div
           className="text-center mb-12"
@@ -205,7 +205,7 @@ export default function Calculator() {
           </div>
         </div>
 
-        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="py-3" />
+        <MobileInlineBanner slot="calculator_top" className="py-3" />
         <Tabs defaultValue="schedule" className="w-full">
           <TabsList className="w-full grid grid-cols-2 mb-5 h-11">
             <TabsTrigger value="schedule" className="text-sm gap-1.5">

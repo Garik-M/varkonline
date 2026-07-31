@@ -13,11 +13,11 @@ export default function HomepageAdLayout({ children }: Props) {
     return (
       <div className="flex items-start gap-4 px-4">
         <aside className="w-[160px] xl:w-[200px] shrink-0 sticky top-20 self-start pt-6">
-          <Advertisement slot="HOME_LEFT" />
+          <Advertisement slot="home_left" />
         </aside>
         <div className="flex-1 min-w-0">{children}</div>
         <aside className="w-[160px] xl:w-[200px] shrink-0 sticky top-20 self-start pt-6">
-          <Advertisement slot="HOME_RIGHT" />
+          <Advertisement slot="home_right" />
         </aside>
       </div>
     );
