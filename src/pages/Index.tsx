@@ -23,15 +23,15 @@ export default function Index() {
   }, []);
 
   return (
-    <HomepageAdLayout>
-      <main className="pb-16 md:pb-0">
-        <PageMeta
-          title="Վարկերի Համեմատություն Հայաստանում"
-          description="Համեմատեք հայկական բանկերի վարկային առաջարկները, ստուգեք ձեր իրավասությունը 3 րոպեում և գտեք լավագույն տոկոսադրույքները։"
-          path="/"
-        />
-        <StructuredData type="home" locale={locale} path="/" />
-        <HeroSection />
+    <main className="pb-16 md:pb-0">
+      <PageMeta
+        title="Վարկերի Համեմատություն Հայաստանում"
+        description="Համեմատեք հայկական բանկերի վարկային առաջարկները, ստուգեք ձեր իրավասությունը 3 րոպեում և գտեք լավագույն տոկոսադրույքները։"
+        path="/"
+      />
+      <StructuredData type="home" locale={locale} path="/" />
+      <HeroSection />
+      <HomepageAdLayout>
         {isDesktop === false && (
           <div className="container-tight px-4 py-4">
             <Advertisement slot="HOME_MOBILE_ROW" />
@@ -43,7 +43,7 @@ export default function Index() {
         <TestimonialsSection />
         <TrustSection />
         <FAQSection />
-      </main>
-    </HomepageAdLayout>
+      </HomepageAdLayout>
+    </main>
   );
 }
