@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import MobileInlineBanner from "@/components/MobileInlineBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -609,6 +610,7 @@ export default function Eligibility() {
           ))}
         </div>
 
+        <MobileInlineBanner className="py-3" />
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import MobileInlineBanner from "@/components/MobileInlineBanner";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -242,7 +243,8 @@ export default function Affordability() {
           </motion.div>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-6 max-w-xl mx-auto">
+        <MobileInlineBanner className="mt-6" />
+        <p className="text-xs text-muted-foreground text-center mt-4 max-w-xl mx-auto">
           {t("affordability.disclaimer")}
         </p>
       </div>

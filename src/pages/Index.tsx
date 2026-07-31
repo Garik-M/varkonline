@@ -11,13 +11,10 @@ import StructuredData from "@/components/StructuredData";
 import { useTranslation } from "@/lib/i18n";
 import PageMeta from "@/components/PageMeta";
 import HomepageAdLayout from "@/components/HomepageAdLayout";
-import Advertisement from "@/components/Advertisement";
-import { useIsDesktop } from "@/hooks/useBreakpoint";
+import MobileInlineBanner from "@/components/MobileInlineBanner";
 
 export default function Index() {
   const { locale } = useTranslation();
-  const isDesktop = useIsDesktop();
-
   useEffect(() => {
     trackPageView("/");
   }, []);
@@ -32,15 +29,13 @@ export default function Index() {
       <StructuredData type="home" locale={locale} path="/" />
       <HeroSection />
       <HomepageAdLayout>
-        {isDesktop === false && (
-          <div className="container-tight px-4 py-4">
-            <Advertisement slot="HOME_MOBILE_ROW" />
-          </div>
-        )}
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
         <HowItWorks />
         <LoanCalculatorWidget />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
         <LoanCategories />
         <TestimonialsSection />
+        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
         <TrustSection />
         <FAQSection />
       </HomepageAdLayout>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import MobileInlineBanner from "@/components/MobileInlineBanner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Calendar, ArrowRight, Tag, BookOpen } from "lucide-react";
@@ -141,6 +142,7 @@ export default function Blog() {
           ))}
         </div>
 
+        <MobileInlineBanner className="mb-6" />
         {posts.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground">
@@ -199,6 +201,7 @@ export default function Blog() {
             ))}
           </div>
         )}
+        <MobileInlineBanner className="mt-8" />
       </div>
     </main>
   );
