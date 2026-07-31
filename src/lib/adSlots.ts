@@ -45,6 +45,25 @@ export function isValidPosition(value: string): value is Position {
   return (POSITIONS as readonly string[]).includes(value);
 }
 
+export function isValidPageArray(value: string[]): boolean {
+  return value.every(isValidPage);
+}
+
+export function isValidPositionArray(value: string[]): boolean {
+  return value.every(isValidPosition);
+}
+
 export function slotFromPageAndPosition(page: Page, position: Position): AdSlot {
   return `${page}_${position}` as AdSlot;
+}
+
+// Get all possible slot combinations from pages and positions arrays
+export function getSlotsFromPagesAndPositions(pages: Page[], positions: Position[]): AdSlot[] {
+  const result: AdSlot[] = [];
+  for (const page of pages) {
+    for (const position of positions) {
+      result.push(slotFromPageAndPosition(page, position));
+    }
+  }
+  return result;
 }

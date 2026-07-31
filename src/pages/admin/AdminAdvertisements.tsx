@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { AD_SLOTS, SLOT_LABELS, PAGES, POSITIONS, PAGE_LABELS, POSITION_LABELS, type AdSlot, type Page, type Position, slotFromPageAndPosition } from "@/lib/adSlots";
+import { AD_SLOTS, SLOT_LABELS, PAGES, POSITIONS, PAGE_LABELS, POSITION_LABELS, type AdSlot, type Page, type Position, slotFromPageAndPosition, getSlotsFromPagesAndPositions } from "@/lib/adSlots";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,7 +55,8 @@ import { useToast } from "@/hooks/use-toast";
 interface Advertisement {
   id: string;
   title: string;
-  slot: string;
+  pages: string[];
+  positions: string[];
   destination_url: string;
   open_in_new_tab: boolean;
   image_desktop: string;
@@ -278,8 +279,8 @@ function ImageUploadField({ label, required, icon, field, onChange, error }: Ima
 
 const emptyForm = {
   title: "",
-  page: "" as Page | "",
-  position: "" as Position | "",
+  pages: [] as Page[],
+  positions: [] as Position[],
   destinationUrl: "",
   openInNewTab: true,
   priority: 0,
@@ -336,7 +337,11 @@ export default function AdminAdvertisements() {
     ads.filter((ad) => {
       if (search && !ad.title.toLowerCase().includes(search.toLowerCase())) return false;
       if (statusFilter !== "all" && getAdStatus(ad) !== statusFilter) return false;
-      if (slotFilter !== "all" && ad.slot !== slotFilter) return false;
+      // Filter by slot - check if ad's pages/positions match the selected slot
+      if (slotFilter !== "all") {
+        const [page, position] = slotFilter.split('_');
+        if (!ad.pages.includes(page) || !ad.positions.includes(position)) return false;
+      }
       return true;
     }),
     sortOption
@@ -407,12 +412,11 @@ export default function AdminAdvertisements() {
 
   const openEdit = (ad: Advertisement) => {
     setEditing(ad);
-    // Parse slot into page and position
-    const [page, position] = ad.slot.split('_') as [Page, Position];
+    // The backend now returns pages and positions arrays directly
     setForm({
       title: ad.title,
-      page,
-      position,
+      pages: (ad.pages || []) as Page[],
+      positions: (ad.positions || []) as Position[],
       destinationUrl: ad.destination_url,
       openInNewTab: ad.open_in_new_tab,
       priority: ad.priority,
@@ -439,8 +443,8 @@ export default function AdminAdvertisements() {
   const validate = (): boolean => {
     const next: typeof errors = {};
     if (!form.title.trim()) next.title = "Title is required";
-    if (!form.page) next.page = "Page is required";
-    if (!form.position) next.position = "Position is required";
+    if (!form.pages || form.pages.length === 0) next.pages = "At least one page is required";
+    if (!form.positions || form.positions.length === 0) next.positions = "At least one position is required";
     if (!form.destinationUrl.trim()) {
       next.destinationUrl = "Destination URL is required";
     } else if (!isValidHttpsUrl(form.destinationUrl)) {
@@ -465,9 +469,9 @@ export default function AdminAdvertisements() {
     try {
       const data = new FormData();
       data.append("title", form.title.trim());
-      // Convert page+position to slot
-      const slot = slotFromPageAndPosition(form.page as Page, form.position as Position);
-      data.append("slot", slot);
+      // Send pages and positions as JSON arrays
+      data.append("pages", JSON.stringify(form.pages));
+      data.append("positions", JSON.stringify(form.positions));
       data.append("destinationUrl", form.destinationUrl.trim());
       data.append("openInNewTab", String(form.openInNewTab));
       data.append("priority", String(form.priority));
@@ -804,9 +808,22 @@ export default function AdminAdvertisements() {
                         <span className="block truncate">{ad.title}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="secondary" className="font-mono text-xs">
-                          {SLOT_LABELS[ad.slot as AdSlot] ?? ad.slot}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {ad.pages.map((page) => (
+                            <Badge key={page} variant="outline" className="font-mono text-xs">
+                              {PAGE_LABELS[page as Page] || page}
+                            </Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {ad.positions.map((pos) => (
+                            <Badge key={pos} variant="outline" className="font-mono text-xs">
+                              {POSITION_LABELS[pos as Position] || pos}
+                            </Badge>
+                          ))}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center font-mono text-muted-foreground">
                         {ad.priority}
@@ -937,9 +954,18 @@ export default function AdminAdvertisements() {
                             {sc.label}
                           </span>
                         </div>
-                        <Badge variant="secondary" className="font-mono text-xs">
-                          {SLOT_LABELS[ad.slot as AdSlot] ?? ad.slot}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {ad.pages.map((page) => (
+                            <Badge key={page} variant="outline" className="font-mono text-xs">
+                              {PAGE_LABELS[page as Page] || page}
+                            </Badge>
+                          ))}
+                          {ad.positions.map((pos) => (
+                            <Badge key={pos} variant="outline" className="font-mono text-xs">
+                              {POSITION_LABELS[pos as Position] || pos}
+                            </Badge>
+                          ))}
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">
                           {ad.destination_url.replace(/^https?:\/\//, "")}
                         </p>
@@ -1035,56 +1061,56 @@ export default function AdminAdvertisements() {
               {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
             </div>
 
-            {/* Page */}
+            {/* Pages - Multi-select */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                Page <span className="text-destructive">*</span>
+                Pages <span className="text-destructive">*</span>
               </label>
-              <Select
-                value={form.page}
-                onValueChange={(v) => {
-                  setForm({ ...form, page: v as Page });
-                  if (errors.page) setErrors({ ...errors, page: undefined });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a page" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {PAGE_LABELS[p]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.page && <p className="text-xs text-destructive">{errors.page}</p>}
+              <div className="flex flex-wrap gap-2">
+                {PAGES.map((p) => (
+                  <label key={p} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={form.pages.includes(p)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setForm({ ...form, pages: [...form.pages, p] });
+                        } else {
+                          setForm({ ...form, pages: form.pages.filter((pg) => pg !== p) });
+                        }
+                        if (errors.pages) setErrors({ ...errors, pages: undefined });
+                      }}
+                    />
+                    <span className="text-sm">{PAGE_LABELS[p]}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.pages && <p className="text-xs text-destructive">{errors.pages}</p>}
             </div>
 
-            {/* Position */}
+            {/* Positions - Multi-select */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                Position <span className="text-destructive">*</span>
+                Positions <span className="text-destructive">*</span>
               </label>
-              <Select
-                value={form.position}
-                onValueChange={(v) => {
-                  setForm({ ...form, position: v as Position });
-                  if (errors.position) setErrors({ ...errors, position: undefined });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a position" />
-                </SelectTrigger>
-                <SelectContent>
-                  {POSITIONS.map((pos) => (
-                    <SelectItem key={pos} value={pos}>
-                      {POSITION_LABELS[pos]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.position && <p className="text-xs text-destructive">{errors.position}</p>}
+              <div className="flex flex-wrap gap-2">
+                {POSITIONS.map((pos) => (
+                  <label key={pos} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={form.positions.includes(pos)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setForm({ ...form, positions: [...form.positions, pos] });
+                        } else {
+                          setForm({ ...form, positions: form.positions.filter((p) => p !== pos) });
+                        }
+                        if (errors.positions) setErrors({ ...errors, positions: undefined });
+                      }}
+                    />
+                    <span className="text-sm">{POSITION_LABELS[pos]}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.positions && <p className="text-xs text-destructive">{errors.positions}</p>}
             </div>
 
             {/* Destination URL */}
@@ -1267,10 +1293,24 @@ export default function AdminAdvertisements() {
                     <p className="font-medium">{detailsAd.title}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Slot</p>
-                    <Badge variant="secondary" className="font-mono text-xs">
-                      {SLOT_LABELS[detailsAd.slot as AdSlot] ?? detailsAd.slot}
-                    </Badge>
+                    <p className="text-xs text-muted-foreground mb-0.5">Pages</p>
+                    <div className="flex flex-wrap gap-1">
+                      {detailsAd.pages.map((page) => (
+                        <Badge key={page} variant="secondary" className="font-mono text-xs">
+                          {PAGE_LABELS[page as Page] || page}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Positions</p>
+                    <div className="flex flex-wrap gap-1">
+                      {detailsAd.positions.map((pos) => (
+                        <Badge key={pos} variant="secondary" className="font-mono text-xs">
+                          {POSITION_LABELS[pos as Position] || pos}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-0.5">Status</p>
