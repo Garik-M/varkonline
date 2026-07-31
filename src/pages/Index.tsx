@@ -29,13 +29,13 @@ export default function Index() {
       <StructuredData type="home" locale={locale} path="/" />
       <HeroSection />
       <HomepageAdLayout>
-        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
+        <MobileInlineBanner slot="MOBILE_ROW" className="container-tight px-4 py-3" />
         <HowItWorks />
         <LoanCalculatorWidget />
-        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
+        <MobileInlineBanner slot="MOBILE_ROW" className="container-tight px-4 py-3" />
         <LoanCategories />
         <TestimonialsSection />
-        <MobileInlineBanner slot="HOME_MOBILE_ROW" className="container-tight px-4 py-3" />
+        <MobileInlineBanner slot="MOBILE_ROW" className="container-tight px-4 py-3" />
         <TrustSection />
         <FAQSection />
       </HomepageAdLayout>

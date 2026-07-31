@@ -9,8 +9,8 @@ interface Props {
 
 export default function AdLayout({ 
   children, 
-  leftSlot = "PAGE_LEFT", 
-  rightSlot = "PAGE_RIGHT" 
+  leftSlot = "LEFT", 
+  rightSlot = "RIGHT" 
 }: Props) {
   const isDesktop = useIsDesktop();
 

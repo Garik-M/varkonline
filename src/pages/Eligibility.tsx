@@ -321,7 +321,7 @@ export default function Eligibility() {
     const overallConfig = probConfig[overallProb];
     return (
       <main className="section-padding bg-background min-h-screen pb-24 md:pb-16">
-        <AdLayout leftSlot="ELIGIBILITY_LEFT" rightSlot="ELIGIBILITY_RIGHT">
+        <AdLayout leftSlot="LEFT" rightSlot="RIGHT">
           <div className="container-tight max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -614,7 +614,7 @@ export default function Eligibility() {
           ))}
         </div>
 
-        <MobileInlineBanner slot="ELIGIBILITY_MOBILE_ROW" className="py-3" />
+        <MobileInlineBanner slot="MOBILE_ROW" className="py-3" />
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -789,7 +789,7 @@ export default function Eligibility() {
           )}
         </AnimatePresence>
 
-        <MobileInlineBanner slot="ELIGIBILITY_MOBILE_ROW" className="py-3" />
+        <MobileInlineBanner slot="MOBILE_ROW" className="py-3" />
         <div className="flex gap-3 mt-6">
           {step > 1 && (
             <Button

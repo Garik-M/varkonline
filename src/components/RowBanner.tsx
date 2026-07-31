@@ -7,7 +7,7 @@ interface Props {
 
 // Shows a horizontal ad banner on all devices (desktop, tablet, mobile)
 export default function RowBanner({
-  slot = "ROW_BANNER",
+  slot = "MOBILE_ROW",
   className = "py-3",
 }: Props) {
   return (
