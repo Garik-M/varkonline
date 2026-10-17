@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="hy">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Varkonline · Three apartment integration</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f1f4f7;
+        font: 16px Arial;
+        color: #173453;
+      }
+      main {
+        max-width: 1060px;
+        margin: auto;
+        padding: 32px 20px;
+      }
+      h1 {
+        font-size: 30px;
+      }
+      header {
+        margin-bottom: 28px;
+      }
+      section {
+        margin: 24px 0;
+      }
+      nav {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 12px;
+        cursor: pointer;
+      } /* Deliberately conflicting host styling must stay outside the iframe. */
+      .varkonline-widget input {
+        background: red !important;
+        font-size: 50px !important;
+      }
+      .varkonline-widget h1 {
+        color: red !important;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+      }
+      #events {
+        max-height: 100px;
+        overflow: auto;
+      }
+      @media (max-width: 500px) {
+        main {
+          padding: 18px 10px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p>LOCAL INTEGRATION · SYNTHETIC TERMS, NOT A BANK OFFER</p>
+        <h1>Բնակարանի ֆինանսավորման տարբերակներ</h1>
+        <p>
+          Three apartments. One shared integration pattern. No apartment
+          synchronization.
+        </p>
+      </header>
+      <nav>
+        <button id="add">Add apartment dynamically</button
+        ><button id="update">Update Apartment A</button
+        ><button id="remove">Remove last apartment</button
+        ><button id="duplicate">Load SDK again</button>
+      </nav>
+      <pre id="events" aria-label="Public SDK events"></pre>
+      <div id="apartments">
+        <section>
+          <h2>Apartment A · 35,000,000 ֏ · 9%</h2>
+          <div
+            class="varkonline-widget"
+            data-partner="defanse-local"
+            data-apartment-id="A-101"
+            data-price-amd="35000000"
+            data-annual-interest-rate="9"
+            data-down-payment-percent="20"
+            data-duration-months="240"
+            data-financing-type="mortgage"
+          ></div>
+        </section>
+        <section>
+          <h2>Apartment B · 42,000,000 ֏ · 11.5%</h2>
+          <div
+            class="varkonline-widget"
+            data-partner="defanse-local"
+            data-apartment-id="A-102"
+            data-price-amd="42000000"
+            data-annual-interest-rate="11.5"
+            data-down-payment-percent="30"
+            data-duration-months="180"
+            data-financing-type="mortgage"
+          ></div>
+        </section>
+        <section>
+          <h2>Apartment C · 58,000,000 ֏ · 8.5%</h2>
+          <div
+            class="varkonline-widget"
+            data-partner="defanse-local"
+            data-apartment-id="A-103"
+            data-price-amd="58000000"
+            data-annual-interest-rate="8.5"
+            data-down-payment-percent="25"
+            data-duration-months="300"
+            data-financing-type="mortgage"
+          ></div>
+        </section>
+      </div>
+      <p>
+        This local page loads the SDK from localhost:8080. Production snippets
+        use the deployed Varkonline frontend origin.
+      </p>
+    </main>
+    <script async src="http://localhost:8080/sdk/v1.js"></script>
+    <script>
+      let count = 3;
+      for (const type of ["loaded", "calculated", "changed", "error"])
+        document.addEventListener("varkonline:" + type, (e) => {
+          const log = document.querySelector("#events");
+          if (log)
+            log.textContent =
+              type +
+              " " +
+              JSON.stringify(e.detail) +
+              "\n" +
+              log.textContent.slice(0, 2500);
+        });
+      document.querySelector("#add").onclick = () => {
+        const section = document.createElement("section");
+        section.innerHTML =
+          '<h2>Dynamic apartment</h2><div class="varkonline-widget" data-partner="defanse-local" data-apartment-id="dynamic-' +
+          ++count +
+          '" data-price-amd="30000000"></div>';
+        document.querySelector("#apartments").append(section);
+      };
+      document.querySelector("#update").onclick = () =>
+        document
+          .querySelector(".varkonline-widget")
+          .setAttribute("data-price-amd", "36000000");
+      document.querySelector("#remove").onclick = () =>
+        document.querySelector("#apartments section:last-child")?.remove();
+      document.querySelector("#duplicate").onclick = () => {
+        const script = document.createElement("script");
+        script.src = "http://localhost:8080/sdk/v1.js";
+        document.head.append(script);
+      };
+    </script>
+  </body>
+</html>

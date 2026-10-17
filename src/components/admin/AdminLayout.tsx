@@ -26,6 +26,7 @@ const navItems = [
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/admin/scraped-loans", label: "Scraped Loans", icon: Database },
   { path: "/admin/blog", label: "Blog", icon: FileText },
+  { path: "/admin/financing", label: "Financing integrations", icon: CreditCard },
   { path: "/admin/partners", label: "Partners", icon: Handshake },
   { path: "/admin/advertisements", label: "Advertisements", icon: Megaphone },
 ];

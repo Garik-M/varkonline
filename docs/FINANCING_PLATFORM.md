@@ -1,0 +1,92 @@
+# Financing platform implementation report
+
+Implemented in the existing React/Vite frontend and Express/PostgreSQL backend. Phase 1 and Phase 2 remain the financial authorities; their calculation APIs and formulas were not rewritten. No production deployment or production database change was performed.
+
+The frontend serves the small versioned `/sdk/v1.js` bundle and a separate built `embed.html` entry. Express serves `/embed/:partner`, applying a partner-specific HTTP ancestor policy and safe bootstrap values, then loads the calculator assets from the configured frontend origin. This uses the existing frontend/backend deployments and requires no new subdomain or service.
+
+The iframe has its own Armenian UI, React root and CSS. It does not import the site's auth, analytics, main application or browser storage helpers. It displays apartment price, down payment, principal, nominal rate, term, monthly payment, interest, complete totals, and a full schedule paginated by twelve rows. Whole AMD and whole USD use the existing half-up engine rounding and final-payment reconciliation. Visitor controls obey the partner's approved bounds, steps and supported terms.
+
+The refund flow preflights property eligibility before collecting personal eligibility details. Known exclusions skip the salary form; unresolved property evidence permits a separate income-tax estimate without inventing refunds. Eligible property inputs unlock the real Phase 2 projection, optional actual withheld tax and one optional co-borrower. It separates the bank payment, quarterly refund and average effective cost. Salary stays in iframe memory and is never sent in API requests, stored, logged or included in host events. Personal documentary self-checks are user assertions; property evidence can only be marked reviewed through authenticated administration. Nothing substitutes for SRC approval.
+
+The SDK auto-mounts multiple widgets, observes apartment attribute changes and inserted/removed nodes, supports SPA cleanup, repeated loading and an optional mount/update/destroy API. Message handling checks exact origins, source window, random instance and protocol version. Malformed messages do not coerce arbitrary objects. Per-widget state/timers and message listeners are removed on cleanup; the shared observer remains for future widgets until `disconnect()`. Only identifiers/status codes appear in public events. The production SDK is approximately **8.02 kB / 3.55 kB gzip**; React and financial modules load inside the iframe.
+
+Administrators use `/admin/financing` with existing JWT/role permissions. They can create stable partner IDs, edit/deactivate records, set exact website origins, defaults, allowed overrides, term/range constraints, light/dark branding, and reviewed development/property facts. A mortgage default rate may be omitted only when explicit apartment rates are permitted; an unresolved rate is an error. The live preview uses the real SDK and backend, and the generated snippet uses the actual frontend hostname. Optimistic revisions prevent overwriting another administrator's edits. Existing partner-application administration remains intact.
+
+| Area | Created or changed files |
+| --- | --- |
+| Hosted UI and lifecycle | `src/embed/main.tsx`, `FinancingCalculator.tsx`, `RefundPanel.tsx`, `refund-model.ts`, `refund-messages.ts`, `format.ts`, `embed.css`, `types.ts`, `embed.html` |
+| SDK and integration | `src/embed/sdk.ts`, `sdk-core.ts`, `protocol.ts`, `snippet.ts`, `PartnerPreview.tsx`, `scripts/build-sdk.mjs`, `public/examples/apartments.html` |
+| Existing admin integration | `src/pages/admin/AdminFinancing.tsx`, `src/App.tsx`, `src/components/admin/AdminLayout.tsx` |
+| Backend boundary/storage/security | `../backend/src/embed/config.ts`, `repository.ts`, `security.ts`, `routes.ts`, existing `src/index.ts` |
+| Additive storage | `../backend/migrations/20261017_financing_partners.sql` |
+| Hosting/build | frontend/backend `vercel.json`, frontend `vite.config.ts`, package scripts, generated SDK ignore rule |
+| Verification | `src/embed/__tests__`, `tsconfig.embed.json`, backend `tests/financing-*`, `scripts/test-financing-local.sh` |
+| Developer documentation | `public/docs/financing-integration.md`; Phase 2 README now links the implemented consumer |
+
+API changes:
+
+- `POST /api/embed/:slug/resolve`: strictly validates non-sensitive apartment data and returns canonical permitted financing inputs, controls, branding, partner revision and scoped legal evidence. It accepts no payroll fields.
+- `GET /embed/:slug`: isolated HTML with CSP, nonce, exact ancestor origins, no-store and restricted capabilities.
+- Protected `GET/POST /api/financing-partners`, `PUT /api/financing-partners/:slug`: partner management with immutable IDs and optimistic revision checks. Protected documentary responses are explicitly no-store.
+- The migration adds only `financing_partners`: slug, display name, activation, JSONB origins/configuration, revision, last editor and timestamps. It never synchronizes apartment inventory, alters existing tables, or runs automatically at startup.
+
+Public configuration and iframe endpoints have bounded per-process IP rate limits. Public integrations have no secret API key. Origin allowlisting is a browser control, not cryptographic API authentication; actual ancestors are separately checked by CSP. Frontend static asset CORS headers support cross-origin module loading. Financial estimate assumptions and lack of official approval are visible in the calculator.
+
+A production integration, after configuring and deploying an actual active `defanse` record, is:
+
+```html
+<div class="varkonline-widget"
+  data-partner="defanse"
+  data-apartment-id="A-101"
+  data-price-amd="35000000"
+  data-annual-interest-rate="9"
+  data-down-payment-percent="20"
+  data-duration-months="240"
+  data-financing-type="mortgage"></div>
+<script async src="https://varkonline.am/sdk/v1.js"></script>
+```
+
+The ID and financial values above are examples. Add the script once and bind the div's values to each apartment in the shared website/CMS template. The integration guide documents all attributes, precedence, WordPress, Webflow, React/Next.js, SPA behavior, programmatic calls, events, evidence examples and troubleshooting.
+
+Limitations and release requirements:
+
+- The UI projects constant monthly income/answers, complete calendar quarters and no interest subsidy. Variable payroll, subsidized/irregular contracts and richer paid-interest reconciliation need individual handling. The underlying Phase 2 API retains its broader capabilities.
+- USD bank payments work, but the basic UI does not collect bank-certified AMD amounts for every USD schedule row. Refund quantities remain unresolved; no FX rate is invented.
+- Reviewed metadata requires human documentary checks. A reference-string guard is not document authentication. No real Defanse evidence or financial conditions were assumed or seeded in production.
+- Active widgets refresh while visible every sixty seconds; deactivation is enforced on that refresh rather than instant remote revocation. Template caching is thirty seconds. Preserve prior hashed assets through rollout where supported.
+- IP limits are per backend process. Configure the exact trusted proxy count and use deployment perimeter controls for global quotas. Modern Chromium desktop/mobile viewports were tested; real iOS/Safari/Firefox certification is not claimed.
+- Full-app lint/type baseline failures remain separate from this feature. No unrelated code was changed to conceal them.
+
+Before production: review the legal snapshot and actual partner terms/evidence; apply the additive migration through the normal reviewed database release; deploy frontend/backend through the existing pipelines; set the absolute `VITE_API_URL`, canonical `EMBED_FRONTEND_ORIGIN`, backend `EMBED_PUBLIC_ORIGIN` and reviewed `TRUST_PROXY_HOPS`; retain asset CORS/CSP settings; create the real partner with exact origins, approve bounds/branding, activate and test on its actual shared apartment template. The workspace's frontend/backend are separate Git checkouts, so release their changes through the existing repository workflow. No commit, push or deployment is performed by the local test command.
+
+Run the complete disposable verification from the repository root:
+
+```sh
+bash backend/scripts/test-financing-local.sh
+```
+
+It initializes an isolated local PostgreSQL cluster, applies the baseline and additive migration (twice to check idempotency), builds both applications, runs unit/API/Chromium scenarios and tears down its own services and database. Browser reports/screenshots are in ignored `backend/artifacts/`.
+
+Local verification on 17 October 2026 completed successfully:
+
+| Check | Result |
+| --- | --- |
+| Frontend Vitest | **359 passed**: 161 Phase 1, 172 Phase 2, 25 SDK/presentation tests and the existing app test |
+| Backend native unit tests | **7 passed** |
+| Real API/PostgreSQL checks | **30 passed**, including JWT permissions, real CRUD, revisions, bounds, scoped evidence, private-response caching and active/unknown/domain states |
+| Real Chromium integration | **56 passed**, Chromium 147.0.7727.15; desktop/mobile layouts, three distinct apartments, control/attribute changes, schedules, refunds, SPA insertion/removal, duplicate SDK, source/instance/CSP checks, failed/slow requests, live refresh/deactivation, admin creation/editing/copy and dark preview |
+| Strict TypeScript | Financial engine and new embed/admin modules passed; backend production TypeScript build passed |
+| Feature lint | New modules, their tests and financial engines passed without errors or warnings |
+| Production builds | Frontend and backend passed; SDK 8.02 kB / 3.55 kB gzip |
+| Full-app baseline | Existing **30 lint errors / 18 warnings** and the existing DOMPurify configuration mismatch at `src/lib/sanitize.ts:22` remain separately reported |
+| Local cleanup | Disposable application services and PostgreSQL stopped; no production migration/deployment occurred |
+
+The three sample apartments were also recalculated independently with Python Decimal (70-digit precision, half-up whole-AMD interest and final-payment reconciliation):
+
+| Apartment | Price AMD | Nominal rate | Down payment | Months | Monthly AMD | Total interest AMD | Total with down payment AMD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| A | 35,000,000 | 9% | 20% | 240 | 251,923 | 32,461,718 | 67,461,718 |
+| B | 42,000,000 | 11.5% | 30% | 180 | 343,448 | 32,420,544 | 74,420,544 |
+| C | 58,000,000 | 8.5% | 25% | 300 | 350,274 | 61,581,982 | 119,581,982 |
+
+Every final balance was zero. The separate short refund fixture independently reconciles 421,046 AMD of quarterly interest, 300,000 AMD salary tax and a 750,000 AMD cap to a 300,000 AMD refund; the bank payment remains 9,473,682 AMD while its informational monthly equivalent after refund is 9,373,682 AMD. Synthetic fixtures are not real partner terms or evidence.

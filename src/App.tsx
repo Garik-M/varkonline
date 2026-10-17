@@ -35,6 +35,7 @@ import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminScrapedLoans from "./pages/admin/AdminScrapedLoans";
+import AdminFinancing from "./pages/admin/AdminFinancing";
 import AdminPartners from "./pages/admin/AdminPartners";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 
@@ -140,6 +141,7 @@ function AppRoutes() {
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="scraped-loans" element={<AdminScrapedLoans />} />
           <Route path="blog" element={<AdminBlog />} />
+          <Route path="financing" element={<AdminFinancing />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
         </Route>
