@@ -47,9 +47,109 @@
           "value": "noindex, nofollow"
         }
       ]
+    },
+    {
+      "source": "/partner",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self'; frame-src https://varkonlineback-production.up.railway.app; frame-ancestors 'none'; form-action 'self'; base-uri 'none'; object-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/partner/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self'; frame-src https://varkonlineback-production.up.railway.app; frame-ancestors 'none'; form-action 'self'; base-uri 'none'; object-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/partner.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self'; frame-src https://varkonlineback-production.up.railway.app; frame-ancestors 'none'; form-action 'self'; base-uri 'none'; object-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/partner-api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/partner-api/:path*",
+      "destination": "https://varkonlineback-production.up.railway.app/api/partner/:path*"
+    },
+    {
+      "source": "/partner",
+      "destination": "/partner.html"
+    },
+    {
+      "source": "/partner/:path*",
+      "destination": "/partner.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

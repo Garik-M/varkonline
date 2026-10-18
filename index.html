@@ -35,41 +35,28 @@
 
     <!-- Structured data is injected dynamically per-page via React -->
 
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-HDC9TW9D16"
-    ></script>
+    <!-- Analytics belongs to public pages, never the staff or partner workspace. -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-
-      gtag("config", "G-HDC9TW9D16");
+      (function () {
+        if (/^\/(?:admin|partner)(?:\/|$)/.test(window.location.pathname)) return;
+        if (/^\/(?:(?:en|ru)\/)?financing-partners(?:\/|$)/.test(window.location.pathname)) return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag("js", new Date());
+        window.gtag("config", "G-HDC9TW9D16");
+        function load(src, client) {
+          var script = document.createElement("script");
+          script.async = true;
+          script.src = src;
+          if (client) script.crossOrigin = "anonymous";
+          document.head.appendChild(script);
+        }
+        load("https://www.googletagmanager.com/gtag/js?id=G-HDC9TW9D16");
+        load("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8306358488450539", true);
+        window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        load("https://www.googletagmanager.com/gtm.js?id=GTM-MRS79ZJG");
+      })();
     </script>
-
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8306358488450539"
-      crossorigin="anonymous"
-    ></script>
-
-    <!-- Google Tag Manager -->
-    <script>
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || [];
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != "dataLayer" ? "&l=" + l : "";
-        j.async = true;
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-        f.parentNode.insertBefore(j, f);
-      })(window, document, "script", "dataLayer", "GTM-MRS79ZJG");
-    </script>
-    <!-- End Google Tag Manager -->
   </head>
 
   <body>

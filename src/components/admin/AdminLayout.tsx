@@ -27,6 +27,7 @@ const navItems = [
   { path: "/admin/scraped-loans", label: "Scraped Loans", icon: Database },
   { path: "/admin/blog", label: "Blog", icon: FileText },
   { path: "/admin/financing", label: "Financing integrations", icon: CreditCard },
+  { path: "/admin/financing-applications", label: "Financing applications", icon: Handshake },
   { path: "/admin/partners", label: "Partners", icon: Handshake },
   { path: "/admin/advertisements", label: "Advertisements", icon: Megaphone },
 ];
@@ -61,7 +62,7 @@ export default function AdminLayout() {
           {navItems.map((item) => {
             const isActive = item.exact
               ? location.pathname === item.path
-              : location.pathname.startsWith(item.path);
+              : (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
             return (
               <Link
                 key={item.path}
@@ -104,7 +105,7 @@ export default function AdminLayout() {
           {navItems.map((item) => {
             const isActive = item.exact
               ? location.pathname === item.path
-              : location.pathname.startsWith(item.path);
+              : (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`));
             return (
               <Link
                 key={item.path}

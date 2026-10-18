@@ -49,7 +49,7 @@ function isValidPhone(value: string): boolean {
 }
 
 export default function PartnerModal({ open, onClose }: PartnerModalProps) {
-  const { t } = useTranslation();
+  const { t, lp } = useTranslation();
   const [step, setStep] = useState<1 | 2 | "success">(1);
   const [partnerType, setPartnerType] = useState<PartnerType | null>(null);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -180,6 +180,10 @@ export default function PartnerModal({ open, onClose }: PartnerModalProps) {
                       <p className="text-sm font-semibold text-foreground">
                         {t("partner.whoAreYou")}
                       </p>
+                      <a href={lp("/financing-partners")} onClick={onClose} className="block rounded-2xl border-2 border-primary p-4 text-sm font-semibold text-primary hover:bg-primary/5">
+                        {t("financingPartner.title")}
+                        <span className="block mt-1 text-xs font-normal text-muted-foreground">{t("financingPartner.shortIntro")}</span>
+                      </a>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => {

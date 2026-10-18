@@ -36,6 +36,8 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminScrapedLoans from "./pages/admin/AdminScrapedLoans";
 import AdminFinancing from "./pages/admin/AdminFinancing";
+import FinancingPartners from "./pages/FinancingPartners";
+import AdminFinancingApplications from "./pages/admin/AdminFinancingApplications";
 import AdminPartners from "./pages/admin/AdminPartners";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 
@@ -64,6 +66,7 @@ function PublicLayout({
 function PublicRoutes() {
   return (
     <Routes>
+      <Route path="financing-partners" element={<PublicLayout><FinancingPartners /></PublicLayout>} />
       <Route
         index
         element={
@@ -142,6 +145,7 @@ function AppRoutes() {
           <Route path="scraped-loans" element={<AdminScrapedLoans />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="financing" element={<AdminFinancing />} />
+          <Route path="financing-applications" element={<AdminFinancingApplications />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
         </Route>

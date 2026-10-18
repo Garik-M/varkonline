@@ -1,6 +1,6 @@
 # Financing platform implementation report
 
-Implemented in the existing React/Vite frontend and Express/PostgreSQL backend. Phase 1 and Phase 2 remain the financial authorities; their calculation APIs and formulas were not rewritten. No production deployment or production database change was performed.
+Implemented in the existing React/Vite frontend and Express/PostgreSQL backend. Phase 1 and Phase 2 remain the financial authorities; their calculation APIs and formulas were not rewritten. The initial implementation was verified locally before the approved partner-workspace release.
 
 The frontend serves the small versioned `/sdk/v1.js` bundle and a separate built `embed.html` entry. Express serves `/embed/:partner`, applying a partner-specific HTTP ancestor policy and safe bootstrap values, then loads the calculator assets from the configured frontend origin. This uses the existing frontend/backend deployments and requires no new subdomain or service.
 
@@ -43,7 +43,7 @@ A production integration, after configuring and deploying an actual active `defa
   data-down-payment-percent="20"
   data-duration-months="240"
   data-financing-type="mortgage"></div>
-<script async src="https://varkonline.am/sdk/v1.js"></script>
+<script async src="https://www.varkonline.am/sdk/v1.js"></script>
 ```
 
 The ID and financial values above are examples. Add the script once and bind the div's values to each apartment in the shared website/CMS template. The integration guide documents all attributes, precedence, WordPress, Webflow, React/Next.js, SPA behavior, programmatic calls, events, evidence examples and troubleshooting.
@@ -90,3 +90,37 @@ The three sample apartments were also recalculated independently with Python Dec
 | C | 58,000,000 | 8.5% | 25% | 300 | 350,274 | 61,581,982 | 119,581,982 |
 
 Every final balance was zero. The separate short refund fixture independently reconciles 421,046 AMD of quarterly interest, 300,000 AMD salary tax and a 750,000 AMD cap to a 300,000 AMD refund; the bank payment remains 9,473,682 AMD while its informational monthly equivalent after refund is 9,373,682 AMD. Synthetic fixtures are not real partner terms or evidence.
+
+## Financing partner onboarding and workspace (18 October 2026)
+
+The partner-facing entry is **Varkonline Financing Partners**, at `/financing-partners` (also `/en/financing-partners` and `/ru/financing-partners`). The footer and existing Become a partner chooser link to it. Applicants read the calculator description and contact-data acknowledgement, explicitly accept, then submit company, website, contact name, email and phone. Version `2026-10-18-v2`, language and server timestamp are recorded. This acknowledgement describes the application process; it is not a signed commercial agreement.
+
+Staff review `/admin/financing-applications`. Leaving an application alone keeps it pending. Acceptance preserves the original reviewer/time and creates a single-use invitation valid for 72 hours. Staff copy and privately share that link with the approved contact. **Delivery is manual; no email provider or automatic notification is configured.** Staff can issue a new invitation, invalidating any older unused link. Confirm the contact identity and canonical company website before approving or issuing recovery invitations.
+
+The approved contact follows the invitation, sets a password (at least 12 characters and at most 72 UTF-8 bytes), and enters `/partner`. An existing email account must authenticate with its current password; invitations cannot overwrite unrelated accounts or administrator passwords. A recovery invitation may reset the account originally created through that same application; existing linked accounts still use their existing credentials. Invitations are stored as SHA-256 digests, removed from the address bar immediately, expire in 72 hours and are consumed in a row-locked transaction. Concurrent claims cannot reuse the same token.
+
+The partner workspace is an independent `partner.html` Vite entry, with Armenian, English and Russian UI. It loads no public advertising or analytics scripts. Those scripts are also excluded on direct staff and financing-application page entry; links into the application page perform a full navigation. Partners explicitly provide financing type, currency, nominal mortgage rate (where applicable), down payment, term and appearance. No financial rate, down payment, duration or apartment price is prefilled. Saving creates an active integration limited to the approved website's exact HTTPS origin (loopback HTTP is accepted for local testing). The partner then provides a sample price, copies the SDK snippet, opens the real preview and follows the shared apartment-template documentation. Whole AMD and USD use the existing engine. No new financial formulas were added.
+
+Owners can edit their own basic terms and appearance. Staff limits, allowed models/currencies/overrides, website origins, reviewed tax-refund evidence and activation state are preserved. A partner cannot reactivate an integration paused by staff. Optimistic revisions reject stale edits. The private API projects only necessary settings; documentary references are not returned. Multiple approved companies can belong to one existing account without adding a new global user role.
+
+Authentication reuses users, bcrypt and JWT. Partner sessions are eight-hour, audience-scoped tokens in Secure/HttpOnly/SameSite=Strict cookies, restricted to `/partner-api`. The frontend gateway proxies that same-origin path to `/api/partner` on the existing Railway backend. No token is returned to browser storage. State-changing requests require the exact canonical frontend Origin; APIs use no-store caching. Login/invitation attempts are bounded by account/token digest as well as a coarse IP limit. Authenticated workspace quotas use the account ID so gateway IP sharing does not conflate accounts. Password changes invalidate older partner sessions immediately. Admin permission checks now verify the current stored role, so deleting or demoting a staff account revokes approval privileges even before its old JWT expires.
+
+Deleting an application revokes its invitations/account access and pauses its integration in one transaction. The underlying user record is retained because it can be shared with other approved companies or existing site functionality. Configuration history remains available to staff, inactive. Existing bank/institution partnership applications remain separate and unchanged.
+
+### Storage and release
+
+Apply the explicit additive migrations in order:
+
+1. Backend `migrations/20261017_financing_partners.sql`.
+2. Backend `migrations/20261018_financing_partner_applications.sql`.
+3. Backend `migrations/20261018_financing_partner_access.sql`.
+
+The explicit command `node --import tsx scripts/migrate-financing.ts` checks setup without changing it. `--apply` executes the reviewed migrations; a remote database additionally requires `--allow-remote`. The runner checks baseline tables, obtains an advisory lock and uses bounded statement/lock timeouts. Migrations do not run on server startup. The local runner applies each twice to check idempotency.
+
+The original live failure was an absent `financing_partners` table in the configured Railway database. The admin now reports `FINANCING_SETUP_REQUIRED` for missing relations and explains why SDK code needs a saved configuration. Public errors omit database details. Logging includes safe PostgreSQL codes and routes, without request bodies or credentials.
+
+Set `EMBED_FRONTEND_ORIGIN=https://www.varkonline.am`, which serves `embed.html` and `partner.html` without redirect. The code fallback now uses that canonical hostname. `EMBED_PUBLIC_ORIGIN` remains the existing Railway origin. Vercel rewrites `/partner` and its subpaths to the isolated partner entry, and `/partner-api/*` to the existing backend. Private HTML receives CSP, no-referrer, no-store and anti-framing headers. Static SDK and calculator hosting are unchanged.
+
+Run `bash backend/scripts/test-financing-local.sh` for the complete disposable verification. `FINANCING_TEST_FOCUS=portal` skips only the longer existing widget-browser suite when iterating on account flow; it still runs financial/unit checks, both builds, all database/API checks and application/workspace browsers. Artifacts are ignored under `backend/artifacts`. The runner tears down its temporary PostgreSQL and services.
+
+The explicitly authorized production smoke command is `node --import tsx scripts/verify-financing-production.ts --allow-production`. It verifies the real public application, staff approval, invitation, account claim, first-party Secure cookie, explicit setup, SDK copying, live preview, actual published SDK execution, refresh, sign-out/sign-in, domain enforcement and deletion/revocation. It uses separately named synthetic records and removes only those records, including temporary staff roles, afterward. No real partner terms, contacts or tax evidence are seeded.

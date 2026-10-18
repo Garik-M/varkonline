@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useState,
   useCallback,
   ReactNode,
   useEffect,
@@ -13,7 +12,6 @@ import { ru } from "@/translations/ru";
 import {
   Locale,
   LOCALE_TO_LANG,
-  LANG_TO_LOCALE,
   localePath,
   resolveLocaleFromPath,
   detectBrowserLocale,

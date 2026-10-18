@@ -114,6 +114,7 @@ export default function Footer() {
             {t("footer.rights")}
           </p>
           <div className="flex flex-wrap items-center gap-5 text-xs text-gray-400">
+            <a href={lp("/financing-partners")} className="text-accent font-semibold hover:underline">{t("financingPartner.title")}</a>
             <button
               onClick={() => setPartnerOpen(true)}
               className="flex items-center gap-1.5 text-accent font-semibold hover:text-accent/80 transition-colors"

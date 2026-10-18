@@ -83,16 +83,19 @@ export default function AdminFinancing() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [samplePrice, setSamplePrice] = useState("35000000");
   const [sampleRate, setSampleRate] = useState("9");
   const [copied, setCopied] = useState(false);
   const field = (key: keyof Fields, value: string | boolean) =>
     setFields((previous) => ({ ...previous, [key]: value }));
   const load = async () => {
+    setLoading(true);
+    setLoadError("");
     try {
       setPartners(await api.request("/financing-partners"));
     } catch (error) {
-      setMessage(
+      setLoadError(
         error instanceof Error ? error.message : "Failed to load partners",
       );
     } finally {
@@ -237,8 +240,8 @@ export default function AdminFinancing() {
       <div>
         <h1 className="text-2xl font-bold">Financing integrations</h1>
         <p className="text-muted-foreground mt-2">
-          Manage website integrations independently of bank partnership
-          applications. All calculations are estimates.
+          Staff configuration for saved website integrations. Prospective partners
+          apply through Varkonline Financing Partners. All calculations are estimates.
         </p>
       </div>
       <div className="flex flex-wrap gap-3">
@@ -283,6 +286,8 @@ export default function AdminFinancing() {
         )}
       </div>
       {loading && <p role="status">Loading partners…</p>}
+      {loadError && <p role="alert" className="text-destructive">{loadError} Integration code is available after a partner configuration can be saved and loaded.</p>}
+      {!selected && !loadError && !loading && <p className="text-sm text-muted-foreground">Select a saved integration or create a partner configuration below to generate its SDK code. Application acceptance alone does not create an integration.</p>}
       {message && (
         <p
           role="status"
@@ -690,7 +695,7 @@ export default function AdminFinancing() {
             the partner website.
           </p>
         </section>
-        <Button disabled={busy} type="submit">
+        <Button disabled={busy || loading || !!loadError} type="submit">
           {busy
             ? "Saving…"
             : selected

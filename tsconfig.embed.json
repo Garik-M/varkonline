@@ -8,7 +8,10 @@
   },
   "include": [
     "src/embed",
+    "src/partner",
     "src/pages/admin/AdminFinancing.tsx",
+    "src/pages/admin/AdminFinancingApplications.tsx",
+    "src/pages/FinancingPartners.tsx",
     "src/vite-env.d.ts"
   ],
   "exclude": ["src/embed/__tests__"]
