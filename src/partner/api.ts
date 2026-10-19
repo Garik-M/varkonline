@@ -33,6 +33,7 @@ export interface Settings {
   durationMonths: number;
   theme: "light" | "dark";
   accentColor: string;
+  incomeTaxRefundEnabled: boolean;
 }
 export interface Company {
   applicationId: string;

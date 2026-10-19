@@ -40,7 +40,7 @@ const blankConfiguration = (): PartnerConfiguration => ({
   adjustable: { downPaymentPercent: true, durationMonths: true },
   appearance: { theme: "light", accentColor: "#29986c", logoUrl: null },
   refund: {
-    enabled: false,
+    enabled: true,
     defaultDevelopmentId: null,
     developments: [],
     propertyEvidence: [],
@@ -86,7 +86,18 @@ export default function AdminFinancing() {
   const [loadError, setLoadError] = useState("");
   const [samplePrice, setSamplePrice] = useState("35000000");
   const [sampleRate, setSampleRate] = useState("9");
+  const [sampleApartmentId, setSampleApartmentId] = useState("preview-apartment");
   const [copied, setCopied] = useState(false);
+  const refundDraft = useMemo<Record<string, unknown> | null>(() => {
+    try {
+      const value: unknown = JSON.parse(evidence);
+      return value && typeof value === "object" && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : null;
+    } catch {
+      return null;
+    }
+  }, [evidence]);
   const field = (key: keyof Fields, value: string | boolean) =>
     setFields((previous) => ({ ...previous, [key]: value }));
   const load = async () => {
@@ -210,7 +221,7 @@ export default function AdminFinancing() {
     const defaults = saved.defaults;
     const value: WidgetConfiguration = {
       partner: selected.slug,
-      apartmentId: "preview-apartment",
+      apartmentId: sampleApartmentId.trim() || "preview-apartment",
     };
     if (saved.overrides.includes("apartmentPrice"))
       value.apartmentPrice =
@@ -222,7 +233,7 @@ export default function AdminFinancing() {
       value.annualInterestRatePercent =
         sampleRate.trim() === "" ? NaN : Number(sampleRate);
     return value;
-  }, [selected, samplePrice, sampleRate]);
+  }, [selected, samplePrice, sampleRate, sampleApartmentId]);
   const snippet = useMemo(() => {
     try {
       return preview
@@ -664,8 +675,19 @@ export default function AdminFinancing() {
           <h2 className="font-semibold text-lg">
             Refund policy & reviewed property evidence
           </h2>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={refundDraft?.enabled === true}
+              disabled={!refundDraft}
+              onChange={(e) => setEvidence(JSON.stringify({ ...refundDraft, enabled: e.target.checked }, null, 2))}
+            />
+            Show income-tax refund tools for mortgages
+          </label>
           <p className="text-sm text-muted-foreground">
-            Enable refunds through <code>enabled</code>. Development facts may
+            Showing the tools does not confirm eligibility. Save before previewing.
+            Unreviewed properties show the missing evidence and a separate salary-tax estimate.
+            Development facts may
             cover acquisition type, exact location, permit decision and
             self-build permit. Lender, price, title, documents and origination
             evidence belong to individual properties. Unknown facts must remain
@@ -712,6 +734,18 @@ export default function AdminFinancing() {
             permissions to vary sample values.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
+            <label className={label}>
+              Sample apartment ID
+              <Input
+                aria-label="Sample apartment ID"
+                value={sampleApartmentId}
+                maxLength={120}
+                onChange={(e) => { setSampleApartmentId(e.target.value); setCopied(false); }}
+              />
+              <span className="text-xs text-muted-foreground">
+                Use the exact apartment ID from reviewed property evidence to preview its refund eligibility.
+              </span>
+            </label>
             <label className={label}>
               Sample apartment price
               <Input

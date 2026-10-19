@@ -146,12 +146,13 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
   const [type, setType] = useState<Settings["financingType"]>(existing?.settings.financingType ?? "mortgage");
   const [currency, setCurrency] = useState<Settings["currency"]>(existing?.settings.currency ?? "AMD");
   const [samplePrice, setSamplePrice] = useState(existing && !existing.overrides.includes("apartmentPrice") ? String(existing.settings.apartmentPrice ?? "") : "");
+  const [sampleApartmentId, setSampleApartmentId] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [preview, setPreview] = useState<WidgetConfiguration | null>(null);
   let snippet = "";
   if (existing?.active && samplePrice.trim() && Number(samplePrice) >= existing.limits.apartmentPrice.min && Number(samplePrice) <= existing.limits.apartmentPrice.max) {
-    try { snippet = integrationSnippet(window.location.origin, parseWidgetConfiguration({ partner: existing.slug, apartmentId: "APARTMENT_ID", currency: existing.settings.currency, apartmentPrice: Number(samplePrice) })); } catch { /* Keep invalid sample values out of integration code. */ }
+    try { snippet = integrationSnippet(window.location.origin, parseWidgetConfiguration({ partner: existing.slug, apartmentId: sampleApartmentId.trim() || "APARTMENT_ID", currency: existing.settings.currency, apartmentPrice: Number(samplePrice) })); } catch { /* Keep invalid sample values out of integration code. */ }
   }
   return <div className="space-y-6">
     <section className="rounded-xl border bg-card p-5 space-y-3">
@@ -163,7 +164,7 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
         event.preventDefault(); const fields = new FormData(event.currentTarget);
         void save({ financingType: type, currency, downPaymentPercent: Number(fields.get("downPayment")), durationMonths: Number(fields.get("duration")),
           ...(type === "mortgage" ? { annualInterestRatePercent: Number(fields.get("rate")) } : {}),
-          theme: String(fields.get("theme")) as Settings["theme"], accentColor: String(fields.get("accentColor")) });
+          theme: String(fields.get("theme")) as Settings["theme"], accentColor: String(fields.get("accentColor")), incomeTaxRefundEnabled: fields.get("incomeTaxRefundEnabled") === "on" });
       }} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <label className="space-y-2 text-sm font-medium">{c.financingType}<select aria-label={c.financingType} className="block border rounded-lg p-2 w-full bg-background" value={type} onChange={event => setType(event.target.value as Settings["financingType"])}>
@@ -176,17 +177,28 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
           <label className="space-y-2 text-sm font-medium">{c.theme}<select aria-label={c.theme} name="theme" className="block border rounded-lg p-2 w-full bg-background" defaultValue={existing?.settings.theme ?? "light"}><option value="light">{c.light}</option><option value="dark">{c.dark}</option></select></label>
           <label className="space-y-2 text-sm font-medium">{c.accent}<Input name="accentColor" type="color" defaultValue={existing?.settings.accentColor ?? "#29986c"} /></label>
         </div>
+        <fieldset className="rounded-lg border p-4 space-y-2">
+          <legend className="px-1 text-sm font-semibold">{c.refundTitle}</legend>
+          <label className="flex items-start gap-3 text-sm font-medium">
+            <input name="incomeTaxRefundEnabled" type="checkbox" className="mt-1" defaultChecked={existing?.settings.incomeTaxRefundEnabled ?? true} />
+            <span>{c.refundEnable}</span>
+          </label>
+          <p className="text-sm text-muted-foreground">{c.refundHelp}</p>
+        </fieldset>
         <Button disabled={busy} type="submit">{busy ? c.working : existing ? c.save : c.create}</Button>
       </form>
     </section>
     {existing?.active && <section className="rounded-xl border bg-card p-5 space-y-4">
       <h2 className="font-semibold text-xl">{c.integration}</h2>
+      {!existing.settings.incomeTaxRefundEnabled && <p className="rounded-lg border p-3 text-sm" role="status">{c.refundDisabled}</p>}
       <p className="text-sm text-muted-foreground">{c.instructions}</p>
+      <label className="block text-sm space-y-2 max-w-md">{c.sampleApartmentId}<Input maxLength={120} value={sampleApartmentId} placeholder="A-101" onChange={event => { setSampleApartmentId(event.target.value); setCopied(false); setPreview(null); }} /></label>
+      <p className="text-sm text-muted-foreground">{c.sampleApartmentHelp}</p>
       <label className="block text-sm space-y-2 max-w-md">{c.samplePrice} ({existing.settings.currency})<Input type="number" min={existing.limits.apartmentPrice.min} max={existing.limits.apartmentPrice.max} step={1} value={samplePrice} disabled={!existing.overrides.includes("apartmentPrice")} onChange={event => { setSamplePrice(event.target.value); setCopied(false); setPreview(null); }} /></label>
       <pre data-testid="partner-sdk-code" className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg bg-muted p-4 text-xs">{snippet || c.enterSample}</pre>
       <div className="flex flex-wrap gap-3">
         <Button disabled={!snippet} onClick={async () => { try { await navigator.clipboard.writeText(snippet); setCopied(true); setCopyError(false); } catch { setCopyError(true); } }}>{copied ? c.copied : c.copy}</Button>
-        <Button variant="outline" disabled={!snippet} onClick={() => { if (existing && snippet) setPreview({ partner: existing.slug, apartmentId: "PREVIEW", apartmentPrice: Number(samplePrice), currency: existing.settings.currency }); }}>{c.preview}</Button>
+        <Button variant="outline" disabled={!snippet} onClick={() => { if (existing && snippet) setPreview({ partner: existing.slug, apartmentId: sampleApartmentId.trim() || "PREVIEW", apartmentPrice: Number(samplePrice), currency: existing.settings.currency }); }}>{c.preview}</Button>
       </div>
       {copyError && <p role="status">{c.copyManually}</p>}
       {preview && <PartnerPreview key={existing.revision} configuration={preview} />}
