@@ -627,3 +627,34 @@ tfoot {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.vk-refund-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin: 24px 0;
+  list-style: none;
+}
+.vk-refund-steps li {
+  border: 1px solid var(--vk-border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--vk-muted);
+}
+.vk-refund-steps [aria-current="step"] {
+  color: inherit;
+  border-color: var(--vk-accent);
+  font-weight: 700;
+}
+.vk-refund-step {
+  display: grid;
+  gap: 18px;
+}
+.vk-refund-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}

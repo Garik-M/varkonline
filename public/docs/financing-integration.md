@@ -215,3 +215,7 @@ For a persistent manual session, use the same commands in the script without its
 ### Host website security policy
 
 A host page with Content Security Policy must permit `https://www.varkonline.am` in `script-src` (and `script-src-elem` if separately defined), and `https://varkonlineback-production.up.railway.app` in `frame-src` (or the applicable fallback). Varkonline cannot change another website’s response policy. Browser-console insertion remains subject to that policy; adding www support to a partner does not bypass it.
+
+### Borrower refund steps
+
+The first step collects the first payment date, registered gross monthly salary, optional actual withheld salary tax and an optional co-borrower salary. The second step shows reviewed property/mortgage status and, when that status permits it, the personal eligibility questions and explicit forecast assumptions. Salary tax is an estimate of available payroll tax, not the mortgage refund itself. Unreviewed property evidence keeps the refund amount unresolved; known property exclusions stop before asking for salary. Back navigation preserves inputs, and changed personal eligibility answers require renewed document confirmation. All Armenian refund labels use «հետվերադարձ».
