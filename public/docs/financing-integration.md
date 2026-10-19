@@ -21,7 +21,11 @@ Enabling the tools does not establish legal eligibility. Unreviewed properties s
 
 ## Quick integration
 
-An administrator creates an active partner at `/admin/financing` and registers the exact website origin, for example `https://defanse.am`. HTTP is permitted only on loopback during development. `www`, other subdomains, schemes and ports require their own entries. The public identifier is stable and is not a secret.
+Partners normally create their calculator in the partner workspace after application acceptance and account activation. Staff review every saved integration in the searchable directory at `/admin/financing`. **Create integration manually** is a secondary staff tool; it creates a calculator configuration, not a partner account or invitation.
+
+Open a company's **Review** link to view its overview at `/admin/financing/:slug`. **Calculator settings** contains the actual terms, website access, pause/activation switch and appearance. **Advanced settings** contains optional shared prices, permitted overrides, allowed currencies/models and technical bounds. **SDK & preview** uses the saved configuration and accepts a sample apartment ID, price and rate. Links from application records also open the matching saved integration.
+
+Register the exact website origin, for example `https://defanse.am`. HTTP is permitted only on loopback during development. `www`, other subdomains, schemes and ports require their own entries. The public identifier is stable and is not a secret.
 
 Add this div to the shared apartment template, and load the script once in the layout. Replace the example ID and numbers with the actual apartment's escaped values. The real frontend deployment hosts `/sdk/v1.js`; the existing Express deployment hosts `/embed/:partner`. No `embed.varkonline.am` DNS assumption is made.
 
@@ -129,6 +133,8 @@ The basic UI projects constant monthly income, tax allocations and answers throu
 Property eligibility is checked before asking personal eligibility questions; known exclusions skip the salary form, and unresolved property evidence offers only a separate salary-tax estimate. Personal statements need explicit documentary self-check confirmation to be used as confirmed inputs in the estimate. This is a user assertion, not verification by Varkonline or SRC. Only authenticated administrators can enter reviewed property/development evidence; a visitor cannot upgrade missing property evidence to verified. Missing facts, dates or evidence show `requires_verification` with no assumed amount. Known ineligible cases show no applicable refund. No unchecked `eligible` flag exists.
 
 A reviewed development can provide acquisition type, official location/zone, permit-decision date and self-build permit evidence. It cannot establish every apartment's contract price, title, lender, loan date or required documents. Property exceptions are optional and scoped to a partner/apartment ID. Documentary references remain in the protected admin API; public responses include facts and configuration update time only. Do not store personal income or unnecessary personal documents in references.
+
+In the staff partner detail, open **Refund review** to add, edit or remove development and apartment/mortgage records using named fields. Unknown facts stay unknown. Selecting a value records an unreviewed fact; **Verified from documents** is an explicit staff action. Verified facts require an internal document reference of at least eight characters. Changing a fact clears its verification; changing an apartment or development ID clears that record's verification and reference. Save the review, then select the same apartment ID in **SDK & preview**. There is no blanket company-wide eligibility switch and no JSON editing is required.
 
 Example advanced refund configuration (synthetic evidence shape, not facts about any real development):
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
@@ -96,6 +97,7 @@ export default function AdminFinancingApplications() {
             <Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(invitations[application.id].url); setMessage("Invitation copied. Share it privately with the approved contact."); } catch { setMessage("Select and copy the invitation link manually."); } }}>Copy invitation link</Button>
           </div>}
           <div className="flex flex-wrap gap-3 items-center">
+            {application.partner_slug && <Button asChild variant="outline"><Link to={`/admin/financing/${encodeURIComponent(application.partner_slug)}`}>Review saved integration</Link></Button>}
             {application.status === "pending" && <Button disabled={busy} onClick={() => void act(application.id, "accept")}>Accept application</Button>}
             {application.status === "accepted" && <Button disabled={busy} variant="outline" onClick={() => void act(application.id, "invitation")}>Create new invitation</Button>}
             {deleting === application.id ? <>

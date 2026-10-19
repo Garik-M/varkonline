@@ -93,7 +93,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Mobile header */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card">
           <h1 className="text-lg font-bold">VarkOnline Admin</h1>
           <Button variant="ghost" size="icon" onClick={signOut}>

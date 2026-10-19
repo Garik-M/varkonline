@@ -145,6 +145,8 @@ function AppRoutes() {
           <Route path="scraped-loans" element={<AdminScrapedLoans />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="financing" element={<AdminFinancing />} />
+          <Route path="financing/setup/new" element={<AdminFinancing create />} />
+          <Route path="financing/:slug" element={<AdminFinancing />} />
           <Route path="financing-applications" element={<AdminFinancingApplications />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="advertisements" element={<AdminAdvertisements />} />
