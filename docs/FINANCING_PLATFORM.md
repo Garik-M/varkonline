@@ -140,3 +140,20 @@ Local verification of this correction: 363 frontend and 16 backend unit tests, 8
 `backend/src/embed/security.ts` derives an effective origin list by pairing each approved DNS hostname with its single www counterpart, retaining scheme and port. The same list drives API origin checks, iframe `frame-ancestors` and the partner workspace’s approved-website display. Existing stored lists and optimistic revisions remain unchanged; no migration or resave is required. IP literals, loopback and unrelated subdomains retain exact matching. The actual parent origin is preserved for iframe messages; aliases never loosen authentication CORS or cookies. Host website CSP must still permit the script and iframe hosts.
 
 Local www-alias verification passed: 363 frontend and 19 backend unit tests, 92 real API checks and 117 Chromium checks, plus strict feature TypeScript checks, lint and both production builds. New origin tests cover both directions, explicit duplicate entries, retained scheme/port, actual iframe ancestor headers/bootstrap, loopback/IP boundaries and rejection of other subdomains and lookalike domains.
+
+### Borrower field review and Armenian wording
+
+Reviewed the borrower inputs against the official [refund procedure, Decision 1321-N](https://www.arlis.am/hy/acts/200943) and [SRC June 2026 guidance](https://www.src.am/storage/File_Link_Uploade/tv_yndhanur_teghekutyun_rev0626_6a26b2c6dad5f.pdf). The widget is a forecast, not an SRC application; it does not collect ID numbers, bank-account numbers or document uploads. Employment, required document confirmation, prior benefit use, tuition overlap and tax settlement are eligibility/availability checks. They should not be confused with the arithmetic inputs or with Varkonline verification. Actual claim conditions are not established merely because a visitor is considering a purchase.
+
+| Input | Purpose and source |
+| --- | --- |
+| Registered gross monthly salary in AMD | Visitor salary before taxes and deductions; other taxable income is not silently treated as eligible salary. |
+| Actual salary income tax withheld | Optional override for the applicable payroll case; zero is an explicit override. |
+| First monthly payment date | Calendar-quarter timing for the mortgage projection. |
+| Actual origination/disbursement date | Bank/property review establishes the applicable legal period; a visitor-entered date remains unverified. |
+| Optional co-borrower | Separate salary and personal eligibility; not automatically the spouse or every co-borrower on a contract. |
+| Employment, ownership/document and prior-use answers | Personal eligibility assertions. Missing answers remain unresolved. |
+| Tuition overlap, tax already allocated and employer settlement | Avoid unavailable or doubly counted salary tax; distinguish forecasts from paid amounts. |
+| Property location, permit, acquisition type, contractual price and documents | Staff-reviewed development/property evidence, not ordinary calculator visitor inputs. |
+
+Armenian refund labels now use «հետվերադարձ». The salary label explicitly identifies gross salary before deductions. The existing legal snapshot, calculations, caps, validation and eligibility semantics are unchanged. A simpler two-step presentation is a separate layout decision; the field review does not silently remove legal checks or assume missing answers.

@@ -314,7 +314,7 @@ python3 src/lib/financing/income-tax-refund/__tests__/generate_references.py
 
 ## Phase 3 consumption contract
 
-The isolated calculator in `src/embed/` now consumes this contract. Its integration and evidence workflow is documented in `public/docs/financing-integration.md`. For «Հաշվել եկամտահարկի վերադարձով», callers need:
+The isolated calculator in `src/embed/` now consumes this contract. Its integration and evidence workflow is documented in `public/docs/financing-integration.md`. For «Հաշվել եկամտահարկի հետվերադարձով», callers need:
 
 1. The unchanged Phase 1 result and explicit origination/monthly payment dates.
 2. Verified property, lender, title, permit, prior-use and participant facts;

@@ -213,8 +213,8 @@ export default function FinancingCalculator({
                 onClick={() => setRefundOpen(!refundOpen)}
               >
                 {refundOpen
-                  ? "Փակել վերադարձի հաշվարկը"
-                  : "Հաշվել եկամտահարկի վերադարձով"}
+                  ? "Փակել հետվերադարձի հաշվարկը"
+                  : "Հաշվել եկամտահարկի հետվերադարձով"}
                 <span aria-hidden="true">↗</span>
               </button>
             )}
@@ -328,7 +328,7 @@ export default function FinancingCalculator({
       )}
       {initial.financingType === "developer_installment" && (
         <p className="vk-muted">
-          Անտոկոս ապառիկի դեպքում հիփոթեքային տոկոսների եկամտահարկի վերադարձ չի
+          Անտոկոս ապառիկի դեպքում հիփոթեքային տոկոսների եկամտահարկի հետվերադարձ չի
           հաշվարկվում։
         </p>
       )}

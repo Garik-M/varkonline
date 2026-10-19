@@ -59,9 +59,14 @@ function PayrollFields({
       <legend>{title}</legend>
       <div className="vk-grid">
         <label>
-          Գրանցված ամսական համախառն եկամուտ, ֏
+          Գրանցված ամսական համախառն աշխատավարձ, ֏
+          <small id={`${id}-gross-help`}>
+            Աշխատավարձը՝ մինչև հարկերի և այլ պահումների նվազեցումը։
+          </small>
           <input
             id={`${id}-gross`}
+            aria-label="Գրանցված ամսական համախառն աշխատավարձ, ֏"
+            aria-describedby={`${id}-gross-help`}
             inputMode="numeric"
             value={value.gross}
             required
@@ -88,7 +93,7 @@ function PayrollFields({
           "Պահանջվող անձը հաստատող / կացության փաստաթուղթ ունե՞ք",
           yesNo,
         )}
-        {field("prior", "Նախկինում օգտվե՞լ եք այս վերադարձից", [
+        {field("prior", "Նախկինում օգտվե՞լ եք այս հետվերադարձից", [
           ["none", "Ոչ"],
           ["same_mortgage", "Միայն այս հիփոթեքի համար"],
           ["other_post_2018_mortgage", "Մեկ այլ՝ 2018-ից հետո հիփոթեքի համար"],
@@ -96,7 +101,7 @@ function PayrollFields({
         ])}
         {field(
           "tuition",
-          "Նույն եռամսյակում ուսման վճարի հարկային վերադարձ կա՞",
+          "Նույն եռամսյակում ուսման վճարի հարկային հետվերադարձ կա՞",
           yesNo,
         )}
         <label>
@@ -136,6 +141,7 @@ export default function RefundPanel({
   financing: FinancingResult;
   configuration: ResolvedWidget;
 }) {
+  const id = useId();
   const [borrower, setBorrower] = useState(emptyPayroll);
   const [co, setCo] = useState(emptyPayroll);
   const [includeCo, setIncludeCo] = useState(false);
@@ -219,27 +225,27 @@ export default function RefundPanel({
     }
   }
   return (
-    <section className="vk-refund" aria-label="Եկամտահարկի վերադարձ">
+    <section className="vk-refund" aria-label="Եկամտահարկի հետվերադարձ">
       <div className="vk-section-heading">
-        <span className="vk-eyebrow">ԵԿԱՄՏԱՀԱՐԿԻ ՎԵՐԱԴԱՐՁ</span>
-        <h2>Գնահատեք վերադարձի հնարավորությունը</h2>
+        <span className="vk-eyebrow">ԵԿԱՄՏԱՀԱՐԿԻ ՀԵՏՎԵՐԱԴԱՐՁ</span>
+        <h2>Գնահատեք հետվերադարձի հնարավորությունը</h2>
       </div>
       <p className="vk-muted">
-        Աշխատավարձը չի պահպանվում և չի փոխանցվում գործընկերոջը։ Վերադարձը
+        Աշխատավարձը չի պահպանվում և չի փոխանցվում գործընկերոջը։ Հետվերադարձը
         կատարվում է առանձին՝ եռամսյակային կարգով, ՊԵԿ-ի հաստատման դեպքում։
       </p>
       {financing.currency === "USD" && (
         <p className="vk-warning">
           USD հիփոթեքի համար անհրաժեշտ են բանկի տրամադրած դրամային վճարներն ու
           տոկոսները յուրաքանչյուր ամսվա համար։ Այստեղ փոխարժեք չի ենթադրվում․
-          վերադարձի գումարը կմնա չորոշված։
+          հետվերադարձի գումարը կմնա չորոշված։
         </p>
       )}
       {!propertyReady && (
         <div className="vk-warning" data-testid="refund-result">
           <h3>
             {legal?.status === "ineligible"
-              ? "Վերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
+              ? "Հետվերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
               : "Անհրաժեշտ է տվյալների լրացուցիչ ստուգում"}
           </h3>
           <p>
@@ -259,7 +265,7 @@ export default function RefundPanel({
           </ul>
           {legal?.status !== "ineligible" && (
             <p>
-              Վերադարձի գումար չի ենթադրվում։ Դիմեք կառուցապատողին կամ ՊԵԿ-ին
+              Հետվերադարձի գումար չի ենթադրվում։ Դիմեք կառուցապատողին կամ ՊԵԿ-ին
               փաստաթղթերի ստուգման համար։ Արդյունավետ ամսական ծախս՝{" "}
               <strong data-testid="effective-cost">Չորոշված</strong>։ Այստեղ
               կարող եք առանձին գնահատել ձեր եկամտային հարկը։
@@ -300,8 +306,13 @@ export default function RefundPanel({
           {!propertyReady && (
             <div className="vk-grid" style={{ marginTop: 18 }}>
               <label>
-                Գրանցված ամսական համախառն եկամուտ, ֏
+                Գրանցված ամսական համախառն աշխատավարձ, ֏
+                <small id={`${id}-salary-help`}>
+                  Աշխատավարձը՝ մինչև հարկերի և այլ պահումների նվազեցումը։
+                </small>
                 <input
+                  aria-label="Գրանցված ամսական համախառն աշխատավարձ, ֏"
+                  aria-describedby={`${id}-salary-help`}
                   inputMode="numeric"
                   required
                   value={borrower.gross}
@@ -370,7 +381,7 @@ export default function RefundPanel({
           )}
           <button className="vk-button" type="submit">
             {propertyReady
-              ? "Հաշվել վերադարձի կանխատեսումը"
+              ? "Հաշվել հետվերադարձի կանխատեսումը"
               : "Հաշվել եկամտային հարկը"}
           </button>
         </form>
@@ -395,12 +406,12 @@ export default function RefundPanel({
             {projection.eligibility.status === "eligible"
               ? "Պայմանները բավարարված են ըստ տրամադրված տվյալների"
               : projection.eligibility.status === "ineligible"
-                ? "Վերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
+                ? "Հետվերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
                 : "Անհրաժեշտ է տվյալների լրացուցիչ ստուգում"}
           </h3>
           {projection.eligibility.status === "requires_verification" && (
             <p>
-              Վերադարձի և արդյունավետ ծախսի գումար չի ենթադրվում։ Գույքի, վարկի
+              Հետվերադարձի և արդյունավետ ծախսի գումար չի ենթադրվում։ Գույքի, վարկի
               կամ ձեր փաստաթղթերի ստուգումը դեռ ավարտված չէ։ Դիմեք
               կառուցապատողին կամ ՊԵԿ-ին։
             </p>
@@ -421,7 +432,7 @@ export default function RefundPanel({
               </strong>
             </div>
             <div>
-              <span>Վերադարձից հետո միջին ամսական ծախս</span>
+              <span>Հետվերադարձից հետո միջին ամսական ծախս</span>
               <strong data-testid="effective-cost">
                 {projection.effectiveAverageMonthlyFinancingCostAMD === null
                   ? "Չորոշված"
@@ -431,10 +442,10 @@ export default function RefundPanel({
           </div>
           <p className="vk-muted">
             Միջին ծախսը տեղեկատվական համարժեք է․ այն չի փոխում բանկին վճարվող
-            գումարը և չի ներառում կանխավճարը։ Վերադարձը երաշխավորված չէ։
+            գումարը և չի ներառում կանխավճարը։ Հետվերադարձը երաշխավորված չէ։
           </p>
           <details>
-            <summary>Եռամսյակային վերադարձի գրաֆիկ</summary>
+            <summary>Եռամսյակային հետվերադարձի գրաֆիկ</summary>
             <div className="vk-quarter-list">
               {projection.quarterlySchedule
                 .slice(page * 8, page * 8 + 8)
@@ -486,7 +497,7 @@ export default function RefundPanel({
           </details>
           <p>
             <strong>
-              Ընդհանուր կանխատեսված վերադարձ՝{" "}
+              Ընդհանուր կանխատեսված հետվերադարձ՝{" "}
               {projection.totalEstimatedRefundAMD === null
                 ? "Չորոշված"
                 : money(projection.totalEstimatedRefundAMD)}

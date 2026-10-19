@@ -15,7 +15,7 @@ For an expired invitation or account recovery, contact Varkonline at info@varkon
 
 ### Income-tax refund in the preview
 
-In Calculator settings, enable **Show income-tax refund calculator for mortgages**, then save. New integrations enable this visibility switch by default; existing integrations retain their saved choice. Set the sample price and, when property evidence has been reviewed, the exact **Sample apartment ID** used in that evidence. Open the live preview and select **Հաշվել եկամտահարկի վերադարձով** below the mortgage results. The generated SDK code uses the same sample ID. Staff have the equivalent visibility switch and sample ID in `/admin/financing`.
+In Calculator settings, enable **Show income-tax refund calculator for mortgages**, then save. New integrations enable this visibility switch by default; existing integrations retain their saved choice. Set the sample price and, when property evidence has been reviewed, the exact **Sample apartment ID** used in that evidence. Open the live preview and select **Հաշվել եկամտահարկի հետվերադարձով** below the mortgage results. The generated SDK code uses the same sample ID. Staff have the equivalent visibility switch and sample ID in `/admin/financing`.
 
 Enabling the tools does not establish legal eligibility. Unreviewed properties show verification requirements and allow a separate salary-tax estimate; a refund amount requires the reviewed property facts and the visitor's required eligibility inputs. Partners cannot certify property evidence themselves. Interest-free developer installments have no mortgage-interest refund. USD refund amounts remain unresolved without the required AMD interest evidence. Salary stays inside the calculator and is not submitted to Varkonline.
 
