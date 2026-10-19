@@ -40,7 +40,7 @@ input:focus-visible,
 select:focus-visible,
 summary:focus-visible,
 a:focus-visible {
-  outline: 3px solid #4288e7;
+  outline: 3px solid var(--vk-accent, #173453);
   outline-offset: 3px;
 }
 input,
@@ -109,6 +109,8 @@ legend {
   font-weight: 700;
 }
 .vk-card {
+  --vk-accent: #173453;
+  --vk-on-accent: #ffffff;
   --vk-bg: #fff;
   --vk-soft: #f5f8fa;
   --vk-border: #e1e8ef;
@@ -230,8 +232,8 @@ legend {
   font-size: 16px;
 }
 .vk-payment {
-  background: #173453;
-  color: #fff;
+  background: var(--vk-accent);
+  color: var(--vk-on-accent);
   border-radius: 16px;
   padding: 26px;
   display: flex;
@@ -241,7 +243,7 @@ legend {
   min-width: 0;
 }
 .vk-payment > span {
-  color: #c1d2df;
+  color: inherit;
 }
 .vk-payment > strong {
   font-size: clamp(26px, 4.6vw, 42px);
@@ -253,7 +255,7 @@ legend {
   max-width: 100%;
 }
 .vk-payment p {
-  color: #bdcddd;
+  color: inherit;
   font-size: 11px;
 }
 .vk-refund-toggle {
@@ -263,8 +265,8 @@ legend {
   align-items: center;
   gap: 12px;
   margin-top: 22px;
-  background: #fff;
-  color: #173453;
+  background: var(--vk-on-accent);
+  color: var(--vk-accent);
   border: 0;
   font-size: 11px;
   text-align: left;
@@ -272,6 +274,9 @@ legend {
 }
 .vk-refund-toggle span {
   font-size: 21px;
+}
+.vk-payment button:focus-visible {
+  outline-color: var(--vk-on-accent);
 }
 .vk-totals {
   display: grid;
@@ -408,11 +413,11 @@ tfoot {
   accent-color: var(--vk-accent);
 }
 .vk-button {
-  background: #173453;
-  color: #fff;
+  background: var(--vk-accent);
+  color: var(--vk-on-accent);
   font-weight: 700;
   width: 100%;
-  border-color: #173453;
+  border-color: var(--vk-accent);
 }
 .vk-warning {
   background: #fff5dc;

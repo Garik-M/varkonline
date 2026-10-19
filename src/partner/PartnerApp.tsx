@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { integrationSnippet } from "@/embed/snippet";
+import { DEFAULT_ACCENT_COLOR } from "@/embed/appearance";
 import PartnerPreview from "@/embed/PartnerPreview";
 import { parseWidgetConfiguration } from "@/embed/sdk-core";
 import type { WidgetConfiguration } from "@/embed/types";
@@ -175,7 +176,7 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
           <label className="space-y-2 text-sm font-medium">{c.down}<Input name="downPayment" type="number" min={existing?.limits.downPaymentPercent.min ?? 0} max={existing?.limits.downPaymentPercent.max ?? 100} step={existing?.limits.downPaymentPercent.step ?? 0.01} required defaultValue={existing?.settings.downPaymentPercent ?? ""} /></label>
           <label className="space-y-2 text-sm font-medium">{c.duration}{existing?.limits.supportedDurations.length ? <select aria-label={c.duration} name="duration" className="block border rounded-lg p-2 w-full bg-background" defaultValue={existing.settings.durationMonths}>{existing.limits.supportedDurations.map(months => <option key={months} value={months}>{months}</option>)}</select> : <Input name="duration" type="number" min={existing?.limits.durationMonths.min ?? 1} max={existing?.limits.durationMonths.max ?? 600} step={existing?.limits.durationMonths.step ?? 1} required defaultValue={existing?.settings.durationMonths ?? ""} />}</label>
           <label className="space-y-2 text-sm font-medium">{c.theme}<select aria-label={c.theme} name="theme" className="block border rounded-lg p-2 w-full bg-background" defaultValue={existing?.settings.theme ?? "light"}><option value="light">{c.light}</option><option value="dark">{c.dark}</option></select></label>
-          <label className="space-y-2 text-sm font-medium">{c.accent}<Input name="accentColor" type="color" defaultValue={existing?.settings.accentColor ?? "#29986c"} /></label>
+          <label className="space-y-2 text-sm font-medium">{c.accent}<Input name="accentColor" type="color" defaultValue={existing?.settings.accentColor ?? DEFAULT_ACCENT_COLOR} /></label>
         </div>
         <fieldset className="rounded-lg border p-4 space-y-2">
           <legend className="px-1 text-sm font-semibold">{c.refundTitle}</legend>

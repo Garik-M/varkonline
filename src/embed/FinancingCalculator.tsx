@@ -3,6 +3,7 @@ import { calculateFinancing } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
 import RefundPanel from "./RefundPanel";
 import { money, number } from "./format";
+import { accentForeground } from "./appearance";
 
 export default function FinancingCalculator({
   configuration,
@@ -84,6 +85,7 @@ export default function FinancingCalculator({
       style={
         {
           "--vk-accent": configuration.appearance.accentColor,
+          "--vk-on-accent": accentForeground(configuration.appearance.accentColor),
         } as React.CSSProperties
       }
     >

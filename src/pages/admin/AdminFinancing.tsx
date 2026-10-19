@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { parseWidgetConfiguration } from "@/embed/sdk-core";
 import PartnerPreview from "@/embed/PartnerPreview";
 import { integrationSnippet } from "@/embed/snippet";
+import { DEFAULT_ACCENT_COLOR } from "@/embed/appearance";
 import type {
   FinancingPartner,
   PartnerConfiguration,
@@ -42,7 +43,7 @@ const blankConfiguration = (): PartnerConfiguration => ({
     supportedDurations: [],
   },
   adjustable: { downPaymentPercent: true, durationMonths: true },
-  appearance: { theme: "light", accentColor: "#29986c", logoUrl: null },
+  appearance: { theme: "light", accentColor: DEFAULT_ACCENT_COLOR, logoUrl: null },
   refund: {
     enabled: true,
     defaultDevelopmentId: null,

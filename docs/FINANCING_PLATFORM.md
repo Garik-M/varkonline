@@ -161,3 +161,9 @@ Armenian refund labels now use «հետվերադարձ». The salary label expl
 The ownership question explicitly routes prospective purchases and registered rights to buy a property under construction to “unknown / needs review.” The current participant-ownership model must not turn a future purchase intention or a construction purchase-right into confirmed ownership. This is a conservative model boundary, not a statement that those purchases are legally excluded.
 
 Two-step verification passed: 368 frontend and 19 backend unit tests, 92 real API checks and 121 Chromium checks, plus feature TypeScript/lint and both production builds. Component checks cover step separation, preserved inputs, optional co-borrower tax aggregation, explicit zero withheld tax, missing historical rates, document self-check invalidation, and property preflight exclusions. Real iframe checks retain the independent 300,000 AMD quarterly refund reference and salary privacy.
+
+### Partner appearance
+
+New partner and staff setups default to navy blue (`#173453`). Existing saved colors are preserved. The saved appearance accent colors the widget payment panel, primary refund actions, partner marker, focus indicators, checkboxes and active refund-step border in both light and dark themes. Black or white text is selected using sRGB relative luminance for the higher contrast on the exact chosen color; the refund toggle uses the inverse combination. Preview and installed SDK use the same calculator and server-provided appearance. No configuration migration is required.
+
+Appearance verification passed: 375 frontend and 19 backend unit tests, 92 real API checks and 126 Chromium checks, plus feature TypeScript/lint and both production builds. Browser checks cover navy defaults in both setup forms, saved purple after refresh, actual computed payment/action colors, and yellow with black text in dark mode. Mobile screenshots were visually reviewed.
