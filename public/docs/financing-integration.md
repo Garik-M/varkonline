@@ -9,7 +9,7 @@ The partner website supplies apartment values through its existing template. Var
 3. Open the invitation within 72 hours and set your password. If the email already has an account, enter that account's current password instead. The link works once.
 4. Sign in to the [partner workspace](https://www.varkonline.am/partner). Enter your actual currency, financing type, mortgage rate where applicable, down payment and term, then save.
 5. Enter a sample apartment price to generate and copy your code. The sample is not a default apartment price. Bind the actual apartment ID and financial values in your website's shared apartment template, following the examples below.
-6. Test the live preview and your deployed apartment page. Website access is limited to the exact approved origin. Ask Varkonline to review additional domains, restricted settings or tax-refund evidence.
+6. Test the live preview and your deployed apartment page. Website access permits the approved hostname and its www counterpart, with the same scheme and port. Ask Varkonline to review additional domains, restricted settings or tax-refund evidence.
 
 For an expired invitation or account recovery, contact Varkonline at info@varkonline.am. Existing partners can change their password in the workspace. A staff-paused integration requires Varkonline to reactivate it.
 
@@ -25,7 +25,7 @@ Partners normally create their calculator in the partner workspace after applica
 
 Open a company's **Review** link to view its overview at `/admin/financing/:slug`. **Calculator settings** contains the actual terms, website access, pause/activation switch and appearance. **Advanced settings** contains optional shared prices, permitted overrides, allowed currencies/models and technical bounds. **SDK & preview** uses the saved configuration and accepts a sample apartment ID, price and rate. Links from application records also open the matching saved integration.
 
-Register the exact website origin, for example `https://defanse.am`. HTTP is permitted only on loopback during development. `www`, other subdomains, schemes and ports require their own entries. The public identifier is stable and is not a secret.
+Register the exact website origin, for example `https://defanse.am`. HTTP is permitted only on loopback during development. The same hostname with or without a leading `www.` is allowed automatically, including for existing integrations. Other subdomains, schemes and ports require their own entries. Loopback and IP origins remain exact. The public identifier is stable and is not a secret.
 
 Add this div to the shared apartment template, and load the script once in the layout. Replace the example ID and numbers with the actual apartment's escaped values. The real frontend deployment hosts `/sdk/v1.js`; the existing Express deployment hosts `/embed/:partner`. No `embed.varkonline.am` DNS assumption is made.
 
@@ -207,7 +207,11 @@ For a persistent manual session, use the same commands in the script without its
 - `OVERRIDE_NOT_ALLOWED` / `OUTSIDE_PARTNER_LIMITS`: change policy through an authorized admin or use allowed values; check term lists and steps.
 - `INSTALLMENT_RATE_NOT_APPLICABLE`: omit annual interest for developer installments. Only interest-free formula is currently supported.
 - `PARTNER_UNAVAILABLE`: wrong ID, inactive record, or unapplied migration/service issue. Check protected partner administration and backend logs.
-- `ORIGIN_NOT_ALLOWED` / blocked iframe: register the exact real page origin, including scheme, subdomain and port. Nested ancestors must also satisfy CSP. Check browser CSP errors and partner `frame-src` policy.
+- `ORIGIN_NOT_ALLOWED` / blocked iframe: register the real page origin, including scheme and port. Its www counterpart is included automatically; other subdomains need explicit registration. Nested ancestors must also satisfy CSP. Check browser CSP errors and partner `frame-src` policy.
 - SDK timeout: check script URL, backend availability, exact origins and frontend asset deployment. A failed iframe cannot send a trusted handshake; the host shows a safe timeout rather than assuming success.
 - Blank iframe/module CORS error: confirm the asset CORS header, frontend EMBED origin, built `embed.html` and correct backend URL; a SPA fallback HTML response is not a JavaScript module.
 - Refund unresolved: this is a valid outcome when facts, documents, payroll, dates or AMD quotes are missing. Complete documentary review, not an `eligible` override. Bank payment calculations continue to work.
+
+### Host website security policy
+
+A host page with Content Security Policy must permit `https://www.varkonline.am` in `script-src` (and `script-src-elem` if separately defined), and `https://varkonlineback-production.up.railway.app` in `frame-src` (or the applicable fallback). Varkonline cannot change another website’s response policy. Browser-console insertion remains subject to that policy; adding www support to a partner does not bypass it.

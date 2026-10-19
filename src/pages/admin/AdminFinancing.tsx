@@ -472,8 +472,9 @@ export default function AdminFinancing({
                 </label>
                 <p className="text-xs text-muted-foreground">
                   HTTPS required; loopback HTTP is allowed for local testing.
-                  Include scheme and port. No paths, wildcards, or subdomain
-                  inheritance.
+                  Include scheme and port. The www counterpart is included
+                  automatically. Other subdomains need their own entry; no paths
+                  or wildcards.
                 </p>
                 <label className="flex items-center gap-2">
                   <input
