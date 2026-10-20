@@ -77,8 +77,8 @@ const blankFields = (): Fields => ({
   origins: "",
   price: "",
   rate: "",
-  down: "",
-  duration: "",
+  down: "20",
+  duration: "240",
   terms: "",
   logo: "",
 });
@@ -101,7 +101,7 @@ export default function AdminFinancing({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [samplePrice, setSamplePrice] = useState("35000000");
-  const [sampleRate, setSampleRate] = useState("9");
+  const [sampleRate, setSampleRate] = useState("");
   const [sampleLanguage, setSampleLanguage] = useState<"hy" | "en" | "ru">(
     "hy",
   );
@@ -136,6 +136,7 @@ export default function AdminFinancing({
   const choose = useCallback((partner: FinancingPartner | null) => {
     setSelected(partner);
     setCopied(false);
+    setSampleRate("");
     if (!partner) {
       setFields(blankFields());
       const fresh = blankConfiguration();
@@ -157,7 +158,6 @@ export default function AdminFinancing({
       logo: value.appearance.logoUrl ?? "",
     });
     setSamplePrice(String(value.defaults.apartmentPrice ?? 35000000));
-    setSampleRate(String(value.defaults.annualInterestRatePercent ?? 9));
   }, []);
   useEffect(() => {
     if (loading || loadError || (!slug && !create)) return;
@@ -262,10 +262,10 @@ export default function AdminFinancing({
         samplePrice.trim() === "" ? NaN : Number(samplePrice);
     if (
       saved.overrides.includes("annualInterestRatePercent") &&
-      defaults.financingType === "mortgage"
+      defaults.financingType === "mortgage" &&
+      sampleRate.trim() !== ""
     )
-      value.annualInterestRatePercent =
-        sampleRate.trim() === "" ? NaN : Number(sampleRate);
+      value.annualInterestRatePercent = Number(sampleRate);
     return value;
   }, [selected, samplePrice, sampleRate, sampleApartmentId, sampleLanguage]);
   const snippet = useMemo(() => {
@@ -441,493 +441,530 @@ export default function AdminFinancing({
         <AnalyticsPanel request={analyticsRequest} />
       )}
       {tab !== "overview" && tab !== "sdk" && tab !== "analytics" && (
-        <form onSubmit={save} className="space-y-5">
-          {tab === "calculator" && (
-            <>
-              <section className={box}>
-                <h2 className="font-semibold text-lg">
-                  Partner & website access
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
+        <div
+          className={
+            tab === "calculator"
+              ? "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]"
+              : ""
+          }
+        >
+          <form onSubmit={save} className="min-w-0 space-y-5">
+            {tab === "calculator" && (
+              <>
+                <section className={box}>
+                  <h2 className="font-semibold text-lg">
+                    Partner & website access
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <label className={label}>
+                      Stable public ID
+                      <Input
+                        required
+                        pattern="[a-z0-9][a-z0-9-]{1,63}"
+                        value={fields.slug}
+                        disabled={!!selected}
+                        onChange={(e) => field("slug", e.target.value)}
+                        placeholder="defanse"
+                      />
+                    </label>
+                    <label className={label}>
+                      Display name
+                      <Input
+                        required
+                        maxLength={120}
+                        value={fields.displayName}
+                        onChange={(e) => field("displayName", e.target.value)}
+                      />
+                    </label>
+                  </div>
                   <label className={label}>
-                    Stable public ID
-                    <Input
+                    Allowed exact website origins (one per line)
+                    <textarea
                       required
-                      pattern="[a-z0-9][a-z0-9-]{1,63}"
-                      value={fields.slug}
-                      disabled={!!selected}
-                      onChange={(e) => field("slug", e.target.value)}
-                      placeholder="defanse"
+                      rows={3}
+                      className="w-full border rounded-md p-3 font-mono text-sm"
+                      value={fields.origins}
+                      onChange={(e) => field("origins", e.target.value)}
+                      placeholder="https://partner.am"
                     />
                   </label>
-                  <label className={label}>
-                    Display name
-                    <Input
-                      required
-                      maxLength={120}
-                      value={fields.displayName}
-                      onChange={(e) => field("displayName", e.target.value)}
+                  <p className="text-xs text-muted-foreground">
+                    HTTPS required; loopback HTTP is allowed for local testing.
+                    Include scheme and port. The www counterpart is included
+                    automatically. Other subdomains need their own entry; no
+                    paths or wildcards.
+                  </p>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={fields.active}
+                      onChange={(e) => field("active", e.target.checked)}
                     />
+                    Active integration
                   </label>
-                </div>
-                <label className={label}>
-                  Allowed exact website origins (one per line)
-                  <textarea
-                    required
-                    rows={3}
-                    className="w-full border rounded-md p-3 font-mono text-sm"
-                    value={fields.origins}
-                    onChange={(e) => field("origins", e.target.value)}
-                    placeholder="https://partner.am"
-                  />
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  HTTPS required; loopback HTTP is allowed for local testing.
-                  Include scheme and port. The www counterpart is included
-                  automatically. Other subdomains need their own entry; no paths
-                  or wildcards.
-                </p>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={fields.active}
-                    onChange={(e) => field("active", e.target.checked)}
-                  />
-                  Active integration
-                </label>
-              </section>
-              <section className={box}>
-                <h2 className="font-semibold text-lg">Financing defaults</h2>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <label className={label}>
-                    Financing type
-                    <select
-                      className="w-full border rounded-md p-2"
-                      value={config.defaults.financingType}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          allowedFinancingTypes: [
-                            ...new Set([
-                              ...config.allowedFinancingTypes,
-                              e.target.value as
+                </section>
+                <section className={box}>
+                  <h2 className="font-semibold text-lg">Financing defaults</h2>
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <label className={label}>
+                      Financing type
+                      <select
+                        className="w-full border rounded-md p-2"
+                        value={config.defaults.financingType}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            allowedFinancingTypes: [
+                              ...new Set([
+                                ...config.allowedFinancingTypes,
+                                e.target.value as
+                                  | "mortgage"
+                                  | "developer_installment",
+                              ]),
+                            ],
+                            defaults: {
+                              ...config.defaults,
+                              financingType: e.target.value as
                                 | "mortgage"
                                 | "developer_installment",
-                            ]),
-                          ],
-                          defaults: {
-                            ...config.defaults,
-                            financingType: e.target.value as
-                              | "mortgage"
-                              | "developer_installment",
-                          },
-                        })
-                      }
-                    >
-                      <option value="mortgage">Mortgage</option>
-                      <option value="developer_installment">
-                        Interest-free developer installments
-                      </option>
-                    </select>
-                  </label>
-                  <label className={label}>
-                    Currency
-                    <select
-                      className="w-full border rounded-md p-2"
-                      value={config.defaults.currency}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          allowedCurrencies: [
-                            ...new Set([
-                              ...config.allowedCurrencies,
-                              e.target.value as "AMD" | "USD",
-                            ]),
-                          ],
-                          defaults: {
-                            ...config.defaults,
-                            currency: e.target.value as "AMD" | "USD",
-                          },
-                        })
-                      }
-                    >
-                      <option>AMD</option>
-                      <option>USD</option>
-                    </select>
-                  </label>
-                  {config.defaults.financingType === "mortgage" && (
-                    <label className={label}>
-                      Annual nominal rate, %
-                      <Input
-                        required={
-                          !config.overrides.includes(
-                            "annualInterestRatePercent",
-                          )
+                            },
+                          })
                         }
-                        placeholder="Optional when each apartment supplies a rate"
+                      >
+                        <option value="mortgage">Mortgage</option>
+                        <option value="developer_installment">
+                          Interest-free developer installments
+                        </option>
+                      </select>
+                    </label>
+                    <label className={label}>
+                      Currency
+                      <select
+                        className="w-full border rounded-md p-2"
+                        value={config.defaults.currency}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            allowedCurrencies: [
+                              ...new Set([
+                                ...config.allowedCurrencies,
+                                e.target.value as "AMD" | "USD",
+                              ]),
+                            ],
+                            defaults: {
+                              ...config.defaults,
+                              currency: e.target.value as "AMD" | "USD",
+                            },
+                          })
+                        }
+                      >
+                        <option>AMD</option>
+                        <option>USD</option>
+                      </select>
+                    </label>
+                    {config.defaults.financingType === "mortgage" && (
+                      <label className={label}>
+                        Annual nominal rate, %
+                        <Input
+                          required={
+                            !config.overrides.includes(
+                              "annualInterestRatePercent",
+                            )
+                          }
+                          placeholder="Optional when each apartment supplies a rate"
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="any"
+                          value={fields.rate}
+                          onChange={(e) => field("rate", e.target.value)}
+                        />
+                      </label>
+                    )}
+                    <label className={label}>
+                      Down payment, %
+                      <Input
+                        required
                         type="number"
                         min={0}
                         max={100}
                         step="any"
-                        value={fields.rate}
-                        onChange={(e) => field("rate", e.target.value)}
+                        value={fields.down}
+                        onChange={(e) => field("down", e.target.value)}
                       />
                     </label>
-                  )}
-                  <label className={label}>
-                    Down payment, %
-                    <Input
-                      required
-                      type="number"
-                      min={0}
-                      max={100}
-                      step="any"
-                      value={fields.down}
-                      onChange={(e) => field("down", e.target.value)}
+                    <label className={label}>
+                      Duration in months
+                      <Input
+                        required
+                        type="number"
+                        min={1}
+                        max={600}
+                        step={1}
+                        value={fields.duration}
+                        onChange={(e) => field("duration", e.target.value)}
+                      />
+                    </label>
+                  </div>
+                </section>
+                <section className={box}>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={config.refund.enabled}
+                      onChange={(event) =>
+                        setConfig({
+                          ...config,
+                          refund: {
+                            ...config.refund,
+                            enabled: event.target.checked,
+                          },
+                        })
+                      }
                     />
+                    Show income-tax refund tools for mortgages
                   </label>
+                  <p className="text-sm text-muted-foreground">
+                    Visitors can estimate a possible refund using their own
+                    answers. No apartment registry or document review is
+                    required.
+                  </p>
+                </section>
+                <section className={box}>
+                  <CalculatorControlsEditor
+                    value={{
+                      limits: config.limits,
+                      adjustable: config.adjustable,
+                      calculator: config.calculator,
+                    }}
+                    onChange={(value) => setConfig({ ...config, ...value })}
+                    mortgage={config.defaults.financingType === "mortgage"}
+                  />
+                </section>
+                <section className={box}>
+                  <h2 className="font-semibold text-lg">Appearance</h2>
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <label className={label}>
+                      Accent color
+                      <Input
+                        type="color"
+                        value={config.appearance.accentColor}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            appearance: {
+                              ...config.appearance,
+                              accentColor: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                    <label className={label}>
+                      Theme
+                      <select
+                        className="w-full border rounded-md p-2"
+                        aria-label="Theme"
+                        value={config.appearance.theme}
+                        onChange={(e) =>
+                          setConfig({
+                            ...config,
+                            appearance: {
+                              ...config.appearance,
+                              theme: e.target.value as "light" | "dark",
+                            },
+                          })
+                        }
+                      >
+                        <option>light</option>
+                        <option>dark</option>
+                      </select>
+                    </label>
+                    <label className={label}>
+                      HTTPS logo URL (optional)
+                      <Input
+                        type="url"
+                        value={fields.logo}
+                        onChange={(e) => field("logo", e.target.value)}
+                      />
+                    </label>
+                  </div>
+                </section>
+              </>
+            )}
+            {tab === "advanced" && (
+              <>
+                <section className={box}>
+                  <h2 className="text-lg font-semibold">
+                    Optional shared apartment price
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Usually each apartment page supplies its own price. Only set
+                    a shared price when it applies to this integration.
+                  </p>{" "}
                   <label className={label}>
-                    Duration in months
+                    Default apartment price (optional)
                     <Input
-                      required
                       type="number"
                       min={1}
-                      max={600}
+                      max={1e12}
                       step={1}
-                      value={fields.duration}
-                      onChange={(e) => field("duration", e.target.value)}
+                      value={fields.price}
+                      onChange={(e) => field("price", e.target.value)}
                     />
                   </label>
-                </div>
-              </section>
-              <section className={box}>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={config.refund.enabled}
-                    onChange={(event) =>
-                      setConfig({
-                        ...config,
-                        refund: {
-                          ...config.refund,
-                          enabled: event.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  Show income-tax refund tools for mortgages
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  Visitors can estimate a possible refund using their own
-                  answers. No apartment registry or document review is required.
-                </p>
-              </section>
-              <section className={box}>
-                <CalculatorControlsEditor
-                  value={{
-                    limits: config.limits,
-                    adjustable: config.adjustable,
-                    calculator: config.calculator,
-                  }}
-                  onChange={(value) => setConfig({ ...config, ...value })}
-                  mortgage={config.defaults.financingType === "mortgage"}
-                />
-              </section>
-              <section className={box}>
-                <h2 className="font-semibold text-lg">Appearance</h2>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <label className={label}>
-                    Accent color
-                    <Input
-                      type="color"
-                      value={config.appearance.accentColor}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          appearance: {
-                            ...config.appearance,
-                            accentColor: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </label>
-                  <label className={label}>
-                    Theme
-                    <select
-                      className="w-full border rounded-md p-2"
-                      aria-label="Theme"
-                      value={config.appearance.theme}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          appearance: {
-                            ...config.appearance,
-                            theme: e.target.value as "light" | "dark",
-                          },
-                        })
-                      }
+                </section>
+                <section className={box}>
+                  <h2 className="text-lg font-semibold">
+                    Permissions for this integration
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    These restrict what the partner and apartment pages may
+                    supply. Routine term changes belong in Calculator settings.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <fieldset>
+                      <legend className="text-sm font-medium mb-2">
+                        Allowed financing models
+                      </legend>
+                      {(["mortgage", "developer_installment"] as const).map(
+                        (type) => (
+                          <label className="flex gap-2 mb-2" key={type}>
+                            <input
+                              type="checkbox"
+                              checked={config.allowedFinancingTypes.includes(
+                                type,
+                              )}
+                              onChange={(e) =>
+                                setConfig({
+                                  ...config,
+                                  allowedFinancingTypes: e.target.checked
+                                    ? [...config.allowedFinancingTypes, type]
+                                    : config.allowedFinancingTypes.filter(
+                                        (value) => value !== type,
+                                      ),
+                                })
+                              }
+                            />
+                            {type}
+                          </label>
+                        ),
+                      )}
+                    </fieldset>
+                    <fieldset>
+                      <legend className="text-sm font-medium mb-2">
+                        Allowed currencies
+                      </legend>
+                      {(["AMD", "USD"] as const).map((currency) => (
+                        <label key={currency} className="flex gap-2 mb-2">
+                          <input
+                            type="checkbox"
+                            checked={config.allowedCurrencies.includes(
+                              currency,
+                            )}
+                            onChange={(e) =>
+                              setConfig({
+                                ...config,
+                                allowedCurrencies: e.target.checked
+                                  ? [...config.allowedCurrencies, currency]
+                                  : config.allowedCurrencies.filter(
+                                      (value) => value !== currency,
+                                    ),
+                              })
+                            }
+                          />
+                          {currency} (whole units)
+                        </label>
+                      ))}
+                    </fieldset>
+                  </div>
+                  <fieldset>
+                    <legend className="text-sm font-medium mb-2">
+                      Permitted apartment overrides
+                    </legend>
+                    <div className="flex flex-wrap gap-4">
+                      {(
+                        [
+                          "apartmentPrice",
+                          "annualInterestRatePercent",
+                          "downPaymentPercent",
+                          "durationMonths",
+                          "financingType",
+                          "currency",
+                        ] as const
+                      ).map((key) => (
+                        <label key={key} className="flex gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={config.overrides.includes(key)}
+                            onChange={(e) =>
+                              setConfig({
+                                ...config,
+                                overrides: e.target.checked
+                                  ? [...config.overrides, key]
+                                  : config.overrides.filter(
+                                      (value) => value !== key,
+                                    ),
+                              })
+                            }
+                          />
+                          {key}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </section>
+                <section className={box}>
+                  <h2 className="font-semibold text-lg">
+                    Permitted bounds & visitor controls
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Set reviewed partner limits. The initial broad bounds are
+                    engine resource limits, not lending terms.
+                  </p>
+                  {(
+                    [
+                      "apartmentPrice",
+                      "annualInterestRatePercent",
+                      "downPaymentPercent",
+                      "durationMonths",
+                    ] as const
+                  ).map((key) => (
+                    <fieldset
+                      className="grid grid-cols-3 sm:grid-cols-4 gap-3 items-end"
+                      key={key}
                     >
-                      <option>light</option>
-                      <option>dark</option>
-                    </select>
-                  </label>
+                      <legend className="text-sm font-medium">{key}</legend>
+                      {(
+                        [
+                          "min",
+                          "max",
+                          ...("step" in config.limits[key] ? ["step"] : []),
+                        ] as ("min" | "max" | "step")[]
+                      ).map((bound) => (
+                        <label key={bound} className="text-xs">
+                          {bound}
+                          <Input
+                            required
+                            type="number"
+                            step="any"
+                            value={
+                              (
+                                config.limits[key] as unknown as Record<
+                                  string,
+                                  number
+                                >
+                              )[bound]
+                            }
+                            onChange={(e) =>
+                              setConfig({
+                                ...config,
+                                limits: {
+                                  ...config.limits,
+                                  [key]: {
+                                    ...config.limits[key],
+                                    [bound]: Number(e.target.value),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                    </fieldset>
+                  ))}
                   <label className={label}>
-                    HTTPS logo URL (optional)
+                    Supported durations (comma-separated months, empty = range)
                     <Input
-                      type="url"
-                      value={fields.logo}
-                      onChange={(e) => field("logo", e.target.value)}
+                      value={fields.terms}
+                      onChange={(e) => field("terms", e.target.value)}
                     />
                   </label>
-                </div>
-              </section>
-            </>
-          )}
+                  <div className="flex flex-wrap gap-5">
+                    {(["downPaymentPercent", "durationMonths"] as const).map(
+                      (key) => (
+                        <label className="flex gap-2 text-sm" key={key}>
+                          <input
+                            type="checkbox"
+                            checked={config.adjustable[key]}
+                            onChange={(e) =>
+                              setConfig({
+                                ...config,
+                                adjustable: {
+                                  ...config.adjustable,
+                                  [key]: e.target.checked,
+                                },
+                              })
+                            }
+                          />
+                          Visitor may adjust {key}
+                        </label>
+                      ),
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
+            <Button disabled={busy || loading || !!loadError} type="submit">
+              {busy
+                ? "Saving…"
+                : selected
+                  ? "Save configuration"
+                  : "Create integration"}
+            </Button>
+          </form>
           {tab === "calculator" && (
-            <section className={box}>
+            <aside
+              className={`${box} min-w-0 order-first xl:order-last xl:sticky xl:top-6 xl:max-h-[calc(100dvh-5rem)] xl:overflow-y-auto`}
+              aria-label="Live draft preview"
+            >
               <h2 className="font-semibold">Live draft preview</h2>
               <p className="text-xs text-muted-foreground">
                 Preview only. Save to publish changes. No analytics are
                 collected here.
               </p>
+              <label className={label}>
+                Preview apartment price ({config.defaults.currency})
+                <Input
+                  type="number"
+                  min={1}
+                  max={1e12}
+                  step={1}
+                  value={samplePrice}
+                  onChange={(event) => setSamplePrice(event.target.value)}
+                />
+              </label>
               <DraftCalculatorPreview
                 name={fields.displayName || "Varkonline"}
-                price={Number(samplePrice) || 35000000}
+                price={samplePrice.trim() ? Number(samplePrice) : NaN}
                 language={config.calculator?.defaultLanguage ?? "hy"}
                 configuration={{
                   ...config,
+                  appearance: {
+                    ...config.appearance,
+                    logoUrl: fields.logo || null,
+                  },
                   defaults: {
                     ...config.defaults,
-                    downPaymentPercent: Number(fields.down),
-                    durationMonths: Number(fields.duration),
+                    downPaymentPercent: fields.down.trim()
+                      ? Number(fields.down)
+                      : NaN,
+                    durationMonths: fields.duration.trim()
+                      ? Number(fields.duration)
+                      : NaN,
                     ...(config.defaults.financingType === "mortgage"
-                      ? { annualInterestRatePercent: Number(fields.rate) }
+                      ? {
+                          annualInterestRatePercent: fields.rate.trim()
+                            ? Number(fields.rate)
+                            : NaN,
+                        }
                       : {}),
                   },
                 }}
               />
-            </section>
+            </aside>
           )}
-          {tab === "advanced" && (
-            <>
-              <section className={box}>
-                <h2 className="text-lg font-semibold">
-                  Optional shared apartment price
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Usually each apartment page supplies its own price. Only set a
-                  shared price when it applies to this integration.
-                </p>{" "}
-                <label className={label}>
-                  Default apartment price (optional)
-                  <Input
-                    type="number"
-                    min={1}
-                    max={1e12}
-                    step={1}
-                    value={fields.price}
-                    onChange={(e) => field("price", e.target.value)}
-                  />
-                </label>
-              </section>
-              <section className={box}>
-                <h2 className="text-lg font-semibold">
-                  Permissions for this integration
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  These restrict what the partner and apartment pages may
-                  supply. Routine term changes belong in Calculator settings.
-                </p>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <fieldset>
-                    <legend className="text-sm font-medium mb-2">
-                      Allowed financing models
-                    </legend>
-                    {(["mortgage", "developer_installment"] as const).map(
-                      (type) => (
-                        <label className="flex gap-2 mb-2" key={type}>
-                          <input
-                            type="checkbox"
-                            checked={config.allowedFinancingTypes.includes(
-                              type,
-                            )}
-                            onChange={(e) =>
-                              setConfig({
-                                ...config,
-                                allowedFinancingTypes: e.target.checked
-                                  ? [...config.allowedFinancingTypes, type]
-                                  : config.allowedFinancingTypes.filter(
-                                      (value) => value !== type,
-                                    ),
-                              })
-                            }
-                          />
-                          {type}
-                        </label>
-                      ),
-                    )}
-                  </fieldset>
-                  <fieldset>
-                    <legend className="text-sm font-medium mb-2">
-                      Allowed currencies
-                    </legend>
-                    {(["AMD", "USD"] as const).map((currency) => (
-                      <label key={currency} className="flex gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={config.allowedCurrencies.includes(currency)}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              allowedCurrencies: e.target.checked
-                                ? [...config.allowedCurrencies, currency]
-                                : config.allowedCurrencies.filter(
-                                    (value) => value !== currency,
-                                  ),
-                            })
-                          }
-                        />
-                        {currency} (whole units)
-                      </label>
-                    ))}
-                  </fieldset>
-                </div>
-                <fieldset>
-                  <legend className="text-sm font-medium mb-2">
-                    Permitted apartment overrides
-                  </legend>
-                  <div className="flex flex-wrap gap-4">
-                    {(
-                      [
-                        "apartmentPrice",
-                        "annualInterestRatePercent",
-                        "downPaymentPercent",
-                        "durationMonths",
-                        "financingType",
-                        "currency",
-                      ] as const
-                    ).map((key) => (
-                      <label key={key} className="flex gap-2 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={config.overrides.includes(key)}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              overrides: e.target.checked
-                                ? [...config.overrides, key]
-                                : config.overrides.filter(
-                                    (value) => value !== key,
-                                  ),
-                            })
-                          }
-                        />
-                        {key}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              </section>
-              <section className={box}>
-                <h2 className="font-semibold text-lg">
-                  Permitted bounds & visitor controls
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Set reviewed partner limits. The initial broad bounds are
-                  engine resource limits, not lending terms.
-                </p>
-                {(
-                  [
-                    "apartmentPrice",
-                    "annualInterestRatePercent",
-                    "downPaymentPercent",
-                    "durationMonths",
-                  ] as const
-                ).map((key) => (
-                  <fieldset
-                    className="grid grid-cols-3 sm:grid-cols-4 gap-3 items-end"
-                    key={key}
-                  >
-                    <legend className="text-sm font-medium">{key}</legend>
-                    {(
-                      [
-                        "min",
-                        "max",
-                        ...("step" in config.limits[key] ? ["step"] : []),
-                      ] as ("min" | "max" | "step")[]
-                    ).map((bound) => (
-                      <label key={bound} className="text-xs">
-                        {bound}
-                        <Input
-                          required
-                          type="number"
-                          step="any"
-                          value={
-                            (
-                              config.limits[key] as unknown as Record<
-                                string,
-                                number
-                              >
-                            )[bound]
-                          }
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              limits: {
-                                ...config.limits,
-                                [key]: {
-                                  ...config.limits[key],
-                                  [bound]: Number(e.target.value),
-                                },
-                              },
-                            })
-                          }
-                        />
-                      </label>
-                    ))}
-                  </fieldset>
-                ))}
-                <label className={label}>
-                  Supported durations (comma-separated months, empty = range)
-                  <Input
-                    value={fields.terms}
-                    onChange={(e) => field("terms", e.target.value)}
-                  />
-                </label>
-                <div className="flex flex-wrap gap-5">
-                  {(["downPaymentPercent", "durationMonths"] as const).map(
-                    (key) => (
-                      <label className="flex gap-2 text-sm" key={key}>
-                        <input
-                          type="checkbox"
-                          checked={config.adjustable[key]}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              adjustable: {
-                                ...config.adjustable,
-                                [key]: e.target.checked,
-                              },
-                            })
-                          }
-                        />
-                        Visitor may adjust {key}
-                      </label>
-                    ),
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-          <Button disabled={busy || loading || !!loadError} type="submit">
-            {busy
-              ? "Saving…"
-              : selected
-                ? "Save configuration"
-                : "Create integration"}
-          </Button>
-        </form>
+        </div>
       )}
       {tab === "sdk" && selected && preview && (
         <section className={box}>
@@ -982,10 +1019,11 @@ export default function AdminFinancing({
               />
             </label>
             <label className={label}>
-              Sample annual rate, %
+              Sample annual rate, % (optional)
               <Input
                 type="number"
                 step="any"
+                placeholder="Use saved rate rules"
                 value={sampleRate}
                 disabled={
                   !selected.configuration.overrides.includes(
@@ -995,6 +1033,10 @@ export default function AdminFinancing({
                 }
                 onChange={(e) => setSampleRate(e.target.value)}
               />
+              <span className="text-xs text-muted-foreground">
+                Leave blank to use the saved price-based rate or default rate.
+                Set a value only to test an apartment-specific rate override.
+              </span>
             </label>
           </div>
           {selected.active ? (
@@ -1005,9 +1047,10 @@ export default function AdminFinancing({
           <h3 className="font-semibold">Copyable integration code</h3>
           <p className="text-sm">
             Add the script once. Put the widget div in your shared apartment
-            template. Replace the sample ID, price and rate with escaped
-            CMS/database values for each apartment. Omitted values use permitted
-            partner defaults.
+            template. Replace the sample ID and price with escaped CMS/database
+            values for each apartment. The annual rate is optional when saved
+            rate rules or a default rate apply; include it only to override them
+            for an apartment.
           </p>
           <pre className="overflow-x-auto p-4 bg-muted rounded-lg text-xs whitespace-pre-wrap break-all">
             {snippet ||

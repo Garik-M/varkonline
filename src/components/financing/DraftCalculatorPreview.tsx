@@ -1,5 +1,6 @@
 import FinancingCalculator from "@/embed/FinancingCalculator";
 import type { PartnerConfiguration, ResolvedWidget } from "@/embed/types";
+import "@/embed/embed.css";
 
 const noop = () => undefined;
 export default function DraftCalculatorPreview({
@@ -38,7 +39,15 @@ export default function DraftCalculatorPreview({
           }
         : { financingType: "developer_installment", formula: "interest_free" }),
     },
-    controls: { ...configuration.adjustable, limits: configuration.limits },
+    controls: {
+      ...configuration.adjustable,
+      limits: {
+        ...configuration.limits,
+        ...(defaults.financingType === "developer_installment"
+          ? configuration.calculator?.installmentControls
+          : {}),
+      },
+    },
     appearance: configuration.appearance,
     refund: {
       enabled: configuration.refund.enabled,
@@ -62,11 +71,13 @@ export default function DraftCalculatorPreview({
     estimateNotice: "Draft preview",
   };
   return (
-    <FinancingCalculator
-      key={JSON.stringify([configuration, price])}
-      configuration={resolved}
-      initialLanguage={language}
-      notify={noop}
-    />
+    <div className="vk-widget" data-testid="draft-calculator-preview">
+      <FinancingCalculator
+        key={JSON.stringify([configuration, price])}
+        configuration={resolved}
+        initialLanguage={language}
+        notify={noop}
+      />
+    </div>
   );
 }

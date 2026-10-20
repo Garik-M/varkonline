@@ -484,10 +484,14 @@ function CompanyWorkspace({
     defaults: {
       financingType: type,
       currency,
-      downPaymentPercent: Number(defaultDown),
-      durationMonths: Number(defaultMonths),
+      downPaymentPercent: defaultDown.trim() ? Number(defaultDown) : NaN,
+      durationMonths: defaultMonths.trim() ? Number(defaultMonths) : NaN,
       ...(type === "mortgage"
-        ? { annualInterestRatePercent: Number(defaultRate) }
+        ? {
+            annualInterestRatePercent: defaultRate.trim()
+              ? Number(defaultRate)
+              : NaN,
+          }
         : {}),
     },
     overrides: existing?.overrides ?? [
@@ -551,374 +555,383 @@ function CompanyWorkspace({
           </Button>
         ))}
       </nav>
-      {tab === "calculator" && (
-        <section className="rounded-xl border bg-card p-5 space-y-3">
-          <h2 className="font-semibold text-xl">{c.settings}</h2>
-          <p className="text-sm text-muted-foreground">{c.explicitTerms}</p>
-          <p className="text-sm break-all">
-            {c.approvedWebsite}:{" "}
-            {existing?.allowedOrigins.join(", ") ?? company.website}
-          </p>
-          {existing && !existing.active && (
-            <p role="status" className="text-destructive">
-              {c.paused}
+      <div
+        className={
+          tab === "calculator"
+            ? "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]"
+            : "space-y-6"
+        }
+      >
+        {tab === "calculator" && (
+          <section className="min-w-0 rounded-xl border bg-card p-5 space-y-3">
+            <h2 className="font-semibold text-xl">{c.settings}</h2>
+            <p className="text-sm text-muted-foreground">{c.explicitTerms}</p>
+            <p className="text-sm break-all">
+              {c.approvedWebsite}:{" "}
+              {existing?.allowedOrigins.join(", ") ?? company.website}
             </p>
-          )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void save({
-                financingType: type,
-                currency,
-                downPaymentPercent: Number(defaultDown),
-                durationMonths: Number(defaultMonths),
-                controls,
-                ...(type === "mortgage"
-                  ? { annualInterestRatePercent: Number(defaultRate) }
-                  : {}),
-                theme,
-                accentColor: accent,
-                incomeTaxRefundEnabled: refundEnabled,
-              });
-            }}
-            className="space-y-5"
-          >
-            <div className="grid sm:grid-cols-2 gap-4">
-              <label className="space-y-2 text-sm font-medium">
-                {c.financingType}
-                <select
-                  aria-label={c.financingType}
-                  className="block border rounded-lg p-2 w-full bg-background"
-                  value={type}
-                  onChange={(event) => {
-                    const next = event.target
-                      .value as Settings["financingType"];
-                    setType(next);
-                    if (next === "developer_installment") {
-                      setDefaultMonths("36");
-                      setControls({
-                        ...controls,
-                        calculator: {
-                          ...(controls.calculator ?? LEGACY_CALCULATOR_OPTIONS),
-                          durationUnit: "months",
-                        },
-                        limits: {
-                          ...controls.limits,
-                          durationMonths: { min: 1, max: 600, step: 1 },
-                          supportedDurations: [],
-                        },
-                      });
-                    } else {
-                      setDefaultMonths("240");
-                      setControls({
-                        ...mortgageControlPreset(),
-                        calculator: {
-                          ...(controls.calculator ??
-                            mortgageControlPreset().calculator),
-                          durationUnit: "years",
-                        },
-                      });
-                    }
-                  }}
-                >
-                  {(
-                    existing?.allowedFinancingTypes ?? [
-                      "mortgage",
-                      "developer_installment",
-                    ]
-                  ).map((value) => (
-                    <option key={value} value={value}>
-                      {value === "mortgage" ? c.mortgage : c.installment}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-2 text-sm font-medium">
-                {c.currency}
-                <select
-                  aria-label={c.currency}
-                  className="block border rounded-lg p-2 w-full bg-background"
-                  value={currency}
-                  onChange={(event) =>
-                    setCurrency(event.target.value as Settings["currency"])
-                  }
-                >
-                  {(existing?.allowedCurrencies ?? ["AMD", "USD"]).map(
-                    (value) => (
-                      <option key={value}>{value}</option>
-                    ),
-                  )}
-                </select>
-              </label>
-              {type === "mortgage" && (
+            {existing && !existing.active && (
+              <p role="status" className="text-destructive">
+                {c.paused}
+              </p>
+            )}
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void save({
+                  financingType: type,
+                  currency,
+                  downPaymentPercent: Number(defaultDown),
+                  durationMonths: Number(defaultMonths),
+                  controls,
+                  ...(type === "mortgage"
+                    ? { annualInterestRatePercent: Number(defaultRate) }
+                    : {}),
+                  theme,
+                  accentColor: accent,
+                  incomeTaxRefundEnabled: refundEnabled,
+                });
+              }}
+              className="space-y-5"
+            >
+              <div className="grid sm:grid-cols-2 gap-4">
                 <label className="space-y-2 text-sm font-medium">
-                  {c.rate}
+                  {c.financingType}
+                  <select
+                    aria-label={c.financingType}
+                    className="block border rounded-lg p-2 w-full bg-background"
+                    value={type}
+                    onChange={(event) => {
+                      const next = event.target
+                        .value as Settings["financingType"];
+                      setType(next);
+                      if (next === "developer_installment") {
+                        setDefaultMonths("36");
+                        setControls({
+                          ...controls,
+                          calculator: {
+                            ...(controls.calculator ??
+                              LEGACY_CALCULATOR_OPTIONS),
+                            durationUnit: "months",
+                          },
+                          limits: {
+                            ...controls.limits,
+                            durationMonths: { min: 1, max: 600, step: 1 },
+                            supportedDurations: [],
+                          },
+                        });
+                      } else {
+                        setDefaultMonths("240");
+                        setControls({
+                          ...mortgageControlPreset(),
+                          calculator: {
+                            ...(controls.calculator ??
+                              mortgageControlPreset().calculator),
+                            durationUnit: "years",
+                          },
+                        });
+                      }
+                    }}
+                  >
+                    {(
+                      existing?.allowedFinancingTypes ?? [
+                        "mortgage",
+                        "developer_installment",
+                      ]
+                    ).map((value) => (
+                      <option key={value} value={value}>
+                        {value === "mortgage" ? c.mortgage : c.installment}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="space-y-2 text-sm font-medium">
+                  {c.currency}
+                  <select
+                    aria-label={c.currency}
+                    className="block border rounded-lg p-2 w-full bg-background"
+                    value={currency}
+                    onChange={(event) =>
+                      setCurrency(event.target.value as Settings["currency"])
+                    }
+                  >
+                    {(existing?.allowedCurrencies ?? ["AMD", "USD"]).map(
+                      (value) => (
+                        <option key={value}>{value}</option>
+                      ),
+                    )}
+                  </select>
+                </label>
+                {type === "mortgage" && (
+                  <label className="space-y-2 text-sm font-medium">
+                    {c.rate}
+                    <Input
+                      name="rate"
+                      type="number"
+                      min={controls.limits.annualInterestRatePercent.min}
+                      max={controls.limits.annualInterestRatePercent.max}
+                      step="any"
+                      required
+                      value={defaultRate}
+                      onChange={(event) => setDefaultRate(event.target.value)}
+                    />
+                  </label>
+                )}
+                <label className="space-y-2 text-sm font-medium">
+                  {c.down}
                   <Input
-                    name="rate"
+                    name="downPayment"
                     type="number"
-                    min={controls.limits.annualInterestRatePercent.min}
-                    max={controls.limits.annualInterestRatePercent.max}
+                    min={controls.limits.downPaymentPercent.min}
+                    max={controls.limits.downPaymentPercent.max}
                     step="any"
                     required
-                    value={defaultRate}
-                    onChange={(event) => setDefaultRate(event.target.value)}
+                    value={defaultDown}
+                    onChange={(event) => setDefaultDown(event.target.value)}
                   />
                 </label>
-              )}
-              <label className="space-y-2 text-sm font-medium">
-                {c.down}
-                <Input
-                  name="downPayment"
-                  type="number"
-                  min={controls.limits.downPaymentPercent.min}
-                  max={controls.limits.downPaymentPercent.max}
-                  step="any"
-                  required
-                  value={defaultDown}
-                  onChange={(event) => setDefaultDown(event.target.value)}
-                />
-              </label>
-              <label className="space-y-2 text-sm font-medium">
-                {factor === 12
-                  ? {
-                      hy: "Ժամկետ, տարի",
-                      en: "Default term, years",
-                      ru: "Срок по умолчанию, лет",
-                    }[lang]
-                  : c.duration}
-                <Input
-                  name="duration"
-                  type="number"
-                  min={controls.limits.durationMonths.min / factor}
-                  max={controls.limits.durationMonths.max / factor}
-                  step={controls.limits.durationMonths.step / factor}
-                  required
-                  value={
-                    defaultMonths === "" ? "" : Number(defaultMonths) / factor
-                  }
-                  onChange={(event) =>
-                    setDefaultMonths(
-                      event.target.value === ""
-                        ? ""
-                        : String(Number(event.target.value) * factor),
-                    )
-                  }
-                />
-              </label>
-              <label className="space-y-2 text-sm font-medium">
-                {c.theme}
-                <select
-                  aria-label={c.theme}
-                  name="theme"
-                  className="block border rounded-lg p-2 w-full bg-background"
-                  value={theme}
-                  onChange={(event) =>
-                    setTheme(event.target.value as typeof theme)
-                  }
-                >
-                  <option value="light">{c.light}</option>
-                  <option value="dark">{c.dark}</option>
-                </select>
-              </label>
-              <label className="space-y-2 text-sm font-medium">
-                {c.accent}
-                <Input
-                  name="accentColor"
-                  type="color"
-                  value={accent}
-                  onChange={(event) => setAccent(event.target.value)}
-                />
-              </label>
-            </div>
-            <fieldset className="rounded-lg border p-4 space-y-2">
-              <legend className="px-1 text-sm font-semibold">
-                {c.refundTitle}
-              </legend>
-              <label className="flex items-start gap-3 text-sm font-medium">
-                <input
-                  name="incomeTaxRefundEnabled"
-                  type="checkbox"
-                  className="mt-1"
-                  checked={refundEnabled}
-                  onChange={(event) => setRefundEnabled(event.target.checked)}
-                />
-                <span>{c.refundEnable}</span>
-              </label>
-              <p className="text-sm text-muted-foreground">{c.refundHelp}</p>
-            </fieldset>
-            <CalculatorControlsEditor
-              value={controls}
-              onChange={setControls}
-              mortgage={type === "mortgage"}
+                <label className="space-y-2 text-sm font-medium">
+                  {factor === 12
+                    ? {
+                        hy: "Ժամկետ, տարի",
+                        en: "Default term, years",
+                        ru: "Срок по умолчанию, лет",
+                      }[lang]
+                    : c.duration}
+                  <Input
+                    name="duration"
+                    type="number"
+                    min={controls.limits.durationMonths.min / factor}
+                    max={controls.limits.durationMonths.max / factor}
+                    step={controls.limits.durationMonths.step / factor}
+                    required
+                    value={
+                      defaultMonths === "" ? "" : Number(defaultMonths) / factor
+                    }
+                    onChange={(event) =>
+                      setDefaultMonths(
+                        event.target.value === ""
+                          ? ""
+                          : String(Number(event.target.value) * factor),
+                      )
+                    }
+                  />
+                </label>
+                <label className="space-y-2 text-sm font-medium">
+                  {c.theme}
+                  <select
+                    aria-label={c.theme}
+                    name="theme"
+                    className="block border rounded-lg p-2 w-full bg-background"
+                    value={theme}
+                    onChange={(event) =>
+                      setTheme(event.target.value as typeof theme)
+                    }
+                  >
+                    <option value="light">{c.light}</option>
+                    <option value="dark">{c.dark}</option>
+                  </select>
+                </label>
+                <label className="space-y-2 text-sm font-medium">
+                  {c.accent}
+                  <Input
+                    name="accentColor"
+                    type="color"
+                    value={accent}
+                    onChange={(event) => setAccent(event.target.value)}
+                  />
+                </label>
+              </div>
+              <fieldset className="rounded-lg border p-4 space-y-2">
+                <legend className="px-1 text-sm font-semibold">
+                  {c.refundTitle}
+                </legend>
+                <label className="flex items-start gap-3 text-sm font-medium">
+                  <input
+                    name="incomeTaxRefundEnabled"
+                    type="checkbox"
+                    className="mt-1"
+                    checked={refundEnabled}
+                    onChange={(event) => setRefundEnabled(event.target.checked)}
+                  />
+                  <span>{c.refundEnable}</span>
+                </label>
+                <p className="text-sm text-muted-foreground">{c.refundHelp}</p>
+              </fieldset>
+              <CalculatorControlsEditor
+                value={controls}
+                onChange={setControls}
+                mortgage={type === "mortgage"}
+                language={lang}
+              />
+              <Button disabled={busy} type="submit">
+                {busy ? c.working : existing ? c.save : c.create}
+              </Button>
+            </form>
+          </section>
+        )}
+        {tab === "calculator" && (
+          <aside className="min-w-0 order-first rounded-xl border bg-card p-5 space-y-4 xl:order-last xl:sticky xl:top-6 xl:max-h-[calc(100dvh-5rem)] xl:overflow-y-auto">
+            <h2 className="font-semibold">
+              {
+                {
+                  hy: "Կենդանի նախադիտում",
+                  en: "Live draft preview",
+                  ru: "Предпросмотр изменений",
+                }[lang]
+              }
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {
+                {
+                  hy: "Փոփոխությունները կայքում կիրառվում են միայն պահպանելուց հետո։",
+                  en: "Changes reach your website only after saving. This preview does not collect analytics.",
+                  ru: "Изменения попадут на сайт после сохранения. Предпросмотр не собирает аналитику.",
+                }[lang]
+              }
+            </p>
+            <label className="block text-sm space-y-2">
+              {
+                {
+                  hy: "Նախադիտման բնակարանի գին",
+                  en: "Preview apartment price",
+                  ru: "Цена квартиры в предпросмотре",
+                }[lang]
+              }{" "}
+              ({currency})
+              <Input
+                type="number"
+                min={1}
+                max={1e12}
+                step={1}
+                value={samplePrice}
+                placeholder="35000000"
+                onChange={(event) => setSamplePrice(event.target.value)}
+              />
+            </label>
+            <DraftCalculatorPreview
+              configuration={draftConfig}
+              name={company.organizationName}
+              price={samplePrice.trim() ? Number(samplePrice) : 35000000}
               language={lang}
             />
-            <Button disabled={busy} type="submit">
-              {busy ? c.working : existing ? c.save : c.create}
-            </Button>
-          </form>
-        </section>
-      )}
-      {tab === "calculator" && (
-        <section className="rounded-xl border bg-card p-5 space-y-4">
-          <h2 className="font-semibold">
-            {
-              {
-                hy: "Կենդանի նախադիտում",
-                en: "Live draft preview",
-                ru: "Предпросмотр изменений",
-              }[lang]
-            }
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {
-              {
-                hy: "Փոփոխությունները կայքում կիրառվում են միայն պահպանելուց հետո։",
-                en: "Changes reach your website only after saving. This preview does not collect analytics.",
-                ru: "Изменения попадут на сайт после сохранения. Предпросмотр не собирает аналитику.",
-              }[lang]
-            }
-          </p>
-          <label className="block text-sm space-y-2">
-            {
-              {
-                hy: "Նախադիտման բնակարանի գին",
-                en: "Preview apartment price",
-                ru: "Цена квартиры в предпросмотре",
-              }[lang]
-            }{" "}
-            ({currency})
-            <Input
-              type="number"
-              min={1}
-              max={1e12}
-              step={1}
-              value={samplePrice}
-              placeholder="35000000"
-              onChange={(event) => setSamplePrice(event.target.value)}
-            />
-          </label>
-          <DraftCalculatorPreview
-            configuration={draftConfig}
-            name={company.organizationName}
-            price={samplePrice.trim() ? Number(samplePrice) : 35000000}
-            language={lang}
-          />
-        </section>
-      )}
-      {existing && tab === "analytics" && (
-        <AnalyticsPanel request={analyticsRequest} language={lang} />
-      )}
-      {existing?.active && tab === "sdk" && (
-        <section className="rounded-xl border bg-card p-5 space-y-4">
-          <h2 className="font-semibold text-xl">{c.integration}</h2>
-          {!existing.settings.incomeTaxRefundEnabled && (
-            <p className="rounded-lg border p-3 text-sm" role="status">
-              {c.refundDisabled}
+          </aside>
+        )}
+        {existing && tab === "analytics" && (
+          <AnalyticsPanel request={analyticsRequest} language={lang} />
+        )}
+        {existing?.active && tab === "sdk" && (
+          <section className="rounded-xl border bg-card p-5 space-y-4">
+            <h2 className="font-semibold text-xl">{c.integration}</h2>
+            {!existing.settings.incomeTaxRefundEnabled && (
+              <p className="rounded-lg border p-3 text-sm" role="status">
+                {c.refundDisabled}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground">{c.instructions}</p>
+            <label className="block text-sm space-y-2 max-w-md">
+              {c.sampleApartmentId}
+              <Input
+                maxLength={120}
+                value={sampleApartmentId}
+                placeholder="A-101"
+                onChange={(event) => {
+                  setSampleApartmentId(event.target.value);
+                  setCopied(false);
+                  setPreview(null);
+                }}
+              />
+            </label>
+            <p className="text-sm text-muted-foreground">
+              {c.sampleApartmentHelp}
             </p>
-          )}
-          <p className="text-sm text-muted-foreground">{c.instructions}</p>
-          <label className="block text-sm space-y-2 max-w-md">
-            {c.sampleApartmentId}
-            <Input
-              maxLength={120}
-              value={sampleApartmentId}
-              placeholder="A-101"
-              onChange={(event) => {
-                setSampleApartmentId(event.target.value);
-                setCopied(false);
-                setPreview(null);
-              }}
-            />
-          </label>
-          <p className="text-sm text-muted-foreground">
-            {c.sampleApartmentHelp}
-          </p>
-          <label className="block text-sm space-y-2 max-w-md">
-            {c.samplePrice} ({existing.settings.currency})
-            <Input
-              type="number"
-              min={existing.limits.apartmentPrice.min}
-              max={existing.limits.apartmentPrice.max}
-              step={1}
-              value={samplePrice}
-              disabled={!existing.overrides.includes("apartmentPrice")}
-              onChange={(event) => {
-                setSamplePrice(event.target.value);
-                setCopied(false);
-                setPreview(null);
-              }}
-            />
-          </label>
-          <label className="block text-sm space-y-2 max-w-md">
-            {c.widgetLanguage}
-            <select
-              aria-label={c.widgetLanguage}
-              className="block border rounded-lg p-2 w-full bg-background"
-              value={widgetLanguage}
-              onChange={(event) => {
-                setWidgetLanguage(event.target.value as PartnerLanguage);
-                setCopied(false);
-                setPreview(null);
-              }}
+            <label className="block text-sm space-y-2 max-w-md">
+              {c.samplePrice} ({existing.settings.currency})
+              <Input
+                type="number"
+                min={existing.limits.apartmentPrice.min}
+                max={existing.limits.apartmentPrice.max}
+                step={1}
+                value={samplePrice}
+                disabled={!existing.overrides.includes("apartmentPrice")}
+                onChange={(event) => {
+                  setSamplePrice(event.target.value);
+                  setCopied(false);
+                  setPreview(null);
+                }}
+              />
+            </label>
+            <label className="block text-sm space-y-2 max-w-md">
+              {c.widgetLanguage}
+              <select
+                aria-label={c.widgetLanguage}
+                className="block border rounded-lg p-2 w-full bg-background"
+                value={widgetLanguage}
+                onChange={(event) => {
+                  setWidgetLanguage(event.target.value as PartnerLanguage);
+                  setCopied(false);
+                  setPreview(null);
+                }}
+              >
+                <option value="hy">Հայերեն</option>
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+              </select>
+            </label>
+            <pre
+              data-testid="partner-sdk-code"
+              className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg bg-muted p-4 text-xs"
             >
-              <option value="hy">Հայերեն</option>
-              <option value="en">English</option>
-              <option value="ru">Русский</option>
-            </select>
-          </label>
-          <pre
-            data-testid="partner-sdk-code"
-            className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg bg-muted p-4 text-xs"
-          >
-            {snippet || c.enterSample}
-          </pre>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              disabled={!snippet}
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(snippet);
-                  setCopied(true);
-                  setCopyError(false);
-                } catch {
-                  setCopyError(true);
-                }
-              }}
+              {snippet || c.enterSample}
+            </pre>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={!snippet}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(snippet);
+                    setCopied(true);
+                    setCopyError(false);
+                  } catch {
+                    setCopyError(true);
+                  }
+                }}
+              >
+                {copied ? c.copied : c.copy}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!snippet}
+                onClick={() => {
+                  if (existing && snippet)
+                    setPreview({
+                      partner: existing.slug,
+                      language: widgetLanguage,
+                      apartmentId: sampleApartmentId.trim() || "PREVIEW",
+                      apartmentPrice: Number(samplePrice),
+                      currency: existing.settings.currency,
+                    });
+                }}
+              >
+                {c.preview}
+              </Button>
+            </div>
+            {copyError && <p role="status">{c.copyManually}</p>}
+            {preview && (
+              <PartnerPreview key={existing.revision} configuration={preview} />
+            )}
+            <a
+              className="underline text-primary text-sm"
+              href="/docs/financing-integration.md"
+              target="_blank"
+              rel="noreferrer"
             >
-              {copied ? c.copied : c.copy}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!snippet}
-              onClick={() => {
-                if (existing && snippet)
-                  setPreview({
-                    partner: existing.slug,
-                    language: widgetLanguage,
-                    apartmentId: sampleApartmentId.trim() || "PREVIEW",
-                    apartmentPrice: Number(samplePrice),
-                    currency: existing.settings.currency,
-                  });
-              }}
-            >
-              {c.preview}
-            </Button>
-          </div>
-          {copyError && <p role="status">{c.copyManually}</p>}
-          {preview && (
-            <PartnerPreview key={existing.revision} configuration={preview} />
-          )}
-          <a
-            className="underline text-primary text-sm"
-            href="/docs/financing-integration.md"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {c.documentation}
-          </a>
-          <p className="text-xs text-muted-foreground">{c.estimates}</p>
-        </section>
-      )}
+              {c.documentation}
+            </a>
+            <p className="text-xs text-muted-foreground">{c.estimates}</p>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

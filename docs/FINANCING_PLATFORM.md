@@ -4,6 +4,8 @@ See [the current integration and demo guide](../public/docs/financing-integratio
 
 The current widget always shows take-home salary, uses dram down payments and configured year terms, supports editable fractional rates, price tiers and both annuity/equal-principal schedules. The existing quarterly refund core remains authoritative; monthly allocations reconcile to it and never exceed interest. The primary result is period-specific rather than a lifetime average. Partner/admin controls share the same editor, draft previews collect no telemetry, and server-authorized analytics show only named actions with no payroll values.
 
+Draft preview fix: both workspaces load the same widget stylesheet scoped to `.vk-widget`, with container-responsive layouts that do not affect surrounding portal forms. The draft is outside the save form, beside settings on desktop and before them on mobile. Admin SDK samples omit blank annual-rate overrides so the resolver uses saved price tiers or defaults; explicit per-apartment rates still take precedence. New browser regressions cover omitted/cleared/explicit rates, default fallback, isolated styling, mobile visibility and form boundaries.
+
 # Financing platform implementation report
 
 ## Current workflow - 20 October 2026
