@@ -6,6 +6,12 @@ recalculate annuities or change any bank payment. There are no new runtime
 dependencies, UI, endpoints, SDK, database writes, government integrations or
 deployments. Salary inputs are not persisted or logged.
 
+## Evidence basis
+
+Existing callers default to `evidenceMode: "verified"`: missing or unverified evidence remains unresolved. For an explicitly conditional estimate, pass `evidenceMode: "declared"` to either the full calculation or standalone eligibility evaluator. That mode uses supplied unverified values and the supplied actual/planned loan date as scenario inputs; it never changes `verified` flags, fills missing facts or overrides exclusions. Null remains unknown in both modes. Inputs still pass the same strict validation.
+
+Results include `evidenceMode`; a successful declared scenario uses `CONDITIONS_DECLARED` rather than `CONDITIONS_VERIFIED`. Its `eligible` status means that the declared scenario satisfies the selected rule snapshot, not that actual entitlement has been established. Consumers must label it conditional and retain its assumptions. The hosted widget uses declared mode; it does not require a staff document registry. Pure-engine callers can continue using the default strict mode.
+
 ## Public API and example
 
 Import from `@/lib/financing/income-tax-refund` in the frontend, or the directory's

@@ -3,6 +3,153 @@ import type { WidgetLanguage } from "./sdk-messages";
 export { widgetLanguage } from "./sdk-messages";
 export type { WidgetLanguage } from "./sdk-messages";
 export const widgetMessages = {
+  totalWithRefund: {
+    hy: "Ամբողջ ժամկետի ծախսը՝ հետվերադարձով",
+    en: "Full-term cost with the refund",
+    ru: "Расходы за весь срок с учётом возврата",
+  },
+  totalBankPayment: {
+    hy: "Բանկին վճարվող ամբողջ գումարը",
+    en: "Total payments to the bank",
+    ru: "Всего платежей банку",
+  },
+  totalInstallments: {
+    hy: "Ապառիկի ամբողջ գումարը",
+    en: "Total installment payments",
+    ru: "Всего платежей по рассрочке",
+  },
+  bankTotalHelp: {
+    hy: "Առանց կանխավճարի։",
+    en: "Excludes the down payment.",
+    ru: "Без первоначального взноса.",
+  },
+  netTotalHelp: {
+    hy: "Գնահատական՝ առանց կանխավճարի։",
+    en: "Estimated cost, excluding the down payment.",
+    ru: "Оценка расходов без первоначального взноса.",
+  },
+  scenarioIntro: {
+    hy: "Պատասխանեք փաստացի կամ նախատեսվող գնման համար։ Եթե չգիտեք, թողեք «Չգիտեմ»։",
+    en: "Answer for your actual or planned purchase. Leave uncertain answers as Unknown.",
+    ru: "Ответьте для фактической или планируемой покупки. Если не уверены, выберите «Не знаю».",
+  },
+  valuationZone: {
+    hy: "Կադաստրային գնահատման գոտի",
+    en: "Official valuation zone",
+    ru: "Официальная зона оценки",
+  },
+  otherZones: { hy: "Այլ գոտիներ", en: "Other zones", ru: "Другие зоны" },
+  scenarioAssumptions: {
+    hy: "Գնահատման համար ընդունում եմ՝ գրանցված եկամուտը չի փոխվի, վարկը ՀՀ ռեզիդենտ ֆինանսական կազմակերպությունից է՝ բնակարանի համար, իսկ սեփականության, անձը հաստատող և անհրաժեշտ այլ փաստաթղթերը կբավարարեն պահանջներին (սեփական տան կառուցման դեպքում՝ նաև շինթույլտվությունը)։",
+    en: "For this estimate, assume constant registered income, an Armenian resident financial lender, housing use, and that property registration, identity and required documents will meet the conditions (including a valid permit for self-build).",
+    ru: "Для оценки принимаю постоянный официальный доход, кредит на жильё у финансовой организации — резидента Армении и выполнение требований к регистрации собственности, удостоверению личности и документам (включая разрешение при строительстве своего дома).",
+  },
+  plannedOwnerHelp: {
+    hy: "Նախատեսվող գնման համար պատասխանեք՝ կդառնա՞ք սեփականատեր։ Սա փաստաթղթի ստուգում չէ։",
+    en: "For a planned purchase, answer whether you will become an owner. This does not verify ownership.",
+    ru: "При планируемой покупке укажите, станете ли вы собственником. Это не подтверждает право собственности.",
+  },
+  conditionalEstimate: {
+    hy: "Պայմանական հետվերադարձի գնահատական",
+    en: "Conditional refund estimate",
+    ru: "Условная оценка возврата",
+  },
+  conditionalNotice: {
+    hy: "Հաշվարկը հիմնված է ձեր պատասխանների և ենթադրությունների վրա։ Իրավունքը հաստատված չէ․ այն ստուգում է ՊԵԿ-ը։",
+    en: "Based on your answers and the stated assumptions. Entitlement has not been verified; SRC makes the final decision.",
+    ru: "На основе ваших ответов и указанных допущений. Право на возврат не подтверждено; окончательное решение принимает КГД.",
+  },
+  declaredDate: {
+    hy: "Փաստացի կամ նախատեսվող տրամադրման ամսաթիվը․ ազդում է կիրառվող կանոնների վրա։",
+    en: "Actual or planned loan disbursement date; determines the applicable rules.",
+    ru: "Фактическая или планируемая дата выдачи кредита; определяет применимые правила.",
+  },
+  propertyConditions: {
+    hy: "Գույքի մասին",
+    en: "About the property",
+    ru: "О недвижимости",
+  },
+  purchaseSource: {
+    hy: "Գնման տարբերակ",
+    en: "Purchase type",
+    ru: "Вариант приобретения",
+  },
+  fromDeveloper: {
+    hy: "Բնակարան՝ անմիջապես կառուցապատողից",
+    en: "Apartment directly from a developer",
+    ru: "Квартира напрямую у застройщика",
+  },
+  developerHouse: {
+    hy: "Առանձնատուն՝ անմիջապես կառուցապատողից",
+    en: "House directly from a developer",
+    ru: "Дом напрямую у застройщика",
+  },
+  fromState: {
+    hy: "Բնակարան՝ պետությունից կամ համայնքից",
+    en: "Apartment from the state or community",
+    ru: "Квартира у государства или общины",
+  },
+  selfBuild: {
+    hy: "Սեփական տան կառուցում",
+    en: "Building your own house",
+    ru: "Строительство собственного дома",
+  },
+  secondaryMarket: {
+    hy: "Երկրորդային շուկա",
+    en: "Secondary market",
+    ru: "Вторичный рынок",
+  },
+  assignment: {
+    hy: "Իրավունքի փոխանցում ֆիզիկական անձից",
+    en: "Assignment from an individual",
+    ru: "Уступка права физическим лицом",
+  },
+  constructionRight: {
+    hy: "Կառուցվող գույքի գնման իրավունք",
+    en: "Right to purchase property under construction",
+    ru: "Право покупки строящейся недвижимости",
+  },
+  propertyRegion: {
+    hy: "Գույքի մարզը / քաղաքը",
+    en: "Property region / city",
+    ru: "Регион / город недвижимости",
+  },
+  oldPermit: {
+    hy: "Շինթույլտվության որոշումը մինչև 2022 թվականն է՞",
+    en: "Was the construction permit decision issued before 2022?",
+    ru: "Решение о разрешении на строительство принято до 2022 года?",
+  },
+  permitDate: {
+    hy: "Շինթույլտվության որոշման ամսաթիվ",
+    en: "Construction permit decision date",
+    ru: "Дата решения о разрешении на строительство",
+  },
+  borderSettlement: {
+    hy: "Կառավարության հաստատած ցանկի սահմանամերձ բնակավայր է՞",
+    en: "Is it a border settlement on the government exception list?",
+    ru: "Это приграничный населённый пункт из утверждённого правительством списка исключений?",
+  },
+  contractAMD: {
+    hy: "Գույքի պայմանագրային գինը՝ ՀՀ դրամով",
+    en: "Contractual property price in AMD",
+    ru: "Договорная стоимость недвижимости в драмах",
+  },
+  yerevan: { hy: "Երևան", en: "Yerevan", ru: "Ереван" },
+  aragatsotn: { hy: "Արագածոտն", en: "Aragatsotn", ru: "Арагацотн" },
+  ararat: { hy: "Արարատ", en: "Ararat", ru: "Арарат" },
+  armavir: { hy: "Արմավիր", en: "Armavir", ru: "Армавир" },
+  kotayk: { hy: "Կոտայք", en: "Kotayk", ru: "Котайк" },
+  shirak: { hy: "Շիրակ", en: "Shirak", ru: "Ширак" },
+  lori: { hy: "Լոռի", en: "Lori", ru: "Лори" },
+  tavush: { hy: "Տավուշ", en: "Tavush", ru: "Тавуш" },
+  gegharkunik: { hy: "Գեղարքունիք", en: "Gegharkunik", ru: "Гегаркуник" },
+  syunik: { hy: "Սյունիք", en: "Syunik", ru: "Сюник" },
+  vayots_dzor: { hy: "Վայոց ձոր", en: "Vayots Dzor", ru: "Вайоц Дзор" },
+  outside_armenia: {
+    hy: "Հայաստանից դուրս",
+    en: "Outside Armenia",
+    ru: "За пределами Армении",
+  },
   monthlyBreakdown: {
     hy: "Ձեր ամսական ծախսը՝ հետվերադարձով",
     en: "Your monthly cost with the refund",
@@ -479,9 +626,9 @@ export const widgetMessages = {
     ru: "Допустимо:",
   },
   duration: {
-    hy: "Ֆինանսավորման ժամկետ",
-    en: "Financing term",
-    ru: "Срок финансирования",
+    hy: "Ժամկետ",
+    en: "Term",
+    ru: "Срок",
   },
   months: {
     hy: "ամիս",
@@ -489,9 +636,9 @@ export const widgetMessages = {
     ru: "мес.",
   },
   annualRate: {
-    hy: "Տարեկան անվանական տոկոսադրույք",
-    en: "Annual nominal interest rate",
-    ru: "Годовая номинальная ставка",
+    hy: "Տարեկան անվանական",
+    en: "Annual nominal rate",
+    ru: "Номинальная, год.",
   },
   interestFree: {
     hy: "Անտոկոս ապառիկ",

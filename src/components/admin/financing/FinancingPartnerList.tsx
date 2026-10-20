@@ -34,7 +34,7 @@ export default function FinancingPartnerList({
         <h1 className="text-2xl font-bold">Financing integrations</h1>
         <p className="text-muted-foreground">
           Review every saved partner calculator, its website access and
-          income-tax refund evidence. Partners configure their own calculator in
+          refund visibility. Partners configure their own calculator in
           their workspace.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -172,13 +172,7 @@ export default function FinancingPartnerList({
                           <dd>
                             {partner.configuration.refund.enabled
                               ? "Visible"
-                              : "Hidden"}{" "}
-                            ·{" "}
-                            {
-                              partner.configuration.refund.propertyEvidence
-                                .length
-                            }{" "}
-                            property records
+                              : "Hidden"}
                           </dd>
                         </div>
                         <div>

@@ -1,5 +1,16 @@
 # Financing platform implementation report
 
+## Current workflow - 20 October 2026
+
+The normal integration workflow requires company approval, website access, calculator settings/appearance and SDK delivery. The staff **Refund review** tab, development/apartment record counts, document-reference editor and visitor documentary self-checks have been removed. Existing saved configuration remains compatible; there are no migrations or production record deletions for this cleanup.
+
+Refunds use an explicit conditional scenario from visitor declarations and accepted assumptions. Missing inputs remain unresolved. Known exclusions, geographic rules, quarterly caps and exact Phase 1 arithmetic remain in force. The pure engine defaults to verified evidence; only consumers explicitly choosing `evidenceMode: "declared"` can evaluate unverified scenario inputs. Results expose the evidence mode and never upgrade input verification flags. The UI says **Conditional refund estimate** in Armenian, English and Russian and retains the bank-payment-minus-refund breakdown. Salary and personal answers stay inside the iframe.
+
+See the current [integration guide](../public/docs/financing-integration.md) and [refund engine API](../src/lib/financing/income-tax-refund/README.md). The dated sections below describe earlier releases and are historical where they differ from this workflow.
+
+## Original implementation record
+
+
 Implemented in the existing React/Vite frontend and Express/PostgreSQL backend. Phase 1 and Phase 2 remain the financial authorities; their calculation APIs and formulas were not rewritten. The initial implementation was verified locally before the approved partner-workspace release.
 
 The frontend serves the small versioned `/sdk/v1.js` bundle and a separate built `embed.html` entry. Express serves `/embed/:partner`, applying a partner-specific HTTP ancestor policy and safe bootstrap values, then loads the calculator assets from the configured frontend origin. This uses the existing frontend/backend deployments and requires no new subdomain or service.

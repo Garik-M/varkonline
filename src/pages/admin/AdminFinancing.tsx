@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import FinancingPartnerList from "@/components/admin/financing/FinancingPartnerList";
-import RefundEvidenceEditor from "@/components/admin/financing/RefundEvidenceEditor";
-import { refundReviewError } from "@/components/admin/financing/refund-review";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,8 +168,6 @@ export default function AdminFinancing({
         throw new Error(
           "Enter a down payment and duration in Calculator settings before saving.",
         );
-      const reviewError = refundReviewError(config.refund);
-      if (reviewError) throw new Error(reviewError);
       const configuration: PartnerConfiguration = {
         ...config,
         defaults: {
@@ -313,7 +309,7 @@ export default function AdminFinancing({
         </h1>
         <p className="text-muted-foreground">
           {selected
-            ? "Review this partner’s saved calculator, website access and refund evidence."
+            ? "Manage this partner’s calculator, website access and integration code."
             : "Partners normally create their own calculator after approval. This creates a calculator configuration. Account invitations are managed in Applications."}
         </p>
         {selected && (
@@ -338,7 +334,6 @@ export default function AdminFinancing({
         {[
           ["overview", "Overview"],
           ["calculator", "Calculator settings"],
-          ["refund", "Refund review"],
           ["sdk", "SDK & preview"],
           ["advanced", "Advanced settings"],
         ]
@@ -400,11 +395,7 @@ export default function AdminFinancing({
             <div>
               <dt className="text-muted-foreground">Income-tax refund tools</dt>
               <dd>
-                {selected.configuration.refund.enabled ? "Visible" : "Hidden"} ·{" "}
-                {selected.configuration.refund.developments.length} development
-                records ·{" "}
-                {selected.configuration.refund.propertyEvidence.length} property
-                records
+                {selected.configuration.refund.enabled ? "Visible" : "Hidden"}
               </dd>
             </div>
             <div>
@@ -413,20 +404,13 @@ export default function AdminFinancing({
             </div>
           </dl>
           <p className="text-sm text-muted-foreground">
-            Record counts do not confirm eligibility. Review the facts and
-            document references for the relevant apartment. Visitor salary and
-            personal eligibility answers are never stored here.
+            Apartment pages supply their own prices and financing terms. Refund
+            estimates use visitor answers; salary and personal answers are never
+            stored here.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button type="button" onClick={() => setTab("calculator")}>
               Edit calculator
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setTab("refund")}
-            >
-              Review refund evidence
             </Button>
             <Button
               type="button"
@@ -599,6 +583,28 @@ export default function AdminFinancing({
                 </div>
               </section>
               <section className={box}>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={config.refund.enabled}
+                    onChange={(event) =>
+                      setConfig({
+                        ...config,
+                        refund: {
+                          ...config.refund,
+                          enabled: event.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  Show income-tax refund tools for mortgages
+                </label>
+                <p className="text-sm text-muted-foreground">
+                  Visitors can estimate a possible refund using their own
+                  answers. No apartment registry or document review is required.
+                </p>
+              </section>
+              <section className={box}>
                 <h2 className="font-semibold text-lg">Appearance</h2>
                 <div className="grid sm:grid-cols-3 gap-4">
                   <label className={label}>
@@ -648,17 +654,6 @@ export default function AdminFinancing({
                 </div>
               </section>
             </>
-          )}
-          {tab === "refund" && (
-            <section className={box}>
-              <RefundEvidenceEditor
-                key={selected?.slug ?? "new"}
-                value={config.refund}
-                change={(refund) =>
-                  setConfig((previous) => ({ ...previous, refund }))
-                }
-              />
-            </section>
           )}
           {tab === "advanced" && (
             <>
@@ -901,8 +896,8 @@ export default function AdminFinancing({
                 }}
               />
               <span className="text-xs text-muted-foreground">
-                Use the exact apartment ID from reviewed property evidence to
-                preview its refund eligibility.
+                Use your website’s stable apartment ID. Prices and financing
+                terms can change for each apartment.
               </span>
             </label>
             <label className={label}>

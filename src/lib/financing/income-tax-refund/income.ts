@@ -1,7 +1,7 @@
 import { decimalRatio, roundRatio, toWholeAmount } from "../arithmetic";
 import { invalid } from "./calendar";
 import { decision, evaluateParticipant, reason } from "./eligibility";
-import type { RefundParticipant, RefundRuleSet, SalaryIncomeTaxInput } from "./input";
+import type { EvidenceMode, RefundParticipant, RefundRuleSet, SalaryIncomeTaxInput } from "./input";
 import type { MonthlyIncomeTaxResult, QuarterlyParticipantTax, RefundReason, SalaryIncomeTaxResult } from "./output";
 import { validateRefundRules, validateSalaryTaxInput } from "./validation";
 
@@ -33,9 +33,9 @@ function salaryTax(input: SalaryIncomeTaxInput, rules: RefundRuleSet): SalaryInc
 }
 
 export function quarterParticipantTax(
-  participant: RefundParticipant, months: readonly string[], rules: RefundRuleSet,
+  participant: RefundParticipant, months: readonly string[], rules: RefundRuleSet, mode: EvidenceMode = "verified",
 ): { result: QuarterlyParticipantTax; monthly: MonthlyIncomeTaxResult[]; projected: boolean } {
-  const legal = evaluateParticipant(participant);
+  const legal = evaluateParticipant(participant, mode);
   const reasons: RefundReason[] = legal.status === "eligible" ? [] : [...legal.reasons];
   const monthly: MonthlyIncomeTaxResult[] = [];
   let available = 0n;
@@ -68,7 +68,7 @@ export function quarterParticipantTax(
       available += BigInt(tax.selectedIncomeTaxAMD - period.taxAlreadyAllocatedAMD);
     }
   }
-  const eligibility = decision(reasons);
+  const eligibility = decision(reasons, mode);
   return { result: { participantId: participant.id, eligibility,
     eligibleIncomeTaxAMD: eligibility.status === "eligible" ? toWholeAmount(available) :
       eligibility.status === "ineligible" ? 0 : null }, monthly, projected };

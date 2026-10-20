@@ -256,6 +256,62 @@ legend {
   font-size: clamp(18px, 4vw, 24px);
   line-height: 1.3;
 }
+.vk-payment del {
+  text-decoration-thickness: 1px;
+  opacity: 0.78;
+}
+.vk-repayment {
+  display: grid;
+  gap: 5px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid currentColor;
+  font-size: 12px;
+}
+.vk-repayment-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+.vk-repayment-amounts strong {
+  font-size: 20px;
+}
+.vk-repayment small {
+  font-size: 11px;
+}
+.vk-repayment--plain {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+}
+.vk-repayment--plain > span {
+  font-size: 11px;
+}
+.vk-repayment--plain .vk-repayment-amounts strong {
+  font-size: 16px;
+}
+.vk-repayment--plain small {
+  grid-column: 1 / -1;
+}
+.vk-refund-notes {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--vk-muted);
+}
+.vk-refund-notes summary {
+  font-size: 11px;
+}
+.vk-refund-notes ul {
+  padding-left: 18px;
+}
+.vk-refund-notes p,
+.vk-refund-notes ul {
+  margin: 8px 0;
+}
+.vk-refund-result--unresolved .vk-refund-total > strong {
+  font-size: 16px;
+}
 .vk-equation-symbol {
   font-size: 24px;
 }

@@ -5,7 +5,7 @@ export { ARMENIA_REFUND_RULES_2026_10 } from "./rules";
 export { validateMortgageRefundInput, validateRefundRules, validateRefundEligibilityContext, validateSalaryTaxInput } from "./validation";
 export { FinancingCalculationError } from "../errors";
 export type {
-  Evidence, EligibilityStatus, ArmenianRegion, PropertyLocation, AcquisitionType,
+  Evidence, EvidenceMode, EligibilityStatus, ArmenianRegion, PropertyLocation, AcquisitionType,
   MortgageEligibilityFacts, ParticipantEligibilityFacts, IncomePeriod, SalaryIncomeTaxInput,
   RefundParticipant, DatedMortgagePayment, MortgageRefundInput, MortgageEligibilityContext, RefundRuleSet,
 } from "./input";

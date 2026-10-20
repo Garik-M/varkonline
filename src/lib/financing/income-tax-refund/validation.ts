@@ -163,6 +163,7 @@ export function validateSalaryTaxInput(input: unknown): asserts input is SalaryI
 }
 
 function validateContext(data: Record<string, unknown>) {
+  if (own(data, "evidenceMode")) choice(data.evidenceMode, ["verified", "declared"], "evidenceMode");
   financing(data.financing);
   date(data.loanOriginationDate, "loanOriginationDate");
   bool(data.originationDateVerified, "originationDateVerified");
@@ -175,12 +176,12 @@ function validateContext(data: Record<string, unknown>) {
 }
 
 export function validateRefundEligibilityContext(input: unknown): asserts input is MortgageEligibilityContext {
-  const data = shape(input, "eligibilityContext", ["financing", "loanOriginationDate", "originationDateVerified", "eligibility"]);
+  const data = shape(input, "eligibilityContext", ["financing", "loanOriginationDate", "originationDateVerified", "eligibility"], ["evidenceMode"]);
   validateContext(data);
 }
 
 export function validateMortgageRefundInput(input: unknown): asserts input is MortgageRefundInput {
-  const data = shape(input, "refund", ["financing", "loanOriginationDate", "originationDateVerified", "eligibility", "participants", "payments"]);
+  const data = shape(input, "refund", ["financing", "loanOriginationDate", "originationDateVerified", "eligibility", "participants", "payments"], ["evidenceMode"]);
   validateContext(data);
   array(data.participants, "participants", 20);
   if (data.participants.length === 0) invalid("A borrower is required.", "participants");
