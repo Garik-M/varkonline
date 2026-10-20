@@ -175,6 +175,10 @@ describe("Visible net-salary refund calculator", () => {
       "aria-invalid",
       "true",
     );
+    for (const invalid of ["0x10", "1e1", "Infinity"]) {
+      input(t("annualRate"), invalid);
+      expect(screen.getByLabelText(t("annualRate"))).toHaveAttribute("aria-invalid", "true");
+    }
     input(t("annualRate"), "1");
     expect(screen.getByLabelText(t("annualRate"))).toHaveAttribute(
       "aria-invalid",

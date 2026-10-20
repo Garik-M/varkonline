@@ -86,7 +86,7 @@ function CalculatorBody({
   const rateValue = Number(rate.replace(",", "."));
   const rateError =
     mortgage &&
-    (rate.trim() === "" ||
+    (!/^\d+(?:[.,]\d*)?$/.test(rate.trim()) ||
       !Number.isFinite(rateValue) ||
       rateValue < limits.annualInterestRatePercent.min ||
       rateValue > limits.annualInterestRatePercent.max);
