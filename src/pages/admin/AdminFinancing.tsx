@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import CalculatorControlsEditor from "@/components/financing/CalculatorControlsEditor";
+import AnalyticsPanel from "@/components/financing/AnalyticsPanel";
+import DraftCalculatorPreview from "@/components/financing/DraftCalculatorPreview";
+import { mortgageControlPreset } from "@/embed/calculator-options";
 import FinancingPartnerList from "@/components/admin/financing/FinancingPartnerList";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -17,11 +21,12 @@ import type {
 // Resource boundaries are editable constraints, never an implied financing offer.
 const blankConfiguration = (): PartnerConfiguration => ({
   schemaVersion: 1,
+  calculator: mortgageControlPreset().calculator,
   defaults: {
     currency: "AMD",
     financingType: "mortgage",
-    downPaymentPercent: 0,
-    durationMonths: 1,
+    downPaymentPercent: 20,
+    durationMonths: 240,
   },
   overrides: [
     "apartmentPrice",
@@ -35,9 +40,9 @@ const blankConfiguration = (): PartnerConfiguration => ({
   allowedCurrencies: ["AMD"],
   limits: {
     apartmentPrice: { min: 1, max: 1e12 },
-    annualInterestRatePercent: { min: 0, max: 100 },
-    downPaymentPercent: { min: 0, max: 100, step: 1 },
-    durationMonths: { min: 1, max: 600, step: 1 },
+    annualInterestRatePercent: { min: 1, max: 30 },
+    downPaymentPercent: { min: 10, max: 100, step: 0.01 },
+    durationMonths: { min: 120, max: 240, step: 12 },
     supportedDurations: [],
   },
   adjustable: { downPaymentPercent: true, durationMonths: true },
@@ -102,6 +107,13 @@ export default function AdminFinancing({
   );
   const [sampleApartmentId, setSampleApartmentId] =
     useState("preview-apartment");
+  const analyticsRequest = useCallback(
+    <T,>(path: string) =>
+      api.request(
+        `/financing-partners/${encodeURIComponent(slug ?? "")}/analytics${path}`,
+      ) as Promise<T>,
+    [slug],
+  );
   const [copied, setCopied] = useState(false);
   const field = (key: keyof Fields, value: string | boolean) =>
     setFields((previous) => ({ ...previous, [key]: value }));
@@ -335,10 +347,13 @@ export default function AdminFinancing({
           ["overview", "Overview"],
           ["calculator", "Calculator settings"],
           ["sdk", "SDK & preview"],
+          ["analytics", "Analytics"],
           ["advanced", "Advanced settings"],
         ]
           .filter(
-            ([key]) => !!selected || (key !== "overview" && key !== "sdk"),
+            ([key]) =>
+              !!selected ||
+              (key !== "overview" && key !== "sdk" && key !== "analytics"),
           )
           .map(([key, title]) => (
             <Button
@@ -422,7 +437,10 @@ export default function AdminFinancing({
           </div>
         </section>
       )}
-      {tab !== "overview" && tab !== "sdk" && (
+      {selected && tab === "analytics" && (
+        <AnalyticsPanel request={analyticsRequest} />
+      )}
+      {tab !== "overview" && tab !== "sdk" && tab !== "analytics" && (
         <form onSubmit={save} className="space-y-5">
           {tab === "calculator" && (
             <>
@@ -605,6 +623,17 @@ export default function AdminFinancing({
                 </p>
               </section>
               <section className={box}>
+                <CalculatorControlsEditor
+                  value={{
+                    limits: config.limits,
+                    adjustable: config.adjustable,
+                    calculator: config.calculator,
+                  }}
+                  onChange={(value) => setConfig({ ...config, ...value })}
+                  mortgage={config.defaults.financingType === "mortgage"}
+                />
+              </section>
+              <section className={box}>
                 <h2 className="font-semibold text-lg">Appearance</h2>
                 <div className="grid sm:grid-cols-3 gap-4">
                   <label className={label}>
@@ -654,6 +683,31 @@ export default function AdminFinancing({
                 </div>
               </section>
             </>
+          )}
+          {tab === "calculator" && (
+            <section className={box}>
+              <h2 className="font-semibold">Live draft preview</h2>
+              <p className="text-xs text-muted-foreground">
+                Preview only. Save to publish changes. No analytics are
+                collected here.
+              </p>
+              <DraftCalculatorPreview
+                name={fields.displayName || "Varkonline"}
+                price={Number(samplePrice) || 35000000}
+                language={config.calculator?.defaultLanguage ?? "hy"}
+                configuration={{
+                  ...config,
+                  defaults: {
+                    ...config.defaults,
+                    downPaymentPercent: Number(fields.down),
+                    durationMonths: Number(fields.duration),
+                    ...(config.defaults.financingType === "mortgage"
+                      ? { annualInterestRatePercent: Number(fields.rate) }
+                      : {}),
+                  },
+                }}
+              />
+            </section>
           )}
           {tab === "advanced" && (
             <>

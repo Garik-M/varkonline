@@ -32,50 +32,129 @@ function requireNumber(
 }
 
 /** Validate untrusted JSON without coercion, financial defaults, or ignored fields. */
-export function validateFinancingInput(input: unknown): asserts input is FinancingInput {
+export function validateFinancingInput(
+  input: unknown,
+): asserts input is FinancingInput {
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
-    throw new FinancingCalculationError("INVALID_INPUT", "Financing input must be an object.");
+    throw new FinancingCalculationError(
+      "INVALID_INPUT",
+      "Financing input must be an object.",
+    );
   }
   const values = input as Record<string, unknown>;
   const type = values.financingType;
   if (!Object.prototype.hasOwnProperty.call(values, "financingType")) {
-    throw new FinancingCalculationError("INVALID_INPUT", "financingType is required.", "financingType");
+    throw new FinancingCalculationError(
+      "INVALID_INPUT",
+      "financingType is required.",
+      "financingType",
+    );
   }
   if (type !== "mortgage" && type !== "developer_installment") {
     throw new FinancingCalculationError(
-      "UNSUPPORTED_CONFIGURATION", "Unsupported financingType.", "financingType",
+      "UNSUPPORTED_CONFIGURATION",
+      "Unsupported financingType.",
+      "financingType",
     );
   }
 
-  const required = ["currency", "apartmentPrice", "downPaymentPercent", "durationMonths"];
+  const required = [
+    "currency",
+    "apartmentPrice",
+    "downPaymentPercent",
+    "durationMonths",
+  ];
   required.push(type === "mortgage" ? "annualInterestRatePercent" : "formula");
   for (const field of required) {
     if (!Object.prototype.hasOwnProperty.call(values, field)) {
-      throw new FinancingCalculationError("INVALID_INPUT", `${field} is required.`, field);
+      throw new FinancingCalculationError(
+        "INVALID_INPUT",
+        `${field} is required.`,
+        field,
+      );
     }
   }
-  const supported = new Set(["financingType", ...required]);
+  const supported = new Set([
+    "financingType",
+    "downPaymentAmount",
+    ...required,
+    ...(type === "mortgage" ? ["repaymentMethod"] : []),
+  ]);
   for (const field of Reflect.ownKeys(values)) {
     if (typeof field !== "string" || !supported.has(field)) {
       throw new FinancingCalculationError(
-        "UNSUPPORTED_CONFIGURATION", `Unsupported financing field: ${String(field)}.`, String(field),
+        "UNSUPPORTED_CONFIGURATION",
+        `Unsupported financing field: ${String(field)}.`,
+        String(field),
       );
     }
   }
 
   if (values.currency !== "AMD" && values.currency !== "USD") {
     throw new FinancingCalculationError(
-      "UNSUPPORTED_CONFIGURATION", "Unsupported currency. Use AMD or USD.", "currency",
+      "UNSUPPORTED_CONFIGURATION",
+      "Unsupported currency. Use AMD or USD.",
+      "currency",
     );
   }
-  requireNumber(values, "apartmentPrice", 1, FINANCING_LIMITS.maxApartmentPrice, true);
+  requireNumber(
+    values,
+    "apartmentPrice",
+    1,
+    FINANCING_LIMITS.maxApartmentPrice,
+    true,
+  );
   requireNumber(values, "downPaymentPercent", 0, 100);
-  requireNumber(values, "durationMonths", 1, FINANCING_LIMITS.maxDurationMonths, true);
+  if (values.downPaymentAmount !== undefined) {
+    requireNumber(
+      values,
+      "downPaymentAmount",
+      0,
+      values.apartmentPrice as number,
+      true,
+    );
+    if (
+      Math.round(
+        ((values.apartmentPrice as number) *
+          (values.downPaymentPercent as number)) /
+          100,
+      ) !== values.downPaymentAmount
+    )
+      throw new FinancingCalculationError(
+        "INVALID_INPUT",
+        "Down payment amount and percentage must agree.",
+        "downPaymentAmount",
+      );
+  }
+  requireNumber(
+    values,
+    "durationMonths",
+    1,
+    FINANCING_LIMITS.maxDurationMonths,
+    true,
+  );
   if (type === "mortgage") {
-    requireNumber(values, "annualInterestRatePercent", 0, FINANCING_LIMITS.maxAnnualInterestRatePercent);
+    requireNumber(
+      values,
+      "annualInterestRatePercent",
+      0,
+      FINANCING_LIMITS.maxAnnualInterestRatePercent,
+    );
+    if (
+      values.repaymentMethod !== undefined &&
+      values.repaymentMethod !== "annuity" &&
+      values.repaymentMethod !== "equal_principal"
+    )
+      throw new FinancingCalculationError(
+        "UNSUPPORTED_CONFIGURATION",
+        "Unsupported repayment method.",
+        "repaymentMethod",
+      );
   } else if (values.formula !== "interest_free") {
     throw new FinancingCalculationError(
-      "UNSUPPORTED_CONFIGURATION", "Unsupported developer installment formula.", "formula",
+      "UNSUPPORTED_CONFIGURATION",
+      "Unsupported developer installment formula.",
+      "formula",
     );
   }
 }

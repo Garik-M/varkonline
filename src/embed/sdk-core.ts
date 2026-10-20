@@ -148,6 +148,7 @@ export interface FinancingSdk {
 export function createFinancingSdk(
   apiOrigin: string,
   auto = true,
+  preview = false,
 ): FinancingSdk {
   const api = new URL(apiOrigin);
   if (
@@ -313,8 +314,7 @@ export function createFinancingSdk(
         : readWidgetAttributes(element);
       const config = {
         ...parsed,
-        language:
-          parsed.language ?? widgetLanguage(document.documentElement.lang),
+        language: parsed.language,
       };
       suppressed.delete(element);
       element.querySelector(":scope > [data-varkonline-error]")?.remove();
@@ -328,9 +328,9 @@ export function createFinancingSdk(
       if (previous && previous.config.partner === config.partner) {
         previous.config = config;
         previous.signature = signature;
-        previous.frame.title = sdkText(config.language, "iframeTitle");
+        previous.frame.title = sdkText(config.language ?? widgetLanguage(document.documentElement.lang), "iframeTitle");
         if (!previous.loaded)
-          previous.status.textContent = sdkText(config.language, "loading");
+          previous.status.textContent = sdkText(config.language ?? widgetLanguage(document.documentElement.lang), "loading");
         send(previous, "update");
         return;
       }
@@ -344,9 +344,9 @@ export function createFinancingSdk(
       wrapper.dataset.varkonlineOwned = "true";
       const status = document.createElement("p");
       status.setAttribute("role", "status");
-      status.textContent = sdkText(config.language, "loading");
+      status.textContent = sdkText(config.language ?? widgetLanguage(document.documentElement.lang), "loading");
       const frame = document.createElement("iframe");
-      frame.title = sdkText(config.language, "iframeTitle");
+      frame.title = sdkText(config.language ?? widgetLanguage(document.documentElement.lang), "iframeTitle");
       frame.sandbox.add(
         "allow-scripts",
         "allow-same-origin",
@@ -369,8 +369,9 @@ export function createFinancingSdk(
         parentOrigin: window.location.origin,
         instance,
         sdk: "1",
+        ...(preview ? { preview: "1" } : {}),
       }).toString();
-      url.hash = `language=${config.language}`;
+      if (config.language) url.hash = `language=${config.language}`;
       frame.src = url.href;
       const record: Mounted = {
         config,

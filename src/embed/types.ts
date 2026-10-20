@@ -26,8 +26,31 @@ export interface Range {
   max: number;
   step: number;
 }
+export interface CalculatorOptions {
+  downPaymentAmountStep: number;
+  durationUnit: "years" | "months";
+  repaymentMethod: "annuity" | "equal_principal";
+  allowRepaymentChoice: boolean;
+  rateEditable: boolean;
+  priceRateRule: {
+    currency: "AMD" | "USD";
+    threshold: number;
+    below: number;
+    atOrAbove: number;
+  } | null;
+  defaultLanguage: "hy" | "en" | "ru";
+  showSchedule: boolean;
+  showTotals: boolean;
+  allowCoBorrower: boolean;
+  analyticsEnabled: boolean;
+  installmentControls?: Pick<
+    PartnerConfiguration["limits"],
+    "downPaymentPercent" | "durationMonths" | "supportedDurations"
+  >;
+}
 export interface PartnerConfiguration {
   schemaVersion: 1;
+  calculator?: CalculatorOptions;
   defaults: {
     currency: "AMD" | "USD";
     financingType: "mortgage" | "developer_installment";
@@ -88,6 +111,8 @@ export interface FinancingPartner {
   updatedAt: string;
 }
 export interface ResolvedWidget {
+  calculator?: CalculatorOptions;
+  analytics?: { token: string } | null;
   partner: { slug: string; displayName: string; revision: number };
   apartmentId: string;
   financing: FinancingInput;

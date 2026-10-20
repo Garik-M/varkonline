@@ -1,89 +1,27 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import {
-  FinancingCalculationError,
-  type FinancingResult,
-} from "@/lib/financing";
+import type { FinancingResult } from "@/lib/financing";
 import {
   ARMENIA_REFUND_RULES_2026_10,
+  estimateIncomeTaxFromNetSalary,
   type MortgageRefundResult,
 } from "@/lib/financing/income-tax-refund";
 import type { ResolvedWidget } from "./types";
 import {
-  emptyPayroll,
+  automaticProjectionDates,
+  netPayrollParticipant,
   paymentDates,
-  payrollParticipant,
   refundProjection,
-  salaryEstimate,
-  type PayrollForm,
+  wholeAmount,
+  yerevanToday,
 } from "./refund-model";
-import { refundMessages } from "./refund-messages";
 import { useWidgetText } from "./language";
-import type { MessageKey } from "./messages";
-
-type PayrollFieldsProps = {
-  value: PayrollForm;
-  onChange: (value: PayrollForm) => void;
-  title: string;
-};
-
-function SalaryFields({ value, onChange, title }: PayrollFieldsProps) {
-  const { t } = useWidgetText();
-  const id = useId();
-  return (
-    <fieldset>
-      <legend>{title}</legend>
-      <div className="vk-grid">
-        <label>
-          {t("gross")}
-          <small id={`${id}-gross-help`}>{t("grossHelp")}</small>
-          <input
-            id={`${id}-gross`}
-            aria-label={t("gross")}
-            aria-describedby={`${id}-gross-help`}
-            inputMode="numeric"
-            value={value.gross}
-            required
-            onChange={(e) => onChange({ ...value, gross: e.target.value })}
-            placeholder={t("grossExample")}
-            autoComplete="off"
-          />
-        </label>
-        <label>
-          {t("withheld")} <small>{t("withheldHelp")}</small>
-          <input
-            aria-label={t("withheld")}
-            inputMode="numeric"
-            value={value.withheld}
-            onChange={(e) => onChange({ ...value, withheld: e.target.value })}
-            placeholder={t("withheldPlaceholder")}
-            autoComplete="off"
-          />
-        </label>
-      </div>
-    </fieldset>
-  );
-}
-
-function messageForError(cause: unknown): MessageKey {
-  return cause instanceof FinancingCalculationError
-    ? "financialError"
-    : cause instanceof Error &&
-        ["historicalTaxError", "propertyError", "assumptionsError"].includes(
-          cause.message,
-        )
-      ? (cause.message as MessageKey)
-      : cause instanceof Error && cause.message === "INVALID_AMOUNT"
-        ? "amountError"
-        : cause instanceof Error && cause.message === "INVALID_DATE"
-          ? "dateError"
-          : "inputError";
-}
+import type { TrackWidgetEvent } from "./analytics";
 
 export default function RefundPanel({
   financing,
   configuration,
   onProjectionChange,
-  onCalculate,
+  track,
 }: {
   financing: FinancingResult | null;
   configuration: ResolvedWidget;
@@ -91,302 +29,226 @@ export default function RefundPanel({
     projection: MortgageRefundResult | null,
     financing: FinancingResult | null,
   ) => void;
-  onCalculate?: () => void;
+  track?: TrackWidgetEvent;
 }) {
-  const { t, money, language } = useWidgetText();
-  const [borrower, setBorrower] = useState(emptyPayroll);
-  const [co, setCo] = useState(emptyPayroll);
+  const { t, money } = useWidgetText();
+  const id = useId();
+  const [net, setNet] = useState("");
+  const [coNet, setCoNet] = useState("");
   const [includeCo, setIncludeCo] = useState(false);
-  const [first, setFirst] = useState(
-    configuration.refund.firstPaymentDate ?? "",
-  );
-  const [loan, setLoan] = useState(
-    configuration.refund.loanOriginationDate?.value ?? "",
-  );
-  const [constant, setConstant] = useState(false);
-  const [submitted, setSubmitted] = useState<{
-    borrower: PayrollForm;
-    co: PayrollForm;
-    includeCo: boolean;
-    first: string;
-    loan: string;
-  } | null>(null);
-  const [error, setError] = useState<MessageKey | null>(null);
-  const [page, setPage] = useState(0);
-  useEffect(() => {
-    setPage(0);
-  }, [financing]);
-  const invalidate = () => {
-    setSubmitted(null);
-    setError(null);
-  };
-  const change = (value: PayrollForm, secondary = false) => {
-    (secondary ? setCo : setBorrower)(value);
-    invalidate();
-  };
+  const [touched, setTouched] = useState(false);
+  const [dates] = useState(() => {
+    const automatic = automaticProjectionDates(yerevanToday());
+    return {
+      loan: configuration.refund.loanOriginationDate?.value ?? automatic.loan,
+      first: configuration.refund.firstPaymentDate ?? automatic.first,
+    };
+  });
   const outcome = useMemo(() => {
-    if (!submitted || !financing)
-      return { projection: null, tax: null, error: null };
+    if (!net || !financing || financing.currency !== "AMD")
+      return { projection: null, tax: null, error: false };
     try {
-      const { borrower, co, includeCo, first, loan } = submitted;
-      const dates = paymentDates(first, financing.schedule.length);
-      const primary = salaryEstimate(
-        borrower,
-        first.slice(0, 7),
-      ).selectedIncomeTaxAMD;
+      const primary = estimateIncomeTaxFromNetSalary(wholeAmount(net));
       const secondary = includeCo
-        ? salaryEstimate(co, first.slice(0, 7)).selectedIncomeTaxAMD
-        : 0;
-      if (primary === null || secondary === null)
-        throw new Error("historicalTaxError");
+        ? estimateIncomeTaxFromNetSalary(wholeAmount(coNet))
+        : null;
+      const payments = paymentDates(dates.first, financing.schedule.length);
       const participants = [
-        payrollParticipant(borrower, dates, "borrower"),
-        ...(includeCo ? [payrollParticipant(co, dates, "co_borrower")] : []),
+        netPayrollParticipant(net, payments, "borrower"),
+        ...(includeCo
+          ? [netPayrollParticipant(coNet, payments, "co_borrower")]
+          : []),
       ];
       return {
-        projection: refundProjection(financing, first, loan, participants),
-        tax: primary + secondary,
-        error: null,
+        projection: refundProjection(
+          financing,
+          dates.first,
+          dates.loan,
+          participants,
+        ),
+        tax: primary.incomeTaxAMD + (secondary?.incomeTaxAMD ?? 0),
+        error: false,
       };
-    } catch (cause) {
-      return { projection: null, tax: null, error: messageForError(cause) };
+    } catch {
+      return { projection: null, tax: null, error: true };
     }
-  }, [submitted, financing]);
-  const { projection, tax } = outcome;
-  const visibleError = error ?? outcome.error;
+  }, [net, coNet, includeCo, financing, dates]);
   useEffect(() => {
-    onProjectionChange?.(projection, financing);
-  }, [projection, financing, onProjectionChange]);
-  function calculate(event: React.FormEvent) {
-    event.preventDefault();
-    if (!constant) {
-      setError("assumptionsError");
-      return;
-    }
-    if (!financing) return;
-    setError(null);
-    setPage(0);
-    onCalculate?.();
-    setSubmitted({ borrower, co, includeCo, first, loan });
-  }
+    onProjectionChange?.(outcome.projection, financing);
+  }, [outcome.projection, financing, onProjectionChange]);
+  const salaryBlur = (field: "net_salary" | "co_net_salary") => {
+    setTouched(true);
+    track?.("field_changed", field);
+    if (
+      outcome.projection?.totalEstimatedRefundAMD !== null &&
+      outcome.projection
+    )
+      track?.("refund_calculated");
+  };
   return (
-    <section className="vk-refund" aria-label={t("refundTitle")}>
+    <section
+      className="vk-refund vk-refund-visible"
+      aria-label={t("refundTitle")}
+    >
+      <div className="vk-refund-badge">
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 8a8 8 0 1 1-1 7M4 3v5h5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M9 12h6m-3-3v6" strokeLinecap="round" />
+        </svg>
+        <span>{t("refundFeatureBadge")}</span>
+      </div>
       <h2>{t("refundTitle")}</h2>
-      <p className="vk-muted">{t("privacy")}</p>
-      {financing?.currency === "USD" && (
+      <p className="vk-muted">{t("refundPrompt")}</p>
+      {financing?.currency === "USD" ? (
         <p className="vk-warning">{t("usdWarning")}</p>
-      )}
-      <details
-        className="vk-refund-form"
-        open={!submitted || outcome.error !== null}
-      >
-        <summary hidden={!submitted || outcome.error !== null}>
-          {t("editRefund")}
-        </summary>
-        <form onSubmit={calculate} onChange={invalidate}>
-          <div className="vk-refund-step" data-testid="refund-step-income">
-            <div className="vk-grid">
-              <label>
-                {t("firstPayment")}
-                <input
-                  aria-label={t("firstPayment")}
-                  type="date"
-                  required
-                  value={first}
-                  onChange={(event) => {
-                    setFirst(event.target.value);
-                  }}
-                />
-                <small>{t("firstPaymentHelp")}</small>
-              </label>
-              <label>
-                {t("loanDate")}
-                <input
-                  aria-label={t("loanDate")}
-                  type="date"
-                  required
-                  value={loan}
-                  onChange={(event) => setLoan(event.target.value)}
-                />
-                <small>{t("declaredDate")}</small>
-              </label>
+      ) : (
+        <>
+          <label htmlFor={`${id}-salary`}>
+            {t("netSalary")}
+            <div className="vk-input-suffix">
+              <input
+                id={`${id}-salary`}
+                data-testid="net-salary"
+                aria-label={t("netSalary")}
+                aria-describedby={`${id}-help`}
+                type="number"
+                inputMode="numeric"
+                min="0"
+                max="1000000000000"
+                step="10000"
+                value={net}
+                onChange={(event) => setNet(event.target.value)}
+                onBlur={() => salaryBlur("net_salary")}
+                autoComplete="off"
+                placeholder="500000"
+              />
+              <span>֏</span>
             </div>
-            <SalaryFields
-              value={borrower}
-              onChange={change}
-              title={t("borrowerSalary")}
-            />
+            <small id={`${id}-help`}>{t("netSalaryHelp")}</small>
+          </label>
+          {configuration.calculator?.allowCoBorrower && (
             <label className="vk-check">
               <input
                 type="checkbox"
                 checked={includeCo}
                 onChange={(event) => {
                   setIncludeCo(event.target.checked);
+                  track?.("co_borrower_toggled");
                 }}
               />
               {t("includeCo")}
             </label>
-            {includeCo && (
-              <SalaryFields
-                value={co}
-                onChange={(value) => change(value, true)}
-                title={t("coSalary")}
-              />
-            )}
-            <p className="vk-muted">{t("financialScenarioNotice")}</p>
-            <label className="vk-check">
+          )}
+          {includeCo && (
+            <label>
+              {t("coNetSalary")}
               <input
-                type="checkbox"
-                checked={constant}
-                onChange={(event) => setConstant(event.target.checked)}
+                type="number"
+                inputMode="numeric"
+                min="0"
+                max="1000000000000"
+                step="10000"
+                value={coNet}
+                onChange={(event) => setCoNet(event.target.value)}
+                onBlur={() => salaryBlur("co_net_salary")}
+                autoComplete="off"
               />
-              {t("financialScenarioAssumptions")}
             </label>
-            <button className="vk-button" type="submit" disabled={!financing}>
-              {t("calculateRefund")}
-            </button>
-          </div>
-        </form>
-      </details>
-      {visibleError && (
-        <p className="vk-warning" role="alert">
-          {t("inputErrorPrefix")}
-          {t(visibleError)}
-        </p>
-      )}
-      {tax !== null && (
-        <p className="vk-tax" data-testid="salary-tax">
-          {includeCo ? t("combinedTax") : t("selectedTax")}{" "}
-          <strong>{money(tax)}</strong>
-        </p>
-      )}
-      {projection && financing && (
-        <div
-          className={`vk-refund-result${projection.eligibility.status === "requires_verification" ? " vk-refund-result--unresolved" : ""}`}
-          aria-live="polite"
-          data-testid="refund-result"
-        >
-          <h3 tabIndex={-1}>
-            {projection.eligibility.status === "eligible" ||
-            projection.eligibility.status === "not_assessed"
-              ? t("conditionalEstimate")
-              : projection.eligibility.status === "ineligible"
-                ? t("ineligible")
-                : t("verification")}
-          </h3>
-          <div className="vk-refund-total">
-            <span>{t("totalRefund")}</span>
-            <strong data-testid="total-refund">
-              {projection.totalEstimatedRefundAMD === null
-                ? t("unresolved")
-                : money(projection.totalEstimatedRefundAMD)}
-            </strong>
-            <p>{t("refundPeriod", { months: financing.durationMonths })}</p>
-          </div>
-          <div className="vk-refund-metrics">
-            <div>
-              <span>{t("effectiveCost")}</span>
-              <strong data-testid="effective-cost">
-                {projection.effectiveAverageMonthlyFinancingCostAMD === null
-                  ? t("unresolved")
-                  : money(projection.effectiveAverageMonthlyFinancingCostAMD)}
+          )}
+          {touched && outcome.error && (
+            <p role="alert" className="vk-field-error">
+              {t("amountError")}
+            </p>
+          )}
+          {outcome.projection?.totalEstimatedRefundAMD != null && (
+            <div className="vk-refund-hero-result" aria-live="polite">
+              <span>{t("totalRefund")}</span>
+              <strong data-testid="total-refund">
+                {money(outcome.projection.totalEstimatedRefundAMD)}
               </strong>
+              <small>
+                {t("refundPeriod", { months: financing?.durationMonths ?? 0 })}
+              </small>
             </div>
-          </div>
-          <details>
-            <summary>{t("quarterSchedule")}</summary>
-            <div className="vk-quarter-list">
-              {projection.quarterlySchedule
-                .slice(page * 8, page * 8 + 8)
-                .map((q) => (
-                  <div key={`${q.year}-${q.quarter}`}>
-                    <span>
-                      {q.year} · {q.quarter}
-                      {t("quarterSuffix")}
-                    </span>
-                    <strong>
-                      {q.estimatedRefundAMD === null
-                        ? t("needsReview")
-                        : money(q.estimatedRefundAMD)}
-                    </strong>
-                    <small>
-                      {t("interestPrefix")}{" "}
-                      {q.interestUsedAMD === null
-                        ? t("unresolved")
-                        : money(q.interestUsedAMD)}{" "}
-                      {t("taxPrefix")}{" "}
-                      {q.eligibleIncomeTaxAMD === null
-                        ? t("unresolved")
-                        : money(q.eligibleIncomeTaxAMD)}{" "}
-                      {t("capPrefix")}{" "}
-                      {q.quarterlyRefundCapAMD === null
-                        ? t("unresolved")
-                        : money(q.quarterlyRefundCapAMD)}
-                    </small>
-                  </div>
-                ))}
-            </div>
-            <div className="vk-pagination">
-              <button disabled={!page} onClick={() => setPage(page - 1)}>
-                {t("previous")}
-              </button>
-              <span>
-                {page + 1} /{" "}
-                {Math.max(
-                  1,
-                  Math.ceil(projection.quarterlySchedule.length / 8),
-                )}
-              </span>
-              <button
-                disabled={(page + 1) * 8 >= projection.quarterlySchedule.length}
-                onClick={() => setPage(page + 1)}
-              >
-                {t("next")}
-              </button>
-            </div>
-          </details>
-        </div>
+          )}
+          {outcome.tax !== null && (
+            <p className="vk-tax" data-testid="salary-tax">
+              {t("estimatedTax")} <strong>{money(outcome.tax)}</strong>
+            </p>
+          )}
+          <p className="vk-refund-private">
+            <svg
+              viewBox="0 0 24 24"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <rect x="5" y="10" width="14" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            {t("salaryPrivateShort")}
+          </p>
+        </>
       )}
-      <details
-        className="vk-refund-notes"
-        open={
-          projection &&
-          ["requires_verification", "ineligible"].includes(
-            projection.eligibility.status,
-          )
-            ? true
-            : undefined
-        }
-      >
-        <summary>{t("refundDetails")}</summary>
-        <p>{t("financialScenarioNotice")}</p>
-        <p>{t("effectiveHelp")}</p>
-        {projection?.eligibility.status === "requires_verification" && (
-          <p>{t("projectionUnresolved")}</p>
-        )}
-        {projection && financing && (
-          <ul>
-            {refundMessages(projection.eligibility.reasons, language).map(
-              (text) => (
-                <li key={text}>{text}</li>
-              ),
-            )}
-          </ul>
-        )}
-        <p className="vk-fine">
-          {t("ruleVersion")}
-          {ARMENIA_REFUND_RULES_2026_10.version}
-          {t("futureChanges")}{" "}
-          <a
-            href="https://www.arlis.am/hy/acts/230455"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t("taxCode")}
-          </a>
-          {t("period")}
-        </p>
-      </details>
     </section>
+  );
+}
+
+export function RefundNotes({
+  configuration,
+  track,
+}: {
+  configuration: ResolvedWidget;
+  track?: TrackWidgetEvent;
+}) {
+  const { t } = useWidgetText();
+  const [dates] = useState(() => {
+    const automatic = automaticProjectionDates(yerevanToday());
+    return {
+      loan: configuration.refund.loanOriginationDate?.value ?? automatic.loan,
+      first: configuration.refund.firstPaymentDate ?? automatic.first,
+    };
+  });
+  return (
+    <details
+      className="vk-refund-notes"
+      onToggle={(event) => {
+        if (event.currentTarget.open) track?.("refund_details_opened");
+      }}
+    >
+      <summary>{t("refundDetails")}</summary>
+      <p>{t("financialScenarioNotice")}</p>
+      <p>{t("netPayrollAssumptions")}</p>
+      <p>{t("projectionDates", { loan: dates.loan, first: dates.first })}</p>
+      <p>{t("refundAllocationNote")}</p>
+      <p>{t("privacy")}</p>
+      <p>
+        {t("ruleVersion")}
+        {ARMENIA_REFUND_RULES_2026_10.version}
+        {t("futureChanges")}
+      </p>
+      <a
+        href="https://www.arlis.am/hy/acts/200943"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t("taxCode")}
+      </a>
+    </details>
   );
 }

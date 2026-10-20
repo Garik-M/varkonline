@@ -60,7 +60,7 @@ describe("SDK public boundary", () => {
     expect(node.querySelector('[role="status"]')).toHaveTextContent(
       "Loading financing calculator",
     );
-    expect(frame.src).toContain("#language=en");
+    expect(new URL(frame.src).hash).toBe(""); // The resolver supplies the partner default unless explicitly overridden.
     sdk.update(node, { language: "ru" });
     expect(node.querySelector("iframe")).toBe(frame);
     expect(frame.title).toContain("калькулятор");

@@ -227,7 +227,7 @@ python3 src/lib/financing/__tests__/generate_references.py
 ## Assumptions, scope and Phase 2 dependencies
 
 These calculations are estimates, not official bank offers. They assume a fixed
-nominal mortgage rate, equal monthly periods and payments in arrears. They do not
+nominal mortgage rate, equal monthly periods and payments in arrears. Mortgage callers may explicitly choose `repaymentMethod: "annuity" | "equal_principal"`; omission retains the existing annuity contract. Equal-principal repayment distributes whole-unit principal by cumulative rounding, then adds interest on each opening balance. `regularMonthlyPayment` is the first payment for that method; use `schedule` for actual varying payments. An optional exact `downPaymentAmount` must agree with `downPaymentPercent` and avoids converting whole-unit visitor entries into lossy amounts. They do not
 model daily accrual, calendar dates, variable rates, grace periods, early payments,
 fees, insurance, taxes, refunds, or developer markups. There are no new UI, SDK,
 iframe, endpoints, partner records, database migrations or production changes.

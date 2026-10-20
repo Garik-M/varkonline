@@ -3,6 +3,124 @@ import type { WidgetLanguage } from "./sdk-messages";
 export { widgetLanguage } from "./sdk-messages";
 export type { WidgetLanguage } from "./sdk-messages";
 export const widgetMessages = {
+  refundFeatureBadge: {
+    hy: "Ձեր հնարավոր խնայողությունը",
+    en: "Your potential savings",
+    ru: "Ваша возможная экономия",
+  },
+  salaryPrivateShort: {
+    hy: "Աշխատավարձը չի պահպանվում կամ փոխանցվում։",
+    en: "Your salary is never stored or sent.",
+    ru: "Зарплата не сохраняется и не передаётся.",
+  },
+  netSalary: {
+    hy: "Ամսական մաքուր աշխատավարձը, ֏",
+    en: "Monthly take-home salary, AMD",
+    ru: "Зарплата на руки в месяц, AMD",
+  },
+  coNetSalary: {
+    hy: "Համավարկառուի մաքուր աշխատավարձը, ֏",
+    en: "Co-borrower take-home salary, AMD",
+    ru: "Зарплата созаёмщика на руки, AMD",
+  },
+  netSalaryHelp: {
+    hy: "Հարկերից հետո ստացվող գումարը։",
+    en: "Your salary after deductions.",
+    ru: "Сумма после удержаний.",
+  },
+  refundPrompt: {
+    hy: "Տեսեք՝ որքան կարող եք հետ ստանալ։ Մուտքագրեք մաքուր աշխատավարձը։",
+    en: "See how much you could get back. Enter your take-home salary.",
+    ru: "Узнайте, сколько можно вернуть. Введите зарплату на руки.",
+  },
+  estimatedTax: {
+    hy: "Գնահատված ամսական եկամտային հարկ՝",
+    en: "Estimated monthly income tax:",
+    ru: "Расчётный подоходный налог в месяц:",
+  },
+  netPayrollAssumptions: {
+    hy: "Մաքուր աշխատավարձից գնահատվում է 2026թ․ ստանդարտ մեկ գործատուի աշխատավարձը՝ 20% եկամտային հարկով, պարտադիր կուտակային, դրոշմանիշային և կիրառելի առողջության ապահովագրավճարներով։ Արտոնությունները, այլ պահումները և ապահովագրության անցումային կարգավիճակը չեն որոշվում։ Անորոշ դեպքերում ընտրվում է ավելի ցածր հարկով տարբերակը։ Ենթադրվում են կայուն եկամուտ, ամբողջությամբ վճարված հարկ, առանց սուբսիդիաների և այլ հարկային հետվերադարձների։",
+    en: "Net salary is estimated using the 2026 standard single-employer model: 20% income tax, mandatory pension, stamp duty and applicable health insurance. Exemptions, other deductions and transitional insurance status cannot be inferred. Ambiguous salaries use the lower-tax match. Assumes stable income, fully paid tax, no interest subsidy or other tax refunds.",
+    ru: "Используется стандартная модель 2026 года для одного работодателя: подоходный налог 20%, пенсионные, гербовый сбор и применимое медстрахование. Льготы, другие удержания и переходный страховой статус не определяются. При неоднозначности выбирается меньший налог. Доход постоянный, налог уплачен полностью, субсидий процентов и других возвратов нет.",
+  },
+  projectionDates: {
+    hy: "Հաշվարկային տրամադրում՝ {loan}, առաջին վճարում՝ {first}։",
+    en: "Assumed disbursement: {loan}; first payment: {first}.",
+    ru: "Расчётная выдача: {loan}; первый платёж: {first}.",
+  },
+  refundAllocationShort: {
+    hy: "Հետվերադարձը եռամսյակային է․ այստեղ ցույց է տրված ամսին բաժին ընկնող գնահատականը։",
+    en: "Refunds are quarterly; this is the estimated allocation to this month.",
+    ru: "Возврат производится поквартально; здесь показана расчётная доля месяца.",
+  },
+  refundAllocationNote: {
+    hy: "Հետվերադարձը չի գերազանցում վճարված իրավասու տոկոսները, հասանելի եկամտային հարկը և եռամսյակային սահմանաչափը։ Ամսական բաժանումը ցուցադրական է և ճշգրիտ համընկնում է եռամսյակային ընդհանուրին։ Մայր գումարը չի վերադարձվում, բանկի պարտավորությունը չի նվազում։",
+    en: "Refunds are limited by eligible interest, available salary tax and the quarterly cap. Monthly allocations are illustrative and reconcile exactly to each quarter. Principal is not refunded; the bank obligation stays unchanged.",
+    ru: "Возврат ограничен допустимыми процентами, доступным подоходным налогом и квартальным лимитом. Месячные доли условны и точно сходятся с квартальным итогом. Основной долг не возмещается; обязательство перед банком не меняется.",
+  },
+  durationYears: { hy: "Ժամկետ, տարի", en: "Term, years", ru: "Срок, лет" },
+  years: { hy: "տարի", en: "years", ru: "лет" },
+  downBounds: {
+    hy: "Կանխավճարը պետք է լինի {min}–{max}։",
+    en: "Down payment must be {min}–{max}.",
+    ru: "Первоначальный взнос: от {min} до {max}.",
+  },
+  downPercentHelp: {
+    hy: "Բնակարանի արժեքի {percent}%",
+    en: "{percent}% of the apartment price",
+    ru: "{percent}% стоимости квартиры",
+  },
+  termBounds: {
+    hy: "Ժամկետը պետք է լինի {min}–{max}։",
+    en: "Term must be {min}–{max}.",
+    ru: "Срок: от {min} до {max}.",
+  },
+  rateBounds: {
+    hy: "Տոկոսադրույքը պետք է լինի {min}%–{max}%։",
+    en: "Interest rate must be {min}%–{max}%.",
+    ru: "Ставка: от {min}% до {max}%.",
+  },
+  repaymentMethod: {
+    hy: "Մարման տարբերակ",
+    en: "Repayment method",
+    ru: "Способ погашения",
+  },
+  annuity: {
+    hy: "Հավասար բանկային վճարումներ",
+    en: "Equal bank payments (annuity)",
+    ru: "Равные платежи банку (аннуитет)",
+  },
+  equalPrincipal: {
+    hy: "Նվազող բանկային վճարումներ",
+    en: "Declining bank payments",
+    ru: "Убывающие платежи банку",
+  },
+  selectedMonthCost: {
+    hy: "Ձեր ծախսը՝ {month}-րդ ամսում",
+    en: "Your cost in month {month}",
+    ru: "Ваши расходы в месяце {month}",
+  },
+  allocatedRefund: {
+    hy: "Հետվերադարձի բաժինը",
+    en: "Refund allocation",
+    ru: "Доля возврата",
+  },
+  costAfterRefund: {
+    hy: "Ծախսը՝ հետվերադարձով",
+    en: "Cost after refund",
+    ru: "Расходы с возвратом",
+  },
+  refundTimeline: {
+    hy: "Ինչպես է փոխվում հետվերադարձը",
+    en: "How the refund changes over time",
+    ru: "Как меняется возврат со временем",
+  },
+  chooseMonth: {
+    hy: "Ընտրեք հաշվարկի ամիսը",
+    en: "Choose a projection month",
+    ru: "Выберите месяц расчёта",
+  },
+  monthNumber: { hy: "Ամիս {month}", en: "Month {month}", ru: "Месяц {month}" },
   financialScenarioNotice: {
     hy: "Գնահատական՝ հետվերադարձի իրավունք ունենալու դեպքում։ Իրավունքը չի ստուգվում։ Բանկի վճարումները չեն փոխվում։",
     en: "Illustration if eligible for a refund. Eligibility is not checked. Bank payments stay unchanged.",
@@ -676,9 +794,9 @@ export const widgetMessages = {
     ru: "Рассчитать с возвратом налога",
   },
   downAmount: {
-    hy: "Սկզբնական կանխավճար",
-    en: "Initial down payment",
-    ru: "Первоначальный взнос",
+    hy: "Կանխավճար",
+    en: "Down payment",
+    ru: "Первый взнос",
   },
   principal: {
     hy: "Ֆինանսավորվող գումար",

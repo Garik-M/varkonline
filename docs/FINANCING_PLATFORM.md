@@ -1,3 +1,9 @@
+# Current release: simplified refund-first calculator (2026-10-20)
+
+See [the current integration and demo guide](../public/docs/financing-integration.md) for authoritative UX, formulas, controls, telemetry/privacy and release assumptions. Historical release notes below describe earlier interfaces.
+
+The current widget always shows take-home salary, uses dram down payments and configured year terms, supports editable fractional rates, price tiers and both annuity/equal-principal schedules. The existing quarterly refund core remains authoritative; monthly allocations reconcile to it and never exceed interest. The primary result is period-specific rather than a lifetime average. Partner/admin controls share the same editor, draft previews collect no telemetry, and server-authorized analytics show only named actions with no payroll values.
+
 # Financing platform implementation report
 
 ## Current workflow - 20 October 2026

@@ -1,17 +1,44 @@
 import type { FinancingCurrency } from "../input";
-import type { EvidenceMode, EligibilityStatus, IncomePeriod, RefundRuleSet } from "./input";
+import type {
+  EvidenceMode,
+  EligibilityStatus,
+  IncomePeriod,
+  RefundRuleSet,
+} from "./input";
 
 export type RefundReasonCode =
-  | "ELIGIBILITY_NOT_ASSESSED" | "CONDITIONS_VERIFIED" | "CONDITIONS_DECLARED" | "NOT_A_MORTGAGE" | "NO_FINANCED_PRINCIPAL"
-  | "FACT_REQUIRES_VERIFICATION" | "NON_RESIDENT_FINANCIAL_LENDER" | "NOT_USED_FOR_HOUSING"
-  | "ACQUISITION_NOT_ELIGIBLE" | "SPECIAL_ACQUISITION_REVIEW" | "LEGACY_LOAN_REVIEW"
-  | "CONTRACT_PRICE_EXCEEDS_LIMIT" | "CONTRACT_PRICE_MISMATCH" | "OUTSIDE_ARMENIA"
-  | "LOCATION_RESTRICTED" | "CUTOFF_DATE_REVIEW" | "PERMIT_EXCEPTION_APPLIED"
-  | "RIGHTS_NOT_REGISTERED" | "DOCUMENTS_INCOMPLETE" | "SELF_BUILD_PERMIT_INVALID"
-  | "NOT_AN_EMPLOYEE" | "NOT_AN_OWNER" | "IDENTITY_DOCUMENT_MISSING" | "PRIOR_OTHER_MORTGAGE"
-  | "MISSING_INCOME_MONTH" | "TAX_RATE_REQUIRES_VERIFICATION" | "TAX_PAYMENT_UNKNOWN"
-  | "TAX_NOT_FULLY_PAID" | "TUITION_BENEFIT_OVERLAP" | "OTHER_BENEFIT_REVIEW"
-  | "AMD_AMOUNTS_REQUIRED" | "NO_ELIGIBLE_PARTICIPANT";
+  | "ELIGIBILITY_NOT_ASSESSED"
+  | "CONDITIONS_VERIFIED"
+  | "CONDITIONS_DECLARED"
+  | "NOT_A_MORTGAGE"
+  | "NO_FINANCED_PRINCIPAL"
+  | "FACT_REQUIRES_VERIFICATION"
+  | "NON_RESIDENT_FINANCIAL_LENDER"
+  | "NOT_USED_FOR_HOUSING"
+  | "ACQUISITION_NOT_ELIGIBLE"
+  | "SPECIAL_ACQUISITION_REVIEW"
+  | "LEGACY_LOAN_REVIEW"
+  | "CONTRACT_PRICE_EXCEEDS_LIMIT"
+  | "CONTRACT_PRICE_MISMATCH"
+  | "OUTSIDE_ARMENIA"
+  | "LOCATION_RESTRICTED"
+  | "CUTOFF_DATE_REVIEW"
+  | "PERMIT_EXCEPTION_APPLIED"
+  | "RIGHTS_NOT_REGISTERED"
+  | "DOCUMENTS_INCOMPLETE"
+  | "SELF_BUILD_PERMIT_INVALID"
+  | "NOT_AN_EMPLOYEE"
+  | "NOT_AN_OWNER"
+  | "IDENTITY_DOCUMENT_MISSING"
+  | "PRIOR_OTHER_MORTGAGE"
+  | "MISSING_INCOME_MONTH"
+  | "TAX_RATE_REQUIRES_VERIFICATION"
+  | "TAX_PAYMENT_UNKNOWN"
+  | "TAX_NOT_FULLY_PAID"
+  | "TUITION_BENEFIT_OVERLAP"
+  | "OTHER_BENEFIT_REVIEW"
+  | "AMD_AMOUNTS_REQUIRED"
+  | "NO_ELIGIBLE_PARTICIPANT";
 
 export interface RefundReason {
   readonly code: RefundReasonCode;
@@ -33,11 +60,18 @@ export interface MonthlyIncomeTaxResult {
   readonly actualIncomeTaxWithheldAMD: number | null;
   readonly selectedIncomeTaxAMD: number | null;
   readonly taxRatePercent: number | null;
-  readonly taxSource: "actual_withheld" | "standard_rate" | "custom_rate" | "unresolved";
+  readonly taxSource:
+    | "actual_withheld"
+    | "standard_rate"
+    | "custom_rate"
+    | "unresolved";
   readonly taxPaymentStatus: IncomePeriod["taxPaymentStatus"] | "missing";
 }
 
-export type SalaryIncomeTaxResult = Omit<MonthlyIncomeTaxResult, "participantId" | "taxPaymentStatus">;
+export type SalaryIncomeTaxResult = Omit<
+  MonthlyIncomeTaxResult,
+  "participantId" | "taxPaymentStatus"
+>;
 
 export interface QuarterlyParticipantTax {
   readonly participantId: string;
@@ -76,13 +110,28 @@ export interface MortgageRefundResult {
   readonly financingCurrency: FinancingCurrency;
   readonly originalRegularMonthlyBankPayment: number;
   readonly bankPayments: readonly {
-    readonly month: number; readonly paymentDate: string; readonly originalBankPayment: number;
+    readonly month: number;
+    readonly paymentDate: string;
+    readonly originalBankPayment: number;
   }[];
   readonly monthlyIncomeTax: readonly MonthlyIncomeTaxResult[];
   readonly loanEligibility: RefundEligibilityResult;
   readonly eligibility: RefundEligibilityResult;
   readonly quarterlySchedule: readonly QuarterlyRefundResult[];
-  readonly annualRefunds: readonly { readonly year: number; readonly estimatedRefundAMD: number | null }[];
+  /** Informational allocation of each quarterly estimate, not a monthly transfer.
+   * Allocations reconcile exactly and never exceed the row's eligible interest. */
+  readonly monthlySchedule: readonly {
+    readonly month: number;
+    readonly paymentDate: string;
+    readonly bankPaymentAMD: number | null;
+    readonly eligibleInterestAMD: number | null;
+    readonly allocatedRefundAMD: number | null;
+    readonly costAfterAllocatedRefundAMD: number | null;
+  }[];
+  readonly annualRefunds: readonly {
+    readonly year: number;
+    readonly estimatedRefundAMD: number | null;
+  }[];
   readonly totalEstimatedRefundAMD: number | null;
   readonly totalMortgagePaymentsBeforeRefundAMD: number | null;
   readonly totalEffectiveFinancingCostAMD: number | null;

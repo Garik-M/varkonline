@@ -18,7 +18,8 @@ interface BaseFinancingResult {
   readonly downPaymentAmount: number;
   readonly financedPrincipal: number;
   readonly durationMonths: number;
-  /** Rounded annuity or principal / months; actual final payment may differ. */
+  /** Rounded regular payment; first payment for equal-principal schedules.
+   * Use schedule for actual varying/final amounts. */
   readonly regularMonthlyPayment: number;
   readonly totalInterest: number;
   readonly totalFinancedRepayment: number;
@@ -30,6 +31,7 @@ interface BaseFinancingResult {
 export interface MortgageResult extends BaseFinancingResult {
   readonly financingType: "mortgage";
   readonly annualInterestRatePercent: number;
+  readonly repaymentMethod?: "annuity" | "equal_principal";
 }
 
 export interface DeveloperInstallmentResult extends BaseFinancingResult {

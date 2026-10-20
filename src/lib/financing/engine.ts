@@ -1,4 +1,9 @@
-import { annuityPayment, decimalRatio, roundRatio, toWholeAmount } from "./arithmetic";
+import {
+  annuityPayment,
+  decimalRatio,
+  roundRatio,
+  toWholeAmount,
+} from "./arithmetic";
 import type { FinancingInput } from "./input";
 import type { FinancingResult, FinancingScheduleEntry } from "./output";
 import { validateFinancingInput } from "./validation";
@@ -7,17 +12,34 @@ import { validateFinancingInput } from "./validation";
 export function calculateFinancing(input: FinancingInput): FinancingResult {
   validateFinancingInput(input);
   const price = BigInt(input.apartmentPrice);
-  const [downNumerator, downDenominator] = decimalRatio(input.downPaymentPercent);
-  const downPayment = roundRatio(price * downNumerator, downDenominator * 100n);
+  const [downNumerator, downDenominator] = decimalRatio(
+    input.downPaymentPercent,
+  );
+  const downPayment =
+    input.downPaymentAmount === undefined
+      ? roundRatio(price * downNumerator, downDenominator * 100n)
+      : BigInt(input.downPaymentAmount);
   const principal = price - downPayment;
   const [rateNumerator, annualRateDenominator] = decimalRatio(
     input.financingType === "mortgage" ? input.annualInterestRatePercent : 0,
   );
   // Annual percentage points -> nominal monthly fraction (divide by 100 * 12).
   const rateDenominator = annualRateDenominator * 1200n;
-  const regularPayment = principal === 0n ? 0n : annuityPayment(
-    principal, rateNumerator, rateDenominator, input.durationMonths,
-  );
+  const declining =
+    input.financingType === "mortgage" &&
+    input.repaymentMethod === "equal_principal";
+  const regularPayment =
+    principal === 0n
+      ? 0n
+      : declining
+        ? roundRatio(principal, BigInt(input.durationMonths)) +
+          roundRatio(principal * rateNumerator, rateDenominator)
+        : annuityPayment(
+            principal,
+            rateNumerator,
+            rateDenominator,
+            input.durationMonths,
+          );
   const schedule: FinancingScheduleEntry[] = [];
   let balance = principal;
   let totalInterest = 0n;
@@ -25,11 +47,23 @@ export function calculateFinancing(input: FinancingInput): FinancingResult {
 
   // A fully paid purchase has no financing schedule. Otherwise retain all months,
   // including zero rows if whole-unit rounding settles a tiny principal early.
-  for (let month = 1; principal > 0n && month <= input.durationMonths; month++) {
+  for (
+    let month = 1;
+    principal > 0n && month <= input.durationMonths;
+    month++
+  ) {
     const interest = roundRatio(balance * rateNumerator, rateDenominator);
     const amountDue = balance + interest;
-    const payment = month === input.durationMonths || regularPayment > amountDue
-      ? amountDue : regularPayment;
+    // Distribute whole-unit principal rounding over the term instead of accumulating it.
+    const principalSlice = declining
+      ? roundRatio(principal * BigInt(month), BigInt(input.durationMonths)) -
+        roundRatio(principal * BigInt(month - 1), BigInt(input.durationMonths))
+      : 0n;
+    const scheduled = declining ? principalSlice + interest : regularPayment;
+    const payment =
+      month === input.durationMonths || scheduled > amountDue
+        ? amountDue
+        : scheduled;
     const principalPaid = payment - interest;
     const remaining = balance - principalPaid;
     schedule.push({
@@ -60,6 +94,18 @@ export function calculateFinancing(input: FinancingInput): FinancingResult {
     schedule,
   };
   return input.financingType === "mortgage"
-    ? { ...common, financingType: "mortgage", annualInterestRatePercent: input.annualInterestRatePercent }
-    : { ...common, financingType: "developer_installment", formula: input.formula, annualInterestRatePercent: null };
+    ? {
+        ...common,
+        financingType: "mortgage",
+        annualInterestRatePercent: input.annualInterestRatePercent,
+        ...(input.repaymentMethod
+          ? { repaymentMethod: input.repaymentMethod }
+          : {}),
+      }
+    : {
+        ...common,
+        financingType: "developer_installment",
+        formula: input.formula,
+        annualInterestRatePercent: null,
+      };
 }

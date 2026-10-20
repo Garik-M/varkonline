@@ -13,3 +13,5 @@ export type {
   RefundReasonCode, RefundReason, RefundEligibilityResult, SalaryIncomeTaxResult,
   MonthlyIncomeTaxResult, QuarterlyParticipantTax, QuarterlyRefundResult, MortgageRefundResult,
 } from "./output";
+export { estimateIncomeTaxFromNetSalary, standardEmployeePayroll, NET_SALARY_MODEL } from "./net-salary";
+export type { NetSalaryEstimate } from "./net-salary";

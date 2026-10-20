@@ -13,7 +13,7 @@ export default function PartnerPreview({
       import.meta.env.VITE_API_URL ||
         "https://varkonlineback-production.up.railway.app/api",
     ).origin;
-    sdk.current = createFinancingSdk(origin, false);
+    sdk.current = createFinancingSdk(origin, false, true);
     return () => {
       sdk.current?.disconnect();
       sdk.current = undefined;

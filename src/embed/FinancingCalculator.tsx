@@ -1,37 +1,50 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { calculateFinancing, type FinancingResult } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
-import RefundPanel from "./RefundPanel";
+import RefundPanel, { RefundNotes } from "./RefundPanel";
 import { useWidgetText, WidgetLanguageContext } from "./language";
 import type { WidgetLanguage } from "./messages";
 import { accentForeground } from "./appearance";
 import type { MortgageRefundResult } from "@/lib/financing/income-tax-refund";
-import { roundRatio, toWholeAmount } from "@/lib/financing/arithmetic";
+import { LEGACY_CALCULATOR_OPTIONS } from "./calculator-options";
+import type { TrackWidgetEvent } from "./analytics";
 
 function CalculatorBody({
   configuration,
   notify,
   onLanguageChange,
+  track,
 }: {
   configuration: ResolvedWidget;
   notify: (type: "calculated" | "changed") => void;
   onLanguageChange: (language: WidgetLanguage) => void;
+  track?: TrackWidgetEvent;
 }) {
   const { t, language, money, number } = useWidgetText();
   const initial = configuration.financing;
-  const [down, setDown] = useState(String(initial.downPaymentPercent));
-  const [duration, setDuration] = useState(String(initial.durationMonths));
+  const options = configuration.calculator ?? LEGACY_CALCULATOR_OPTIONS;
+  const limits = configuration.controls.limits;
+  const mortgage = initial.financingType === "mortgage";
+  const factor = mortgage && options.durationUnit === "years" ? 12 : 1;
+  const [down, setDown] = useState(
+    String(
+      Math.round((initial.apartmentPrice * initial.downPaymentPercent) / 100),
+    ),
+  );
+  const [duration, setDuration] = useState(
+    String(initial.durationMonths / factor),
+  );
+  const [rate, setRate] = useState(
+    mortgage ? String(initial.annualInterestRatePercent) : "0",
+  );
+  const [method, setMethod] = useState(options.repaymentMethod);
   const [page, setPage] = useState(0);
-  const [refundOpen, setRefundOpen] = useState(false);
-  const [refundMounted, setRefundMounted] = useState(false);
+  const [quarterPage, setQuarterPage] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState(1);
   const [refundState, setRefundState] = useState<{
     financing: FinancingResult;
     projection: MortgageRefundResult;
   } | null>(null);
-  const focusRequested = useRef(false);
-  const requestRefundFocus = useCallback(() => {
-    focusRequested.current = true;
-  }, []);
   const publishRefund = useCallback(
     (
       projection: MortgageRefundResult | null,
@@ -43,97 +56,98 @@ function CalculatorBody({
     },
     [],
   );
-  const paymentPanel = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!refundState || !focusRequested.current) return;
-    focusRequested.current = false;
-    if (
-      refundState.projection.financingCurrency === "AMD" &&
-      refundState.projection.totalEstimatedRefundAMD !== null
-    )
-      paymentPanel.current?.focus();
-  }, [refundState]);
-  const calculated = useMemo(() => {
+  const minDown = Math.ceil(
+    (initial.apartmentPrice * limits.downPaymentPercent.min) / 100,
+  );
+  const maxDown = Math.floor(
+    (initial.apartmentPrice * limits.downPaymentPercent.max) / 100,
+  );
+  const downError =
+    down === "" ||
+    !Number.isSafeInteger(Number(down)) ||
+    Number(down) < minDown ||
+    Number(down) > maxDown;
+  const durationValue = Number(duration) * factor;
+  const durationError =
+    duration === "" ||
+    !Number.isInteger(durationValue) ||
+    durationValue < limits.durationMonths.min ||
+    durationValue > limits.durationMonths.max ||
+    (limits.supportedDurations.length
+      ? !limits.supportedDurations.includes(durationValue)
+      : Math.abs(
+          (durationValue - limits.durationMonths.min) /
+            limits.durationMonths.step -
+            Math.round(
+              (durationValue - limits.durationMonths.min) /
+                limits.durationMonths.step,
+            ),
+        ) > 1e-8);
+  const rateValue = Number(rate.replace(",", "."));
+  const rateError =
+    mortgage &&
+    (rate.trim() === "" ||
+      !Number.isFinite(rateValue) ||
+      rateValue < limits.annualInterestRatePercent.min ||
+      rateValue > limits.annualInterestRatePercent.max);
+  const result = useMemo(() => {
+    if (downError || durationError || rateError) return null;
     try {
-      if (down === "" || duration === "") throw new Error("EMPTY");
-      const downValue = Number(down);
-      const durationValue = Number(duration);
-      const limits = configuration.controls.limits;
-      const aligned = (value: number, min: number, step: number) =>
-        Math.abs((value - min) / step - Math.round((value - min) / step)) <
-        1e-8;
-      if (
-        !Number.isFinite(downValue) ||
-        downValue < limits.downPaymentPercent.min ||
-        downValue > limits.downPaymentPercent.max ||
-        !aligned(
-          downValue,
-          limits.downPaymentPercent.min,
-          limits.downPaymentPercent.step,
-        ) ||
-        !Number.isInteger(durationValue) ||
-        durationValue < limits.durationMonths.min ||
-        durationValue > limits.durationMonths.max ||
-        (limits.supportedDurations.length
-          ? !limits.supportedDurations.includes(durationValue)
-          : !aligned(
-              durationValue,
-              limits.durationMonths.min,
-              limits.durationMonths.step,
-            ))
-      )
-        throw new Error("BOUNDS");
-      return {
-        result: calculateFinancing({
-          ...initial,
-          downPaymentPercent: downValue,
-          durationMonths: durationValue,
-        }),
-        error: null,
+      const common = {
+        currency: initial.currency,
+        apartmentPrice: initial.apartmentPrice,
+        downPaymentAmount: Number(down),
+        downPaymentPercent: (Number(down) / initial.apartmentPrice) * 100,
+        durationMonths: durationValue,
       };
+      return calculateFinancing(
+        initial.financingType === "mortgage"
+          ? {
+              ...common,
+              financingType: "mortgage",
+              annualInterestRatePercent: rateValue,
+              repaymentMethod: method,
+            }
+          : {
+              ...common,
+              financingType: "developer_installment",
+              formula: "interest_free",
+            },
+      );
     } catch {
-      return {
-        result: null,
-        error: true,
-      };
+      return null;
     }
-  }, [configuration.controls.limits, initial, down, duration]);
+  }, [
+    initial,
+    down,
+    downError,
+    durationValue,
+    durationError,
+    rateError,
+    rateValue,
+    method,
+  ]);
   useEffect(() => {
-    if (calculated.result) notify("calculated");
-  }, [calculated.result, notify]);
+    if (result) notify("calculated");
+  }, [result, notify]);
   const change = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
+    setQuarterPage(0);
     notify("changed");
   };
-  const result = calculated.result;
-  const refundProjection =
-    refundState?.financing === result ? refundState?.projection : null;
-  const refundSummary =
-    result?.currency === "AMD" &&
-    refundProjection?.totalEstimatedRefundAMD !== null &&
-    refundProjection?.totalEstimatedRefundAMD !== undefined &&
-    refundProjection.effectiveAverageMonthlyFinancingCostAMD !== null &&
-    refundProjection.totalEffectiveFinancingCostAMD !== null
-      ? {
-          refund: toWholeAmount(
-            roundRatio(
-              BigInt(refundProjection.totalEstimatedRefundAMD),
-              BigInt(result.durationMonths),
-            ),
-          ),
-          cost: refundProjection.effectiveAverageMonthlyFinancingCostAMD,
-          totalRefund: refundProjection.totalEstimatedRefundAMD,
-          totalCost: refundProjection.totalEffectiveFinancingCostAMD,
-        }
-      : null;
-  const limits = configuration.controls.limits;
-  const metric = (label: string, amount: number, testId?: string) => (
-    <div>
-      <dt>{label}</dt>
-      <dd data-testid={testId}>{money(amount, initial.currency)}</dd>
-    </div>
+  const projection =
+    refundState?.financing === result ? refundState.projection : null;
+  const row =
+    result?.schedule[Math.min(selectedMonth, result.schedule.length) - 1];
+  const refundRow = projection?.monthlySchedule.find(
+    (item) => item.month === row?.month,
   );
+  const hasRefund =
+    result?.currency === "AMD" &&
+    projection?.totalEstimatedRefundAMD != null &&
+    refundRow?.allocatedRefundAMD != null;
+  const moneyInCurrency = (value: number) => money(value, initial.currency);
   return (
     <article
       className="vk-card"
@@ -163,107 +177,179 @@ function CalculatorBody({
           className="vk-language"
           aria-label={t("language")}
           value={language}
-          onChange={(e) => onLanguageChange(e.target.value as WidgetLanguage)}
+          onChange={(event) => {
+            onLanguageChange(event.target.value as WidgetLanguage);
+          }}
         >
           <option value="hy">Հայ</option>
           <option value="en">EN</option>
           <option value="ru">РУ</option>
         </select>
       </header>
-      <h1>
-        {t(initial.financingType === "mortgage" ? "mortgage" : "installment")}
-      </h1>
+      <h1>{t(mortgage ? "mortgage" : "installment")}</h1>
       <div className="vk-price-row">
         <div>
           <span>{t("price")}</span>
           <strong data-testid="apartment-price">
-            {money(initial.apartmentPrice, initial.currency)}
+            {moneyInCurrency(initial.apartmentPrice)}
           </strong>
         </div>
-        <div className="vk-rate">
-          <span>
-            {t(
-              initial.financingType === "mortgage"
-                ? "annualRate"
-                : "interestFree",
+        {mortgage && (
+          <label className="vk-rate vk-rate-edit">
+            {t("annualRate")}
+            {options.rateEditable ? (
+              <div className="vk-input-suffix">
+                <input
+                  data-testid="annual-rate"
+                  aria-label={t("annualRate")}
+                  aria-invalid={rateError}
+                  type="text"
+                  inputMode="decimal"
+                  value={rate}
+                  onChange={(event) => change(setRate, event.target.value)}
+                  onBlur={() => track?.("field_changed", "interest_rate")}
+                />
+                <span>%</span>
+              </div>
+            ) : (
+              <strong data-testid="annual-rate">{number(rateValue)}%</strong>
             )}
-          </span>
-          <strong data-testid="annual-rate">
-            {initial.financingType === "mortgage"
-              ? `${number(initial.annualInterestRatePercent)}%`
-              : "0%"}
-          </strong>
-        </div>
+            {rateError && (
+              <small className="vk-field-error">
+                {t("rateBounds", {
+                  min: limits.annualInterestRatePercent.min,
+                  max: limits.annualInterestRatePercent.max,
+                })}
+              </small>
+            )}
+          </label>
+        )}
+
+        {!mortgage && (
+          <div className="vk-rate">
+            <span>{t("interestFree")}</span>
+            <strong>0%</strong>
+          </div>
+        )}
       </div>
       <div className="vk-controls">
         <label>
-          {t("down")}
+          {t("downAmount")}
           {configuration.controls.downPaymentPercent ? (
-            <input
-              aria-label={t("down")}
-              type="number"
-              inputMode="decimal"
-              min={limits.downPaymentPercent.min}
-              max={limits.downPaymentPercent.max}
-              step={limits.downPaymentPercent.step}
-              value={down}
-              onChange={(e) => change(setDown, e.target.value)}
-            />
+            <div className="vk-input-suffix">
+              <input
+                aria-label={t("downAmount")}
+                aria-invalid={downError}
+                aria-describedby="vk-down-help"
+                type="number"
+                inputMode="numeric"
+                min={minDown}
+                max={maxDown}
+                step={
+                  initial.currency === "AMD" ? options.downPaymentAmountStep : 1
+                }
+                value={down}
+                onChange={(event) => change(setDown, event.target.value)}
+                onBlur={() => track?.("field_changed", "down_payment")}
+              />
+              <span>{initial.currency === "AMD" ? "֏" : "$"}</span>
+            </div>
           ) : (
-            <strong>{number(initial.downPaymentPercent)}%</strong>
+            <strong>{moneyInCurrency(Number(down))}</strong>
           )}
+          <small
+            id="vk-down-help"
+            className={downError ? "vk-field-error" : ""}
+          >
+            {downError
+              ? t("downBounds", {
+                  min: moneyInCurrency(minDown),
+                  max: moneyInCurrency(maxDown),
+                })
+              : t("downPercentHelp", {
+                  percent: number(
+                    (Number(down) / initial.apartmentPrice) * 100,
+                  ),
+                })}
+          </small>
         </label>
         <label>
-          {t("duration")}
+          {t(factor === 12 ? "durationYears" : "duration")}
           {configuration.controls.durationMonths ? (
             limits.supportedDurations.length ? (
               <select
-                aria-label={t("duration")}
+                aria-label={t(factor === 12 ? "durationYears" : "duration")}
                 value={duration}
-                onChange={(e) => change(setDuration, e.target.value)}
+                onChange={(event) => change(setDuration, event.target.value)}
+                onBlur={() => track?.("field_changed", "duration")}
               >
                 {limits.supportedDurations.map((months) => (
-                  <option key={months} value={months}>
-                    {months} {t("months")}
+                  <option key={months} value={months / factor}>
+                    {months / factor}
                   </option>
                 ))}
               </select>
             ) : (
               <div className="vk-input-suffix">
                 <input
-                  aria-label={t("duration")}
+                  aria-label={t(factor === 12 ? "durationYears" : "duration")}
+                  aria-invalid={durationError}
                   type="number"
                   inputMode="numeric"
-                  min={limits.durationMonths.min}
-                  max={limits.durationMonths.max}
-                  step={limits.durationMonths.step}
+                  min={limits.durationMonths.min / factor}
+                  max={limits.durationMonths.max / factor}
+                  step={limits.durationMonths.step / factor}
                   value={duration}
-                  onChange={(e) => change(setDuration, e.target.value)}
+                  onChange={(event) => change(setDuration, event.target.value)}
+                  onBlur={() => track?.("field_changed", "duration")}
                 />
-                <span>{t("months")}</span>
+                <span>{t(factor === 12 ? "years" : "months")}</span>
               </div>
             )
           ) : (
             <strong>
-              {initial.durationMonths} {t("months")}
+              {duration} {t(factor === 12 ? "years" : "months")}
             </strong>
           )}
+          {durationError && (
+            <small className="vk-field-error">
+              {t("termBounds", {
+                min: limits.durationMonths.min / factor,
+                max: limits.durationMonths.max / factor,
+              })}
+            </small>
+          )}
         </label>
+        {mortgage && options.allowRepaymentChoice && (
+          <label className="vk-control-wide">
+            {t("repaymentMethod")}
+            <select
+              aria-label={t("repaymentMethod")}
+              value={method}
+              onChange={(event) => {
+                setMethod(event.target.value as typeof method);
+                setPage(0);
+                track?.("repayment_changed");
+              }}
+            >
+              <option value="annuity">{t("annuity")}</option>
+              <option value="equal_principal">{t("equalPrincipal")}</option>
+            </select>
+          </label>
+        )}
       </div>
-      {calculated.error && (
-        <p role="alert" className="vk-warning">
-          {t("boundsError")}
-        </p>
+      {mortgage && configuration.refund.enabled && (
+        <RefundPanel
+          financing={result}
+          configuration={configuration}
+          onProjectionChange={publishRefund}
+          track={track}
+        />
       )}
-      <div
-        ref={paymentPanel}
-        tabIndex={-1}
-        className="vk-payment"
-        aria-live="polite"
-      >
-        {refundSummary && result ? (
+      <div className="vk-payment" aria-live="polite">
+        {hasRefund && row && refundRow ? (
           <>
-            <span>{t("monthlyBreakdown")}</span>
+            <span>{t("selectedMonthCost", { month: row.month })}</span>
             <div
               className="vk-payment-equation"
               role="group"
@@ -274,229 +360,301 @@ function CalculatorBody({
                 <span>{t("bankPayment")}</span>
                 <del>
                   <strong data-testid="monthly-payment">
-                    {money(result.regularMonthlyPayment)}
+                    {moneyInCurrency(row.scheduledPayment)}
                   </strong>
                 </del>
               </div>
-              <span className="vk-equation-symbol" aria-hidden="true">
-                −
-              </span>
+              <span className="vk-equation-symbol">−</span>
               <div>
-                <span>{t("averageRefund")}</span>
+                <span>{t("allocatedRefund")}</span>
                 <strong data-testid="monthly-refund">
-                  {money(refundSummary.refund)}
+                  {money(refundRow.allocatedRefundAMD!)}
                 </strong>
               </div>
-              <span className="vk-equation-symbol" aria-hidden="true">
-                {result.regularMonthlyPayment - refundSummary.refund ===
-                refundSummary.cost
-                  ? "="
-                  : "≈"}
-              </span>
+              <span className="vk-equation-symbol">=</span>
               <div className="vk-equation-result">
-                <span>{t("monthlyNetCost")}</span>
+                <span>{t("costAfterRefund")}</span>
                 <strong data-testid="monthly-net-payment">
-                  {money(refundSummary.cost)}
+                  {money(refundRow.costAfterAllocatedRefundAMD!)}
                 </strong>
               </div>
             </div>
-            <p>{t("monthlyRefundNote")}</p>
-            {result.regularMonthlyPayment - refundSummary.refund !==
-              refundSummary.cost && <p>{t("monthlyRoundingNote")}</p>}
+            <p>{t("refundAllocationShort")}</p>
           </>
         ) : (
           <>
-            <span>
-              {t(
-                initial.financingType === "mortgage"
-                  ? "bankPayment"
-                  : "monthlyPayment",
-              )}
-            </span>
+            <span>{t(mortgage ? "bankPayment" : "monthlyPayment")}</span>
             <strong data-testid="monthly-payment">
               {result
-                ? money(result.regularMonthlyPayment, initial.currency)
+                ? moneyInCurrency(
+                    row?.scheduledPayment ?? result.regularMonthlyPayment,
+                  )
                 : "—"}
             </strong>
           </>
         )}
-        {result && (
+        {result && options.showTotals && (
           <div
-            className={`vk-repayment${refundSummary ? "" : " vk-repayment--plain"}`}
+            className={`vk-repayment${hasRefund ? "" : " vk-repayment--plain"}`}
             data-testid="repayment-summary"
           >
             <span>
               {t(
-                refundSummary
+                hasRefund
                   ? "totalWithRefund"
-                  : initial.financingType === "mortgage"
+                  : mortgage
                     ? "totalBankPayment"
                     : "totalInstallments",
               )}
             </span>
             <div className="vk-repayment-amounts">
-              {refundSummary ? (
+              {hasRefund ? (
                 <>
                   <del data-testid="total-bank-payment">
-                    {money(result.totalFinancedRepayment, initial.currency)}
+                    {moneyInCurrency(result.totalFinancedRepayment)}
                   </del>
                   <strong data-testid="total-net-payment">
-                    {money(refundSummary.totalCost)}
+                    {money(projection!.totalEffectiveFinancingCostAMD!)}
                   </strong>
                 </>
               ) : (
                 <strong data-testid="total-bank-payment">
-                  {money(result.totalFinancedRepayment, initial.currency)}
+                  {moneyInCurrency(result.totalFinancedRepayment)}
                 </strong>
               )}
             </div>
-            {refundSummary && (
-              <small>
-                {t("totalRefund")} {money(refundSummary.totalRefund)}
-              </small>
-            )}
-            <small>
-              {t(refundSummary ? "netTotalHelp" : "bankTotalHelp", {
-                months: result.durationMonths,
-              })}
-            </small>
+            <small>{t(hasRefund ? "netTotalHelp" : "bankTotalHelp")}</small>
           </div>
         )}
         {result?.financedPrincipal === 0 && <p>{t("fullDown")}</p>}
-        {initial.financingType === "mortgage" &&
-          configuration.refund.enabled &&
-          (!!result?.schedule.length || refundMounted) && (
+      </div>
+      {hasRefund && result && (
+        <section className="vk-timeline" aria-label={t("refundTimeline")}>
+          <label>
+            {t("refundTimeline")}
+            <input
+              aria-label={t("chooseMonth")}
+              type="range"
+              min={1}
+              max={result.durationMonths}
+              value={Math.min(selectedMonth, result.durationMonths)}
+              onChange={(event) => setSelectedMonth(Number(event.target.value))}
+              onPointerUp={() => track?.("schedule_page")}
+              onKeyUp={() => track?.("schedule_page")}
+            />
+          </label>
+          <div className="vk-timeline-points">
+            {[
+              0,
+              Math.floor((result.schedule.length - 1) / 2),
+              result.schedule.length - 1,
+            ].map((index, i) => {
+              const item = projection!.monthlySchedule[index];
+              return (
+                <button
+                  key={i}
+                  aria-pressed={row?.month === item.month}
+                  onClick={() => {
+                    setSelectedMonth(item.month);
+                    track?.("schedule_page");
+                  }}
+                >
+                  <small>{t("monthNumber", { month: item.month })}</small>
+                  <strong>{money(item.allocatedRefundAMD!)}</strong>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+      {result && options.showSchedule && (
+        <details
+          className="vk-schedule"
+          onToggle={(event) =>
+            track?.(
+              event.currentTarget.open ? "schedule_opened" : "schedule_closed",
+            )
+          }
+        >
+          <summary>
+            {t("schedule")}{" "}
+            <span>
+              {result.schedule.length} {t("months")}
+            </span>
+          </summary>
+          <dl className="vk-totals">
+            {[
+              ["downAmount", result.downPaymentAmount, "down-payment"],
+              ["principal", result.financedPrincipal, "principal"],
+              ["totalInterest", result.totalInterest, "total-interest"],
+              ["totalCost", result.totalCostIncludingDownPayment, "total-cost"],
+            ].map(([key, value, testId]) => (
+              <div key={key}>
+                <dt>{t(key as "downAmount")}</dt>
+                <dd data-testid={testId}>{moneyInCurrency(value as number)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="vk-fine">
+            {t("roundingNote")} {t("costNote")}
+          </p>
+          {hasRefund && <p className="vk-fine">{t("refundAllocationNote")}</p>}
+          {!result.schedule.length ? (
+            <p>{t("noPrincipal")}</p>
+          ) : (
+            <>
+              <div className="vk-table-wrap">
+                <table>
+                  <caption className="vk-sr-only">
+                    {t("schedule")} · {initial.currency}
+                  </caption>
+                  <thead>
+                    <tr>
+                      {[
+                        "month",
+                        "payment",
+                        "principalColumn",
+                        "interest",
+                        "balance",
+                        ...(hasRefund
+                          ? ["allocatedRefund", "costAfterRefund"]
+                          : []),
+                      ].map((key) => (
+                        <th key={key}>{t(key as "month")}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.schedule
+                      .slice(page * 12, page * 12 + 12)
+                      .map((item) => {
+                        const benefit = projection?.monthlySchedule.find(
+                          (entry) => entry.month === item.month,
+                        );
+                        return (
+                          <tr key={item.month}>
+                            <td>{item.month}</td>
+                            <td>{number(item.scheduledPayment)}</td>
+                            <td>{number(item.principalPaid)}</td>
+                            <td>{number(item.interestPaid)}</td>
+                            <td>{number(item.remainingBalance)}</td>
+                            {hasRefund && (
+                              <>
+                                <td>{number(benefit!.allocatedRefundAMD!)}</td>
+                                <td>
+                                  {number(
+                                    benefit!.costAfterAllocatedRefundAMD!,
+                                  )}
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th>{t("total")}</th>
+                      <td>{number(result.totalFinancedRepayment)}</td>
+                      <td>{number(result.financedPrincipal)}</td>
+                      <td>{number(result.totalInterest)}</td>
+                      <td>0</td>
+                      {hasRefund && (
+                        <>
+                          <td>
+                            {number(projection!.totalEstimatedRefundAMD!)}
+                          </td>
+                          <td>
+                            {number(
+                              projection!.totalEffectiveFinancingCostAMD!,
+                            )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="vk-pagination">
+                <button
+                  disabled={!page}
+                  onClick={() => {
+                    setPage(page - 1);
+                    track?.("schedule_page");
+                  }}
+                  aria-label={t("previousPage")}
+                >
+                  {t("previousArrow")}
+                </button>
+                <span>
+                  {page + 1} / {Math.ceil(result.schedule.length / 12)}
+                </span>
+                <button
+                  disabled={(page + 1) * 12 >= result.schedule.length}
+                  onClick={() => {
+                    setPage(page + 1);
+                    track?.("schedule_page");
+                  }}
+                  aria-label={t("nextPage")}
+                >
+                  {t("nextArrow")}
+                </button>
+              </div>
+            </>
+          )}
+        </details>
+      )}
+      {hasRefund && options.showSchedule && (
+        <details className="vk-schedule">
+          <summary>{t("quarterSchedule")}</summary>
+          <div className="vk-quarter-list">
+            {projection!.quarterlySchedule
+              .slice(quarterPage * 8, quarterPage * 8 + 8)
+              .map((quarter) => (
+                <div key={`${quarter.year}-${quarter.quarter}`}>
+                  <span>
+                    {quarter.year} · {quarter.quarter}
+                    {t("quarterSuffix")}
+                  </span>
+                  <strong>{money(quarter.estimatedRefundAMD!)}</strong>
+                  <small>
+                    {t("interestPrefix")} {money(quarter.eligibleInterestAMD!)}{" "}
+                    · {t("taxPrefix")} {money(quarter.eligibleIncomeTaxAMD!)} ·{" "}
+                    {t("capPrefix")} {money(quarter.quarterlyRefundCapAMD!)}
+                  </small>
+                </div>
+              ))}
+          </div>
+          <div className="vk-pagination">
             <button
-              className="vk-refund-toggle"
-              aria-expanded={refundOpen}
+              disabled={!quarterPage}
               onClick={() => {
-                setRefundMounted(true);
-                setRefundOpen(!refundOpen);
+                setQuarterPage(quarterPage - 1);
+                track?.("schedule_page");
               }}
             >
-              {t(refundOpen ? "closeRefund" : "openRefund")}
-              <span aria-hidden="true">{refundOpen ? "−" : "+"}</span>
+              {t("previous")}
             </button>
-          )}
-      </div>
-      {refundMounted && (
-        <div hidden={!refundOpen}>
-          <RefundPanel
-            financing={result}
-            configuration={configuration}
-            onProjectionChange={publishRefund}
-            onCalculate={requestRefundFocus}
-          />
-        </div>
+            <span>
+              {quarterPage + 1} /{" "}
+              {Math.ceil(projection!.quarterlySchedule.length / 8)}
+            </span>
+            <button
+              disabled={
+                (quarterPage + 1) * 8 >= projection!.quarterlySchedule.length
+              }
+              onClick={() => {
+                setQuarterPage(quarterPage + 1);
+                track?.("schedule_page");
+              }}
+            >
+              {t("next")}
+            </button>
+          </div>
+        </details>
       )}
-      {result && (
-        <>
-          <details className="vk-schedule">
-            <summary>
-              {t("schedule")}{" "}
-              <span>
-                {result.schedule.length} {t("months")}
-              </span>
-            </summary>
-            <dl className="vk-totals">
-              {metric(
-                t("downAmount"),
-                result.downPaymentAmount,
-                "down-payment",
-              )}
-              {metric(t("principal"), result.financedPrincipal, "principal")}
-              {metric(
-                t("totalInterest"),
-                result.totalInterest,
-                "total-interest",
-              )}
-              {metric(
-                t("totalCost"),
-                result.totalCostIncludingDownPayment,
-                "total-cost",
-              )}
-            </dl>
-            <p className="vk-fine">
-              {t("roundingNote")} {t("costNote")}
-            </p>
-            {!result.schedule.length ? (
-              <p>{t("noPrincipal")}</p>
-            ) : (
-              <>
-                <div className="vk-table-wrap">
-                  <table>
-                    <caption className="vk-sr-only">
-                      {t("schedule")} · {initial.currency}
-                    </caption>
-                    <thead>
-                      <tr>
-                        {[
-                          "month",
-                          "payment",
-                          "principalColumn",
-                          "interest",
-                          "balance",
-                        ].map((key) => (
-                          <th key={key}>
-                            {t(
-                              key as
-                                | "month"
-                                | "payment"
-                                | "principalColumn"
-                                | "interest"
-                                | "balance",
-                            )}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.schedule
-                        .slice(page * 12, page * 12 + 12)
-                        .map((row) => (
-                          <tr key={row.month}>
-                            <td>{row.month}</td>
-                            <td>{number(row.scheduledPayment)}</td>
-                            <td>{number(row.principalPaid)}</td>
-                            <td>{number(row.interestPaid)}</td>
-                            <td>{number(row.remainingBalance)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <th>{t("total")}</th>
-                        <td>{number(result.totalFinancedRepayment)}</td>
-                        <td>{number(result.financedPrincipal)}</td>
-                        <td>{number(result.totalInterest)}</td>
-                        <td>0</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-                <div className="vk-pagination">
-                  <button
-                    disabled={!page}
-                    onClick={() => setPage(page - 1)}
-                    aria-label={t("previousPage")}
-                  >
-                    {t("previousArrow")}
-                  </button>
-                  <span>
-                    {page + 1} / {Math.ceil(result.schedule.length / 12)}
-                  </span>
-                  <button
-                    disabled={(page + 1) * 12 >= result.schedule.length}
-                    onClick={() => setPage(page + 1)}
-                    aria-label={t("nextPage")}
-                  >
-                    {t("nextArrow")}
-                  </button>
-                </div>
-              </>
-            )}
-          </details>
-        </>
+      {mortgage && configuration.refund.enabled && (
+        <RefundNotes configuration={configuration} track={track} />
       )}
       <footer className="vk-footer">
         <p>{t("estimate")}</p>
@@ -513,21 +671,26 @@ export default function FinancingCalculator(props: {
   notify: (type: "calculated" | "changed") => void;
   initialLanguage?: WidgetLanguage;
   onLanguageChange?: (language: WidgetLanguage) => void;
+  track?: TrackWidgetEvent;
 }) {
   const [language, setLanguage] = useState<WidgetLanguage>(
-    props.initialLanguage ?? "hy",
+    props.initialLanguage ??
+      props.configuration.calculator?.defaultLanguage ??
+      "hy",
   );
   useEffect(() => {
-    setLanguage(props.initialLanguage ?? "hy");
-  }, [props.initialLanguage]);
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+    setLanguage(
+      props.initialLanguage ??
+        props.configuration.calculator?.defaultLanguage ??
+        "hy",
+    );
+  }, [props.initialLanguage, props.configuration.calculator?.defaultLanguage]);
   return (
     <WidgetLanguageContext.Provider value={language}>
       <CalculatorBody
         configuration={props.configuration}
         notify={props.notify}
+        track={props.track}
         onLanguageChange={(value) => {
           setLanguage(value);
           props.onLanguageChange?.(value);

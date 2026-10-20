@@ -1,5 +1,51 @@
 # Phase 2: Armenian mortgage income-tax refund engine
 
+## 2026-10-20 additions: net salary and monthly presentation
+
+`estimateIncomeTaxFromNetSalary(netAMD)` returns the inferred gross salary and
+separate income-tax/pension/stamp/health amounts under
+`AM-STANDARD-EMPLOYEE-2026-10`. This is an explicit standard single-employer,
+resident, mandatory-pension-participant illustration with no exemptions or other
+deductions, not an exact payroll determination from take-home pay alone.
+
+The model uses 20% gross income tax; pension 5% through 500,000 AMD, otherwise
+10% minus 25,000 capped at 87,500 (15 × 75,000 assessment ceiling); 1,000 AMD
+stamp duty through 1m gross, otherwise 15,000; 2026 ongoing employee health
+contributions of zero through 200,000 gross, 4,800 through 500,000, otherwise
+10,800. Zero salary has zero deductions. Real insurance coverage can depend on
+earlier months, age, exemptions and transition provisions, which cannot be
+deduced from one net figure. Salary tax is modeled using the inferred gross and
+the existing salary-tax engine; payroll deductions themselves are not refundable
+mortgage interest. The current salary/rule snapshot is held constant in forecasts.
+
+The inverse searches each monotone salary band separately because deduction
+thresholds introduce downward jumps and overlapping net amounts. Equally close
+matches choose the lowest gross/income tax, preventing an optimistic choice.
+Whole AMD rounding and range validation are explicit. For example 500,000 AMD
+net maps to gross 695,429 and income tax 139,086 under this model. Values outside
+its supported gross-domain image are rejected rather than clamped.
+
+Sources checked 2026-10-20: [pension law, Articles 5–6](https://old.arlis.am/documentview.aspx?docid=201286),
+[minimum wage amendment](https://old.arlis.am/DocumentView.aspx?docid=172110),
+[stamp duty, Article 12](https://old.arlis.am/documentview.aspx?docid=227002),
+[health insurance, Articles 13, 45–46](https://www.arlis.am/hy/acts/218650/latest).
+The 2026 health insurance transition is deliberately a stated modeling assumption,
+not an inferred fact about the visitor.
+
+`monthlySchedule` now supplies an informational allocation of each authoritative
+quarterly refund to bank-payment months. Start with each row's minimum eligible
+interest/available monthly tax. If the quarterly cap binds, apportion that base;
+if unused quarterly tax can cover further interest, allocate the remainder to
+remaining interest capacity. Exact largest-remainder allocation, with month order
+as the tie breaker, reconciles every dram. No row exceeds eligible interest;
+principal is never refunded. These rows are not receipt dates or guaranteed monthly
+transfers. `quarterlySchedule` and full-term totals retain the legal calculation
+`min(eligible quarter interest, available quarter salary tax, quarter cap)`.
+
+The UI now shows a visible take-home field, no dates/withholding/assumption checkbox,
+automatic explicit projection dates, and period-specific amounts. The strict
+eligibility APIs below retain their original behavior.
+
 This is a pure TypeScript estimate module adjacent to Phase 1. It consumes Phase 1
 results and imports its exact rounding and safe-integer utilities; it does not
 recalculate annuities or change any bank payment. There are no new runtime

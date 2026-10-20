@@ -7,13 +7,16 @@ interface BaseFinancingInput {
   readonly apartmentPrice: number;
   /** Percentage points: 9.5 means 9.5%, not 0.095. */
   readonly downPaymentPercent: number;
+  /** Exact whole-unit amount when entered directly; must agree with the percentage. */
+  readonly downPaymentAmount?: number;
   readonly durationMonths: number;
 }
 
-/** Fixed nominal annual rate, monthly annuity payments in arrears. */
+/** Fixed nominal annual rate, monthly payments in arrears; annuity unless explicit. */
 export interface MortgageInput extends BaseFinancingInput {
   readonly financingType: "mortgage";
   readonly annualInterestRatePercent: number;
+  readonly repaymentMethod?: "annuity" | "equal_principal";
 }
 
 export interface DeveloperInstallmentInput extends BaseFinancingInput {

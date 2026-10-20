@@ -2,6 +2,7 @@ import {
   calculateMortgageRefundScenario,
   calculateSalaryIncomeTax,
   ARMENIA_REFUND_RULES_2026_10,
+  estimateIncomeTaxFromNetSalary,
   type MortgageRefundScenarioInput,
 } from "@/lib/financing/income-tax-refund";
 import type { FinancingResult } from "@/lib/financing";
@@ -112,3 +113,40 @@ export const salaryEstimate = (form: PayrollForm, month: string) =>
     },
     ARMENIA_REFUND_RULES_2026_10,
   );
+
+export function netPayrollParticipant(
+  net: string,
+  dates: string[],
+  role: "borrower" | "co_borrower",
+) {
+  const estimate = estimateIncomeTaxFromNetSalary(wholeAmount(net));
+  return payrollParticipant(
+    { gross: String(estimate.grossSalaryAMD), withheld: "" },
+    dates,
+    role,
+  );
+}
+
+/** UI-only clock boundary. Pure engines always receive explicit dates. */
+export function automaticProjectionDates(today: string) {
+  const [year, month, day] = today.split("-").map(Number);
+  const end = new Date(Date.UTC(year, month + 1, 0));
+  return {
+    loan: today,
+    first: new Date(Date.UTC(year, month, Math.min(day, end.getUTCDate())))
+      .toISOString()
+      .slice(0, 10),
+  };
+}
+
+export function yerevanToday() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Yerevan",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  return ["year", "month", "day"]
+    .map((type) => parts.find((part) => part.type === type)!.value)
+    .join("-");
+}

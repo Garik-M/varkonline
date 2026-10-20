@@ -6,6 +6,7 @@ import { parseWidgetConfiguration } from "./sdk-core";
 import type { ResolvedWidget, WidgetConfiguration } from "./types";
 import "./embed.css";
 import { translate, widgetLanguage, type WidgetLanguage } from "./messages";
+import { createWidgetTracker, type TrackWidgetEvent } from "./analytics";
 
 const boot = document.documentElement.dataset;
 const validBoot =
@@ -71,6 +72,22 @@ function EmbedApp() {
     document.title = translate(language, "iframeTitle");
   }, [language]);
   const [loading, setLoading] = useState(true);
+  const tracker = useRef<ReturnType<typeof createWidgetTracker> | null>(null);
+  const analyticsLanguage = useRef(language);
+  analyticsLanguage.current = language;
+  const track: TrackWidgetEvent = useCallback(
+    (type, field) =>
+      tracker.current?.track(type, analyticsLanguage.current, field),
+    [],
+  );
+  useEffect(() => {
+    const flush = () => void tracker.current?.flush();
+    window.addEventListener("pagehide", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      tracker.current?.stop();
+    };
+  }, []);
   const [retry, setRetry] = useState(0);
   const [generation, setGeneration] = useState(0);
   const current = useRef<WidgetConfiguration>();
@@ -123,6 +140,26 @@ function EmbedApp() {
         }
         const data = (await response.json()) as ResolvedWidget;
         if (disposed || request !== sequence) return;
+        if (!refresh) {
+          tracker.current?.stop();
+          tracker.current = createWidgetTracker(
+            `${boot.apiBase}/embed/${encodeURIComponent(boot.partner!)}/events`,
+          );
+          const selectedLanguage =
+            config.language ?? data.calculator?.defaultLanguage ?? "hy";
+          setLanguage(selectedLanguage);
+          tracker.current.configure(
+            boot.analyticsDisabled === "true"
+              ? null
+              : (data.analytics?.token ?? null),
+          );
+          tracker.current.track("widget_view", selectedLanguage);
+        } else
+          tracker.current?.configure(
+            boot.analyticsDisabled === "true"
+              ? null
+              : (data.analytics?.token ?? null),
+          );
         setConfiguration((previous) =>
           refresh && previous?.partner.revision === data.partner.revision
             ? previous
@@ -265,8 +302,13 @@ function EmbedApp() {
       key={`${configuration.apartmentId}:${configuration.partner.revision}:${generation}`}
       configuration={configuration}
       notify={notify}
+      track={track}
       initialLanguage={language}
-      onLanguageChange={setLanguage}
+      onLanguageChange={(value) => {
+        analyticsLanguage.current = value;
+        setLanguage(value);
+        track("language_changed");
+      }}
     />
   );
 }
