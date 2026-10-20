@@ -23,6 +23,7 @@ let sdk: FinancingSdk | undefined;
 afterEach(() => {
   sdk?.disconnect();
   document.body.innerHTML = "";
+  document.documentElement.lang = "";
 });
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 function widget(price = "35000000") {
@@ -36,6 +37,37 @@ function widget(price = "35000000") {
   return node;
 }
 describe("SDK public boundary", () => {
+  it("accepts only supported explicit languages and preserves the setting in snippets", () => {
+    const node = widget();
+    for (const language of ["hy", "en", "ru"] as const) {
+      node.dataset.language = language;
+      const config = readWidgetAttributes(node);
+      expect(config.language).toBe(language);
+      expect(integrationSnippet("https://www.varkonline.am", config)).toContain(
+        `data-language="${language}"`,
+      );
+    }
+    node.dataset.language = "fr";
+    expect(() => readWidgetAttributes(node)).toThrow("INVALID_LANGUAGE");
+  });
+  it("uses the page language for loading and accessible iframe titles, with an explicit override", () => {
+    document.documentElement.lang = "en-US";
+    const node = widget();
+    sdk = createFinancingSdk("https://api.varkonline.am", false);
+    sdk.mount(node);
+    const frame = node.querySelector("iframe")!;
+    expect(frame.title).toBe("Varkonline — apartment financing calculator");
+    expect(node.querySelector('[role="status"]')).toHaveTextContent(
+      "Loading financing calculator",
+    );
+    expect(frame.src).toContain("#language=en");
+    sdk.update(node, { language: "ru" });
+    expect(node.querySelector("iframe")).toBe(frame);
+    expect(frame.title).toContain("калькулятор");
+    expect(node.querySelector('[role="status"]')).toHaveTextContent(
+      "Загрузка калькулятора",
+    );
+  });
   it("rejects malformed messages without coercing attacker-controlled values", () => {
     expect(
       isFrameMessage({
@@ -192,7 +224,7 @@ describe("SDK public boundary", () => {
     send("https://evil.am", frame.contentWindow);
     send("https://api.varkonline.am", window);
     send("https://api.varkonline.am", frame.contentWindow, "wrong");
-    expect(frame.style.height).toBe("680px");
+    expect(frame.style.height).toBe("500px");
     send("https://api.varkonline.am", frame.contentWindow);
     expect(frame.style.height).toBe("999px");
     send(

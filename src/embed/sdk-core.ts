@@ -1,7 +1,9 @@
 import type { WidgetConfiguration } from "./types";
 import { CHANNEL, VERSION, isFrameMessage } from "./protocol";
+import { sdkText, widgetLanguage } from "./sdk-messages";
 
 const attributes = {
+  "data-language": "language",
   "data-apartment-id": "apartmentId",
   "data-annual-interest-rate": "annualInterestRatePercent",
   "data-down-payment-percent": "downPaymentPercent",
@@ -44,6 +46,11 @@ export function parseWidgetConfiguration(input: unknown): WidgetConfiguration {
   )
     throw new Error("APARTMENT_ID_REQUIRED");
   const result = { ...data };
+  if (
+    result.language !== undefined &&
+    !["hy", "en", "ru"].includes(String(result.language))
+  )
+    throw new Error("INVALID_LANGUAGE");
   for (const field of numeric)
     if (result[field] !== undefined) {
       const raw = result[field];
@@ -280,8 +287,12 @@ export function createFinancingSdk(
       status.setAttribute("role", "alert");
       element.append(status);
     }
-    status.textContent =
-      "Ֆինանսավորման հաշվիչի տվյալները սխալ են։ Ստուգեք ինտեգրման կարգավորումները։";
+    status.textContent = sdkText(
+      widgetLanguage(
+        element.getAttribute("data-language") ?? document.documentElement.lang,
+      ),
+      "configurationError",
+    );
     emit(
       element,
       "error",
@@ -297,17 +308,29 @@ export function createFinancingSdk(
   ) => {
     const element = elementFor(target);
     try {
-      const config = supplied
+      const parsed = supplied
         ? parseWidgetConfiguration(supplied)
         : readWidgetAttributes(element);
+      const config = {
+        ...parsed,
+        language:
+          parsed.language ?? widgetLanguage(document.documentElement.lang),
+      };
       suppressed.delete(element);
       element.querySelector(":scope > [data-varkonline-error]")?.remove();
       const signature = JSON.stringify(config);
       const previous = instances.get(element);
-      if (previous?.signature === signature) return;
+      if (previous?.signature === signature) {
+        // A visitor may have changed language inside the iframe since mounting.
+        if (supplied?.language !== undefined) send(previous, "update");
+        return;
+      }
       if (previous && previous.config.partner === config.partner) {
         previous.config = config;
         previous.signature = signature;
+        previous.frame.title = sdkText(config.language, "iframeTitle");
+        if (!previous.loaded)
+          previous.status.textContent = sdkText(config.language, "loading");
         send(previous, "update");
         return;
       }
@@ -321,9 +344,9 @@ export function createFinancingSdk(
       wrapper.dataset.varkonlineOwned = "true";
       const status = document.createElement("p");
       status.setAttribute("role", "status");
-      status.textContent = "Ֆինանսավորման հաշվիչը բեռնվում է…";
+      status.textContent = sdkText(config.language, "loading");
       const frame = document.createElement("iframe");
-      frame.title = "Varkonline — բնակարանի ֆինանսավորման հաշվիչ";
+      frame.title = sdkText(config.language, "iframeTitle");
       frame.sandbox.add(
         "allow-scripts",
         "allow-same-origin",
@@ -335,7 +358,7 @@ export function createFinancingSdk(
       for (const [name, value] of Object.entries({
         display: "block",
         width: "100%",
-        height: "680px",
+        height: "500px",
         border: "0",
         "max-width": "100%",
         "min-width": "0",
@@ -347,6 +370,7 @@ export function createFinancingSdk(
         instance,
         sdk: "1",
       }).toString();
+      url.hash = `language=${config.language}`;
       frame.src = url.href;
       const record: Mounted = {
         config,
@@ -361,13 +385,15 @@ export function createFinancingSdk(
       };
       record.timer = setTimeout(() => {
         status.hidden = false;
-        status.textContent =
-          "Չհաջողվեց բեռնել հաշվիչը։ Ստուգեք կապը և թույլատրված կայքի հասցեն։";
+        status.textContent = sdkText(record.config.language ?? "hy", "timeout");
         emit(element, "error", record, "LOAD_TIMEOUT");
       }, 20_000);
       frame.onerror = () => {
         clearTimeout(record.timer);
-        status.textContent = "Հաշվիչը ժամանակավորապես հասանելի չէ։";
+        status.textContent = sdkText(
+          record.config.language ?? "hy",
+          "unavailableShort",
+        );
         emit(element, "error", record, "NETWORK_ERROR");
       };
       instances.set(element, record);

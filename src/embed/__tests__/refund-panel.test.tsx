@@ -10,6 +10,8 @@ import RefundPanel from "../RefundPanel";
 import { calculateFinancing } from "@/lib/financing";
 import { sample } from "@/lib/financing/income-tax-refund/__tests__/fixtures";
 import type { ResolvedWidget } from "../types";
+import FinancingCalculator from "../FinancingCalculator";
+import { translate, widgetMessages, type WidgetLanguage } from "../messages";
 
 afterEach(cleanup);
 const nextLabel = "Շարունակել՝ ստուգել պայմանները";
@@ -20,14 +22,14 @@ const selectedTax = () =>
       .querySelector("strong")
       ?.textContent?.replace(/[^\d]/g, "") ?? NaN,
   );
-function fixture(unreviewed = false, price = 35000000) {
+function fixture(unreviewed = false, price = 35000000, durationMonths = 3) {
   const input = {
     financingType: "mortgage",
     currency: "AMD",
     apartmentPrice: price,
     annualInterestRatePercent: 9,
     downPaymentPercent: 20,
-    durationMonths: 3,
+    durationMonths,
   } as const;
   const financing = calculateFinancing(input);
   const facts = sample({ financing }).eligibility;
@@ -176,5 +178,128 @@ describe("two-step borrower refund form", () => {
     expect(
       screen.queryByRole("button", { name: nextLabel }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("compact multilingual widget and total refund", () => {
+  const languages = ["hy", "en", "ru"] as const;
+  const numeric = (text: string | null) => Number(text?.replace(/[^\d]/g, ""));
+  function setup(
+    language: WidgetLanguage,
+    unreviewed = false,
+    months = 3,
+    gross = "500000",
+  ) {
+    const { configuration } = fixture(unreviewed, 35000000, months);
+    render(
+      <FinancingCalculator
+        configuration={configuration}
+        initialLanguage={language}
+        notify={() => {}}
+      />,
+    );
+    const t = (key: keyof typeof widgetMessages) => translate(language, key);
+    fireEvent.click(screen.getByRole("button", { name: t("openRefund") }));
+    amount(t("firstPayment"), "2026-01-31");
+    amount(t("gross"), gross);
+    fireEvent.click(screen.getByRole("button", { name: t("continue") }));
+    return t;
+  }
+  it.each([
+    ["50000", 60000],
+    ["0", 0],
+  ] as const)("shows a full six-month total for salary %s", (gross, total) => {
+    const t = setup("en", false, 6, gross);
+    for (const key of ["employee", "owner", "identity"] as const)
+      amount(t(key), "yes");
+    amount(t("prior"), "none");
+    amount(t("tuition"), "no");
+    amount(t("allocation"), "0");
+    amount(t("settlement"), "projected");
+    for (const key of ["documentsChecked", "constantForecast"] as const)
+      fireEvent.click(screen.getByLabelText(t(key)));
+    fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
+    // At 50000 AMD gross, tax = 10000/month. Each quarter has sufficient interest,
+    // so two full quarters return 2 * (3 * 10000), not just one quarter's 30000.
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(total);
+    expect(
+      screen.getByText(translate("en", "refundPeriod", { months: 6 })),
+    ).toBeVisible();
+  });
+  it.each(languages)(
+    "shows the independent 300000 AMD full-term refund reference in %s",
+    (language) => {
+      const t = setup(language);
+      for (const key of ["employee", "owner", "identity"] as const)
+        amount(t(key), "yes");
+      amount(t("prior"), "none");
+      amount(t("tuition"), "no");
+      amount(t("allocation"), "0");
+      amount(t("settlement"), "projected");
+      for (const key of [
+        "documentsChecked",
+        "noSubsidy",
+        "constantForecast",
+      ] as const) {
+        const checkbox = screen.getByLabelText(t(key)) as HTMLInputElement;
+        if (!checkbox.checked) fireEvent.click(checkbox);
+      }
+      fireEvent.click(
+        screen.getByRole("button", { name: t("calculateRefund") }),
+      );
+      expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+        300000,
+      );
+      expect(numeric(screen.getByTestId("effective-cost").textContent)).toBe(
+        9373682,
+      );
+      expect(numeric(screen.getByTestId("monthly-payment").textContent)).toBe(
+        9473682,
+      );
+      expect(
+        screen.getByText(translate(language, "refundPeriod", { months: 3 })),
+      ).toBeVisible();
+      // Changing only the language must preserve inputs, evidence assertions and calculated totals.
+      fireEvent.change(screen.getByRole("combobox", { name: t("language") }), {
+        target: { value: "en" },
+      });
+      expect(
+        screen.getByRole("region", { name: "Income tax refund" }),
+      ).toBeVisible();
+      expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+        300000,
+      );
+      fireEvent.click(screen.getByText("Edit salary or conditions"));
+      fireEvent.click(screen.getByRole("button", { name: "Previous step" }));
+      expect(
+        screen.getByLabelText("Registered gross monthly salary, ֏"),
+      ).toHaveValue("500000");
+      amount("Registered gross monthly salary, ֏", "600000");
+      expect(screen.queryByTestId("total-refund")).not.toBeInTheDocument();
+    },
+  );
+  it.each(languages)(
+    "keeps unreviewed totals unresolved and localizes validation in %s",
+    (language) => {
+      const t = setup(language, true);
+      expect(screen.getByTestId("total-refund")).toHaveTextContent(
+        t("unresolved"),
+      );
+      expect(
+        screen.queryByRole("button", { name: t("calculateRefund") }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: t("back") }));
+      amount(t("gross"), "-1");
+      fireEvent.click(screen.getByRole("button", { name: t("continue") }));
+      expect(screen.getByRole("alert")).toHaveTextContent(t("amountError"));
+    },
+  );
+  it("has nonempty translations for every key and no Armenian fallback in English or Russian", () => {
+    for (const entry of Object.values(widgetMessages)) {
+      for (const language of languages)
+        expect(entry[language].length).toBeGreaterThan(0);
+      expect(entry.en).not.toMatch(/[Ա-Ֆա-ֆ]/);
+      expect(entry.ru).not.toMatch(/[Ա-Ֆա-ֆ]/);
+    }
   });
 });

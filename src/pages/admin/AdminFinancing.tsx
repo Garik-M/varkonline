@@ -43,7 +43,11 @@ const blankConfiguration = (): PartnerConfiguration => ({
     supportedDurations: [],
   },
   adjustable: { downPaymentPercent: true, durationMonths: true },
-  appearance: { theme: "light", accentColor: DEFAULT_ACCENT_COLOR, logoUrl: null },
+  appearance: {
+    theme: "light",
+    accentColor: DEFAULT_ACCENT_COLOR,
+    logoUrl: null,
+  },
   refund: {
     enabled: true,
     defaultDevelopmentId: null,
@@ -95,6 +99,9 @@ export default function AdminFinancing({
   const [loadError, setLoadError] = useState("");
   const [samplePrice, setSamplePrice] = useState("35000000");
   const [sampleRate, setSampleRate] = useState("9");
+  const [sampleLanguage, setSampleLanguage] = useState<"hy" | "en" | "ru">(
+    "hy",
+  );
   const [sampleApartmentId, setSampleApartmentId] =
     useState("preview-apartment");
   const [copied, setCopied] = useState(false);
@@ -239,6 +246,7 @@ export default function AdminFinancing({
     const defaults = saved.defaults;
     const value: WidgetConfiguration = {
       partner: selected.slug,
+      language: sampleLanguage,
       apartmentId: sampleApartmentId.trim() || "preview-apartment",
     };
     if (saved.overrides.includes("apartmentPrice"))
@@ -251,7 +259,7 @@ export default function AdminFinancing({
       value.annualInterestRatePercent =
         sampleRate.trim() === "" ? NaN : Number(sampleRate);
     return value;
-  }, [selected, samplePrice, sampleRate, sampleApartmentId]);
+  }, [selected, samplePrice, sampleRate, sampleApartmentId, sampleLanguage]);
   const snippet = useMemo(() => {
     try {
       return preview
@@ -896,6 +904,22 @@ export default function AdminFinancing({
                 Use the exact apartment ID from reviewed property evidence to
                 preview its refund eligibility.
               </span>
+            </label>
+            <label className={label}>
+              Widget language
+              <select
+                aria-label="Widget language"
+                className="w-full border rounded-md p-2"
+                value={sampleLanguage}
+                onChange={(event) => {
+                  setSampleLanguage(event.target.value as "hy" | "en" | "ru");
+                  setCopied(false);
+                }}
+              >
+                <option value="hy">Հայերեն</option>
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+              </select>
             </label>
             <label className={label}>
               Sample apartment price

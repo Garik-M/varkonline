@@ -17,7 +17,10 @@ export interface ApartmentConfiguration {
   loanOriginationDate?: string;
   firstPaymentDate?: string;
 }
-export type WidgetConfiguration = ApartmentConfiguration & { partner: string };
+export type WidgetConfiguration = ApartmentConfiguration & {
+  partner: string;
+  language?: "hy" | "en" | "ru";
+};
 export interface Range {
   min: number;
   max: number;

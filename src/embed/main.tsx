@@ -5,6 +5,7 @@ import { CHANNEL, VERSION } from "./protocol";
 import { parseWidgetConfiguration } from "./sdk-core";
 import type { ResolvedWidget, WidgetConfiguration } from "./types";
 import "./embed.css";
+import { translate, widgetLanguage, type WidgetLanguage } from "./messages";
 
 const boot = document.documentElement.dataset;
 const validBoot =
@@ -40,7 +41,10 @@ class Boundary extends React.Component<
   render() {
     return this.state.failed ? (
       <div className="vk-error" role="alert">
-        Հաշվիչը ժամանակավորապես հասանելի չէ։ Թարմացրեք էջը։
+        {translate(
+          widgetLanguage(document.documentElement.lang),
+          "unavailableRefresh",
+        )}
       </div>
     ) : (
       this.props.children
@@ -53,6 +57,19 @@ function EmbedApp() {
     null,
   );
   const [error, setError] = useState("");
+  const [language, setLanguage] = useState<WidgetLanguage>(() =>
+    widgetLanguage(
+      new URLSearchParams(window.location.hash.slice(1)).get("language"),
+    ),
+  );
+  const t = (
+    key: Parameters<typeof translate>[1],
+    values?: Record<string, string | number>,
+  ) => translate(language, key, values);
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.title = translate(language, "iframeTitle");
+  }, [language]);
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
   const [generation, setGeneration] = useState(0);
@@ -64,7 +81,7 @@ function EmbedApp() {
   useEffect(() => {
     if (!validBoot) {
       setLoading(false);
-      setError("Հաշվիչը հասանելի է գործընկերոջ կայքի ինտեգրման միջոցով։");
+      setError("INTEGRATION_ONLY");
       return;
     }
     let controller: AbortController | undefined;
@@ -72,6 +89,7 @@ function EmbedApp() {
     let disposed = false;
     const load = async (config: WidgetConfiguration, refresh = false) => {
       current.current = config;
+      if (!refresh) setLanguage(config.language ?? "hy");
       controller?.abort();
       const active = new AbortController();
       controller = active;
@@ -84,7 +102,7 @@ function EmbedApp() {
       }
       const timeout = setTimeout(() => active.abort(), 12_000);
       try {
-        const { partner: _partner, ...apartment } = config;
+        const { partner: _partner, language: _language, ...apartment } = config;
         const response = await fetch(
           `${boot.apiBase}/embed/${encodeURIComponent(boot.partner!)}/resolve`,
           {
@@ -121,15 +139,7 @@ function EmbedApp() {
             : "NETWORK_ERROR";
         setConfiguration(null);
         setLoading(false);
-        setError(
-          code === "PARTNER_UNAVAILABLE"
-            ? "Գործընկերոջ հաշվիչը հասանելի չէ։"
-            : code === "ORIGIN_NOT_ALLOWED"
-              ? "Այս կայքի համար հաշվիչը թույլատրված չէ։"
-              : code === "NETWORK_ERROR"
-                ? "Չհաջողվեց կապվել ֆինանսավորման ծառայության հետ։ Փորձեք կրկին։"
-                : `Ինտեգրման տվյալները հնարավոր չէ կիրառել (${code})։ Դիմեք կայքի պատասխանատուին։`,
-        );
+        setError(code);
         emit("error", { code });
       } finally {
         clearTimeout(timeout);
@@ -157,14 +167,23 @@ function EmbedApp() {
           JSON.stringify(parsed) === JSON.stringify(current.current)
         )
           return;
-        if (data.type === "update") emit("changed");
+        if (data.type === "update" && current.current) {
+          const { language: _previousLanguage, ...previous } = current.current;
+          const { language: _nextLanguage, ...next } = parsed;
+          if (JSON.stringify(previous) === JSON.stringify(next)) {
+            current.current = parsed;
+            setLanguage(parsed.language ?? "hy");
+            return;
+          }
+          emit("changed");
+        }
         void load(parsed);
       } catch {
         sequence++;
         controller?.abort();
         setConfiguration(null);
         setLoading(false);
-        setError("Մուտքային տվյալները սխալ են։");
+        setError("INVALID_CONFIGURATION");
         emit("error", { code: "INVALID_CONFIGURATION" });
       }
     };
@@ -217,18 +236,28 @@ function EmbedApp() {
     return (
       <div className="vk-loading" role="status">
         <span className="vk-spinner" />
-        Ֆինանսավորման հաշվիչը բեռնվում է…
+        {t("loading")}
       </div>
     );
   if (error || !configuration)
     return (
       <div className="vk-error" role="alert">
-        <h1>Հաշվիչը հասանելի չէ</h1>
-        <p>{error}</p>
+        <h1>{t("unavailable")}</h1>
+        <p>
+          {error === "INTEGRATION_ONLY"
+            ? t("integrationOnly")
+            : error === "PARTNER_UNAVAILABLE"
+              ? t("partnerUnavailable")
+              : error === "ORIGIN_NOT_ALLOWED"
+                ? t("originDenied")
+                : error === "NETWORK_ERROR"
+                  ? t("networkError")
+                  : t("integrationError", { code: error })}
+        </p>
         {validBoot && (
-          <button onClick={() => setRetry(retry + 1)}>Փորձել կրկին</button>
+          <button onClick={() => setRetry(retry + 1)}>{t("retry")}</button>
         )}
-        <p className="vk-fine">Varkonline · Ֆինանսավորման հաշվարկ</p>
+        <p className="vk-fine">{t("footerTitle")}</p>
       </div>
     );
   return (
@@ -236,6 +265,8 @@ function EmbedApp() {
       key={`${configuration.apartmentId}:${configuration.partner.revision}:${generation}`}
       configuration={configuration}
       notify={notify}
+      initialLanguage={language}
+      onLanguageChange={setLanguage}
     />
   );
 }

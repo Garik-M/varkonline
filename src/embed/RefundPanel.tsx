@@ -18,7 +18,8 @@ import {
   type PayrollForm,
 } from "./refund-model";
 import { refundMessages } from "./refund-messages";
-import { money } from "./format";
+import { useWidgetText } from "./language";
+import type { MessageKey } from "./messages";
 
 type PayrollFieldsProps = {
   value: PayrollForm;
@@ -27,36 +28,34 @@ type PayrollFieldsProps = {
 };
 
 function SalaryFields({ value, onChange, title }: PayrollFieldsProps) {
+  const { t } = useWidgetText();
   const id = useId();
   return (
     <fieldset>
       <legend>{title}</legend>
       <div className="vk-grid">
         <label>
-          Գրանցված ամսական համախառն աշխատավարձ, ֏
-          <small id={`${id}-gross-help`}>
-            Աշխատավարձը՝ մինչև հարկերի և այլ պահումների նվազեցումը։
-          </small>
+          {t("gross")}
+          <small id={`${id}-gross-help`}>{t("grossHelp")}</small>
           <input
             id={`${id}-gross`}
-            aria-label="Գրանցված ամսական համախառն աշխատավարձ, ֏"
+            aria-label={t("gross")}
             aria-describedby={`${id}-gross-help`}
             inputMode="numeric"
             value={value.gross}
             required
             onChange={(e) => onChange({ ...value, gross: e.target.value })}
-            placeholder="Օրինակ՝ 500000"
+            placeholder={t("grossExample")}
             autoComplete="off"
           />
         </label>
         <label>
-          Փաստացի պահված եկամտային հարկ, ֏{" "}
-          <small>Ըստ ցանկության․ հատուկ հարկային ռեժիմի դեպքում լրացրեք</small>
+          {t("withheld")} <small>{t("withheldHelp")}</small>
           <input
             inputMode="numeric"
             value={value.withheld}
             onChange={(e) => onChange({ ...value, withheld: e.target.value })}
-            placeholder="Դատարկ՝ օրենքի ստանդարտ դրույք"
+            placeholder={t("withheldPlaceholder")}
             autoComplete="off"
           />
         </label>
@@ -66,6 +65,7 @@ function SalaryFields({ value, onChange, title }: PayrollFieldsProps) {
 }
 
 function EligibilityFields({ value, onChange, title }: PayrollFieldsProps) {
+  const { t } = useWidgetText();
   const id = useId();
   const field = (
     key: keyof PayrollForm,
@@ -94,7 +94,7 @@ function EligibilityFields({ value, onChange, title }: PayrollFieldsProps) {
           })
         }
       >
-        <option value="">Չգիտեմ / չի ստուգվել</option>
+        <option value="">{t("unknown")}</option>
         {options.map(([code, text]) => (
           <option key={code} value={code}>
             {text}
@@ -105,49 +105,36 @@ function EligibilityFields({ value, onChange, title }: PayrollFieldsProps) {
     </label>
   );
   const yesNo: [string, string][] = [
-    ["yes", "Այո"],
-    ["no", "Ոչ"],
+    ["yes", t("yes")],
+    ["no", t("no")],
   ];
   return (
     <fieldset>
       <legend>{title}</legend>
       <div className="vk-grid">
-        {field("employee", "Աշխատանքային պայմանագրով աշխատո՞ւմ եք", yesNo)}
-        {field(
-          "owner",
-          "Գույքի սեփականատե՞ր կամ համասեփականատեր եք",
-          yesNo,
-          "Եթե գնումը դեռ նախատեսվում է կամ գրանցված է կառուցվող գույքը գնելու իրավունք, ընտրեք «Չգիտեմ / չի ստուգվել»․ այդ դեպքը պահանջում է առանձին ստուգում։",
-        )}
-        {field(
-          "identity",
-          "Պահանջվող անձը հաստատող / կացության փաստաթուղթ ունե՞ք",
-          yesNo,
-        )}
-        {field("prior", "Նախկինում օգտվե՞լ եք այս հետվերադարձից", [
-          ["none", "Ոչ"],
-          ["same_mortgage", "Միայն այս հիփոթեքի համար"],
-          ["other_post_2018_mortgage", "Մեկ այլ՝ 2018-ից հետո հիփոթեքի համար"],
-          ["pre_2018_only", "Միայն մինչև 2018թ․ հիփոթեքի համար"],
+        {field("employee", t("employee"), yesNo)}
+        {field("owner", t("owner"), yesNo, t("ownerHelp"))}
+        {field("identity", t("identity"), yesNo)}
+        {field("prior", t("prior"), [
+          ["none", t("no")],
+          ["same_mortgage", t("priorSame")],
+          ["other_post_2018_mortgage", t("priorOther")],
+          ["pre_2018_only", t("priorLegacy")],
         ])}
-        {field(
-          "tuition",
-          "Նույն եռամսյակում ուսման վճարի հարկային հետվերադարձ կա՞",
-          yesNo,
-        )}
+        {field("tuition", t("tuition"), yesNo)}
         <label>
-          Այլ պահանջների համար օգտագործված ամսական հարկ, ֏
+          {t("allocation")}
           <input
             inputMode="numeric"
             value={value.allocation}
             onChange={(e) => onChange({ ...value, allocation: e.target.value })}
-            placeholder="Չկա՝ մուտքագրեք 0"
+            placeholder={t("zeroPlaceholder")}
             autoComplete="off"
           />
         </label>
-        {field("settlement", "Գործատուի եկամտային հարկի վճարում", [
-          ["projected", "Կանխատեսում՝ ենթադրում եմ ամբողջական վճարում"],
-          ["unpaid", "Չի վճարվել ամբողջությամբ"],
+        {field("settlement", t("settlement"), [
+          ["projected", t("projectedSettlement")],
+          ["unpaid", t("unpaidSettlement")],
         ])}
       </div>
       <label className="vk-check">
@@ -158,8 +145,7 @@ function EligibilityFields({ value, onChange, title }: PayrollFieldsProps) {
             onChange({ ...value, documentsChecked: e.target.checked })
           }
         />
-        Աշխատանքի, սեփականության, անձնական փաստաթղթերի և նախկին օգտվելու իմ
-        պատասխանները ստուգել եմ փաստաթղթերով։
+        {t("documentsChecked")}
       </label>
     </fieldset>
   );
@@ -172,6 +158,7 @@ export default function RefundPanel({
   financing: FinancingResult;
   configuration: ResolvedWidget;
 }) {
+  const { t, money, language } = useWidgetText();
   const id = useId();
   const [borrower, setBorrower] = useState(emptyPayroll);
   const [co, setCo] = useState(emptyPayroll);
@@ -191,13 +178,17 @@ export default function RefundPanel({
     null,
   );
   const [tax, setTax] = useState<number | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<MessageKey | null>(null);
   const [page, setPage] = useState(0);
   const [step, setStep] = useState<1 | 2>(1);
   const heading = useRef<HTMLHeadingElement>(null);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
   }, [step]);
+  useEffect(() => {
+    if (projection) resultHeading.current?.focus();
+  }, [projection]);
   const legal = useMemo(() => {
     if (!loan) return null;
     try {
@@ -219,7 +210,7 @@ export default function RefundPanel({
   const propertyReady = legal?.status === "eligible";
   const invalidate = () => {
     setProjection(null);
-    setError("");
+    setError(null);
   };
   const change = (value: PayrollForm, secondary = false) => {
     const previous = secondary ? co : borrower;
@@ -231,10 +222,19 @@ export default function RefundPanel({
   function showError(cause: unknown) {
     setError(
       cause instanceof FinancingCalculationError
-        ? "Ստուգեք ամսաթվերը, աշխատավարձը և պահված հարկը։ Առաջին վճարումը պետք է լինի վարկի տրամադրման կամ հաջորդ ամսում, պահված հարկը՝ աշխատավարձից ոչ մեծ, այլ պահանջների հարկը՝ ընտրված հարկից ոչ մեծ։"
-        : cause instanceof Error
-          ? cause.message
-          : "Ստուգեք մուտքագրված տվյալները։",
+        ? "financialError"
+        : cause instanceof Error &&
+            [
+              "historicalTaxError",
+              "propertyError",
+              "assumptionsError",
+            ].includes(cause.message)
+          ? (cause.message as MessageKey)
+          : cause instanceof Error && cause.message === "INVALID_AMOUNT"
+            ? "amountError"
+            : cause instanceof Error && cause.message === "INVALID_DATE"
+              ? "dateError"
+              : "inputError",
     );
   }
   function selectedSalaryTax() {
@@ -244,9 +244,7 @@ export default function RefundPanel({
       ? salaryEstimate(co, month).selectedIncomeTaxAMD
       : 0;
     if (primary === null || secondary === null)
-      throw new Error(
-        "Ընտրված ժամանակահատվածի համար մուտքագրեք փաստացի պահված եկամտային հարկը․ ստանդարտ դրույքը հաստատված չէ։",
-      );
+      throw new Error("historicalTaxError");
     return primary + secondary;
   }
   function next(event: React.FormEvent) {
@@ -264,12 +262,8 @@ export default function RefundPanel({
     event.preventDefault();
     invalidate();
     try {
-      if (!propertyReady)
-        throw new Error("Գույքի և վարկի տվյալները նախ պետք է ստուգվեն։");
-      if (!constant || !noSubsidy)
-        throw new Error(
-          "Հաստատեք կանխատեսման ենթադրությունները։ Սուբսիդավորված կամ փոփոխվող աշխատավարձով դեպքը պահանջում է անհատական հաշվարկ։",
-        );
+      if (!propertyReady) throw new Error("propertyError");
+      if (!constant || !noSubsidy) throw new Error("assumptionsError");
       const dates = paymentDates(first, financing.schedule.length);
       const payroll = [
         payrollParticipant(borrower, dates, "borrower"),
@@ -287,80 +281,72 @@ export default function RefundPanel({
   const propertyNotice = !propertyReady ? (
     <div className="vk-warning" data-testid="refund-result">
       <h3>
-        {legal?.status === "ineligible"
-          ? "Հետվերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
-          : "Անհրաժեշտ է տվյալների լրացուցիչ ստուգում"}
+        {legal?.status === "ineligible" ? t("ineligible") : t("verification")}
       </h3>
       <p>
-        Բանկի ամսական վճարը՝{" "}
+        {t("bankPaymentPrefix")}{" "}
         <strong>
           {money(financing.regularMonthlyPayment, financing.currency)}
         </strong>
-        ։
+        {t("period")}
+      </p>
+      <p className="vk-refund-total">
+        <span>{t("totalRefund")}</span>
+        <strong data-testid="total-refund">
+          {legal?.status === "ineligible" ? money(0) : t("unresolved")}
+        </strong>
       </p>
       <ul>
         {(legal
-          ? refundMessages(legal.reasons)
-          : ["Վարկի և գույքի փաստաթղթերը դեռ չեն ստուգվել։"]
+          ? refundMessages(legal.reasons, language)
+          : [t("propertyUnreviewed")]
         ).map((message) => (
           <li key={message}>{message}</li>
         ))}
       </ul>
       {legal?.status !== "ineligible" && (
         <p>
-          Հետվերադարձի գումար չի ենթադրվում։ Դիմեք կառուցապատողին կամ ՊԵԿ-ին
-          փաստաթղթերի ստուգման համար։ Արդյունավետ ամսական ծախս՝{" "}
-          <strong data-testid="effective-cost">Չորոշված</strong>։ Այստեղ կարող
-          եք առանձին գնահատել ձեր եկամտային հարկը։
+          {t("unresolvedNotice")}{" "}
+          <strong data-testid="effective-cost">{t("unresolved")}</strong>
+          {t("salaryOnlyNotice")}
         </p>
       )}
     </div>
   ) : null;
   return (
-    <section className="vk-refund" aria-label="Եկամտահարկի հետվերադարձ">
-      <div className="vk-section-heading">
-        <span className="vk-eyebrow">ԵԿԱՄՏԱՀԱՐԿԻ ՀԵՏՎԵՐԱԴԱՐՁ</span>
-        <h2>Գնահատեք հետվերադարձի հնարավորությունը</h2>
-      </div>
-      <p className="vk-muted">
-        Աշխատավարձը չի պահպանվում և չի փոխանցվում գործընկերոջը։ Հետվերադարձը
-        կատարվում է առանձին՝ եռամսյակային կարգով, ՊԵԿ-ի հաստատման դեպքում։
-      </p>
+    <section className="vk-refund" aria-label={t("refundTitle")}>
+      <h2>{t("refundTitle")}</h2>
+      <p className="vk-muted">{t("privacy")}</p>
       {step === 2 && financing.currency === "USD" && (
-        <p className="vk-warning">
-          USD հիփոթեքի համար անհրաժեշտ են բանկի տրամադրած դրամային վճարներն ու
-          տոկոսները յուրաքանչյուր ամսվա համար։ Այստեղ փոխարժեք չի ենթադրվում․
-          հետվերադարձի գումարը կմնա չորոշված։
-        </p>
+        <p className="vk-warning">{t("usdWarning")}</p>
       )}
       {legal?.status === "ineligible" && propertyNotice}
       {legal?.status !== "ineligible" && (
-        <>
-          <ol
-            className="vk-refund-steps"
-            aria-label="Հետվերադարձի հաշվարկի քայլեր"
-          >
+        <details className="vk-refund-form" open={!projection}>
+          <summary hidden={!projection}>{t("editRefund")}</summary>
+          <ol className="vk-refund-steps" aria-label={t("refundSteps")}>
             <li aria-current={step === 1 ? "step" : undefined}>
-              1. Աշխատավարձ և վճարումներ
+              {t("stepIncome")}
             </li>
             <li aria-current={step === 2 ? "step" : undefined}>
-              2. Հետվերադարձի պայմաններ
+              {t("stepEligibility")}
             </li>
           </ol>
           <form onSubmit={step === 1 ? next : calculate} onChange={invalidate}>
             {step === 1 ? (
               <div className="vk-refund-step" data-testid="refund-step-income">
-                <h3 ref={heading} tabIndex={-1} id={`${id}-step-heading`}>
-                  Աշխատավարձ և վճարումներ
+                <h3
+                  className="vk-sr-only"
+                  ref={heading}
+                  tabIndex={-1}
+                  id={`${id}-step-heading`}
+                >
+                  {t("incomeHeading")}
                 </h3>
-                <p className="vk-muted">
-                  Մուտքագրեք աշխատավարձը՝ ամսական եկամտային հարկը գնահատելու
-                  համար։ Հետվերադարձի պայմանները կստուգվեն հաջորդ քայլում։
-                </p>
                 <label>
-                  Առաջին ամսական վճարման ամսաթիվ
+                  {t("firstPayment")}
                   <input
-                    aria-label="Առաջին ամսական վճարման ամսաթիվ"
+                    aria-label={t("firstPayment")}
                     type="date"
                     required
                     value={first}
@@ -369,15 +355,12 @@ export default function RefundPanel({
                       setTax(null);
                     }}
                   />
-                  <small>
-                    Կանխատեսման համար ընտրեք պլանավորվող առաջին վճարման օրը։ Այն
-                    չի հաստատում վարկի տրամադրման ամսաթիվը։
-                  </small>
+                  <small>{t("firstPaymentHelp")}</small>
                 </label>
                 <SalaryFields
                   value={borrower}
                   onChange={change}
-                  title="Վարկառուի աշխատավարձը"
+                  title={t("borrowerSalary")}
                 />
                 <label className="vk-check">
                   <input
@@ -388,17 +371,17 @@ export default function RefundPanel({
                       setTax(null);
                     }}
                   />
-                  Ներառել մեկ համավարկառուի եկամուտը
+                  {t("includeCo")}
                 </label>
                 {includeCo && (
                   <SalaryFields
                     value={co}
                     onChange={(value) => change(value, true)}
-                    title="Համավարկառուի աշխատավարձը"
+                    title={t("coSalary")}
                   />
                 )}
                 <button className="vk-button" type="submit">
-                  Շարունակել՝ ստուգել պայմանները
+                  {t("continue")}
                 </button>
               </div>
             ) : (
@@ -406,17 +389,18 @@ export default function RefundPanel({
                 className="vk-refund-step"
                 data-testid="refund-step-eligibility"
               >
-                <h3 ref={heading} tabIndex={-1} id={`${id}-step-heading`}>
-                  Հետվերադարձի պայմաններ
+                <h3
+                  className="vk-sr-only"
+                  ref={heading}
+                  tabIndex={-1}
+                  id={`${id}-step-heading`}
+                >
+                  {t("conditionsHeading")}
                 </h3>
-                <p className="vk-muted">
-                  Պատասխանեք ըստ հաստատված տվյալների։ Չստուգված պայմանների համար
-                  ընտրեք «Չգիտեմ / չի ստուգվել»։ Սա կանխատեսում է, ոչ ՊԵԿ-ին
-                  ներկայացվող դիմում։
-                </p>
+                <p className="vk-muted">{t("conditionsIntro")}</p>
                 {propertyNotice}
                 <label>
-                  Հիփոթեքի տրամադրման ամսաթիվ
+                  {t("loanDate")}
                   <input
                     type="date"
                     required={propertyReady}
@@ -429,8 +413,8 @@ export default function RefundPanel({
                   />
                   <small>
                     {configuration.refund.loanOriginationDate?.verified
-                      ? "Փաստաթղթով ստուգված ամսաթիվ"
-                      : "Չստուգված ամսաթիվը կպահանջի հաստատում"}
+                      ? t("verifiedDate")
+                      : t("unverifiedDate")}
                   </small>
                 </label>
                 {propertyReady && (
@@ -438,13 +422,13 @@ export default function RefundPanel({
                     <EligibilityFields
                       value={borrower}
                       onChange={change}
-                      title="Վարկառուի պայմանները"
+                      title={t("borrowerConditions")}
                     />
                     {includeCo && (
                       <EligibilityFields
                         value={co}
                         onChange={(value) => change(value, true)}
-                        title="Համավարկառուի պայմանները"
+                        title={t("coConditions")}
                       />
                     )}
                     <label className="vk-check">
@@ -453,8 +437,7 @@ export default function RefundPanel({
                         checked={noSubsidy}
                         onChange={(event) => setNoSubsidy(event.target.checked)}
                       />
-                      Տոկոսների սուբսիդավորում չկա․ բոլոր վճարների համար այն 0
-                      է։
+                      {t("noSubsidy")}
                     </label>
                     <label className="vk-check">
                       <input
@@ -462,10 +445,7 @@ export default function RefundPanel({
                         checked={constant}
                         onChange={(event) => setConstant(event.target.checked)}
                       />
-                      Սա կանխատեսում է․ նշված ամսական աշխատավարձը, հարկն ու
-                      պատասխանները հաստատուն են ամբողջ ժամանակահատվածում,
-                      ներառյալ առաջին և վերջին ամբողջ օրացուցային եռամսյակները։
-                      Վճարման օրը կրկնվում է ամսական՝ ամսավերջին սահմանափակմամբ։
+                      {t("constantForecast")}
                     </label>
                   </>
                 )}
@@ -474,32 +454,31 @@ export default function RefundPanel({
                     type="button"
                     onClick={() => {
                       setStep(1);
-                      setError("");
+                      setError(null);
                     }}
                   >
-                    Նախորդ քայլ
+                    {t("back")}
                   </button>
                   {propertyReady && (
                     <button className="vk-button" type="submit">
-                      Հաշվել հետվերադարձի կանխատեսումը
+                      {t("calculateRefund")}
                     </button>
                   )}
                 </div>
               </div>
             )}
           </form>
-        </>
+        </details>
       )}
       {error && (
         <p className="vk-warning" role="alert">
-          Մուտքային տվյալների սխալ․ {error}
+          {t("inputErrorPrefix")}
+          {t(error)}
         </p>
       )}
       {tax !== null && (
         <p className="vk-tax" data-testid="salary-tax">
-          {includeCo
-            ? "Երկու անձանց ամսական եկամտային հարկ՝ "
-            : "Ընտրված ամսական եկամտային հարկ՝ "}{" "}
+          {includeCo ? t("combinedTax") : t("selectedTax")}{" "}
           <strong>{money(tax)}</strong>
         </p>
       )}
@@ -509,75 +488,71 @@ export default function RefundPanel({
           aria-live="polite"
           data-testid="refund-result"
         >
-          <h3>
+          <h3 ref={resultHeading} tabIndex={-1}>
             {projection.eligibility.status === "eligible"
-              ? "Պայմանները բավարարված են ըստ տրամադրված տվյալների"
+              ? t("eligible")
               : projection.eligibility.status === "ineligible"
-                ? "Հետվերադարձը կիրառելի չէ ըստ տրամադրված տվյալների"
-                : "Անհրաժեշտ է տվյալների լրացուցիչ ստուգում"}
+                ? t("ineligible")
+                : t("verification")}
           </h3>
           {projection.eligibility.status === "requires_verification" && (
-            <p>
-              Հետվերադարձի և արդյունավետ ծախսի գումար չի ենթադրվում։ Գույքի,
-              վարկի կամ ձեր փաստաթղթերի ստուգումը դեռ ավարտված չէ։ Դիմեք
-              կառուցապատողին կամ ՊԵԿ-ին։
-            </p>
+            <p>{t("projectionUnresolved")}</p>
           )}
           <ul>
-            {refundMessages(projection.eligibility.reasons).map((text) => (
-              <li key={text}>{text}</li>
-            ))}
+            {refundMessages(projection.eligibility.reasons, language).map(
+              (text) => (
+                <li key={text}>{text}</li>
+              ),
+            )}
           </ul>
-          <div className="vk-grid vk-refund-metrics">
+          <div className="vk-refund-total">
+            <span>{t("totalRefund")}</span>
+            <strong data-testid="total-refund">
+              {projection.totalEstimatedRefundAMD === null
+                ? t("unresolved")
+                : money(projection.totalEstimatedRefundAMD)}
+            </strong>
+            <p>{t("refundPeriod", { months: financing.durationMonths })}</p>
+          </div>
+          <div className="vk-refund-metrics">
             <div>
-              <span>Բանկի ամսական վճար</span>
-              <strong>
-                {money(
-                  projection.originalRegularMonthlyBankPayment,
-                  financing.currency,
-                )}
-              </strong>
-            </div>
-            <div>
-              <span>Հետվերադարձից հետո միջին ամսական ծախս</span>
+              <span>{t("effectiveCost")}</span>
               <strong data-testid="effective-cost">
                 {projection.effectiveAverageMonthlyFinancingCostAMD === null
-                  ? "Չորոշված"
+                  ? t("unresolved")
                   : money(projection.effectiveAverageMonthlyFinancingCostAMD)}
               </strong>
             </div>
           </div>
-          <p className="vk-muted">
-            Միջին ծախսը տեղեկատվական համարժեք է․ այն չի փոխում բանկին վճարվող
-            գումարը և չի ներառում կանխավճարը։ Հետվերադարձը երաշխավորված չէ։
-          </p>
+          <p className="vk-muted">{t("effectiveHelp")}</p>
           <details>
-            <summary>Եռամսյակային հետվերադարձի գրաֆիկ</summary>
+            <summary>{t("quarterSchedule")}</summary>
             <div className="vk-quarter-list">
               {projection.quarterlySchedule
                 .slice(page * 8, page * 8 + 8)
                 .map((q) => (
                   <div key={`${q.year}-${q.quarter}`}>
                     <span>
-                      {q.year} · {q.quarter}-րդ եռամսյակ
+                      {q.year} · {q.quarter}
+                      {t("quarterSuffix")}
                     </span>
                     <strong>
                       {q.estimatedRefundAMD === null
-                        ? "Ստուգում է պահանջվում"
+                        ? t("needsReview")
                         : money(q.estimatedRefundAMD)}
                     </strong>
                     <small>
-                      Տոկոս՝{" "}
+                      {t("interestPrefix")}{" "}
                       {q.interestUsedAMD === null
-                        ? "Չորոշված"
+                        ? t("unresolved")
                         : money(q.interestUsedAMD)}{" "}
-                      · Հարկ՝{" "}
+                      {t("taxPrefix")}{" "}
                       {q.eligibleIncomeTaxAMD === null
-                        ? "Չորոշված"
+                        ? t("unresolved")
                         : money(q.eligibleIncomeTaxAMD)}{" "}
-                      · Սահմանաչափ՝{" "}
+                      {t("capPrefix")}{" "}
                       {q.quarterlyRefundCapAMD === null
-                        ? "Չորոշված"
+                        ? t("unresolved")
                         : money(q.quarterlyRefundCapAMD)}
                     </small>
                   </div>
@@ -585,7 +560,7 @@ export default function RefundPanel({
             </div>
             <div className="vk-pagination">
               <button disabled={!page} onClick={() => setPage(page - 1)}>
-                Նախորդ
+                {t("previous")}
               </button>
               <span>
                 {page + 1} /{" "}
@@ -598,32 +573,28 @@ export default function RefundPanel({
                 disabled={(page + 1) * 8 >= projection.quarterlySchedule.length}
                 onClick={() => setPage(page + 1)}
               >
-                Հաջորդ
+                {t("next")}
               </button>
             </div>
           </details>
-          <p>
-            <strong>
-              Ընդհանուր կանխատեսված հետվերադարձ՝{" "}
-              {projection.totalEstimatedRefundAMD === null
-                ? "Չորոշված"
-                : money(projection.totalEstimatedRefundAMD)}
-            </strong>
-          </p>
         </div>
       )}
-      <p className="vk-fine">
-        Իրավական տարբերակ՝ {ARMENIA_REFUND_RULES_2026_10.version}։ Ապագա
-        օրենքների, եկամուտների և տոկոսների փոփոխություններ չեն կանխատեսվում։{" "}
-        <a
-          href="https://www.arlis.am/hy/acts/230455"
-          target="_blank"
-          rel="noreferrer"
-        >
-          ՀՀ հարկային օրենսգիրք, հոդված 160
-        </a>
-        ։
-      </p>
+      <details className="vk-refund-notes">
+        <summary>{t("refundDetails")}</summary>
+        <p className="vk-fine">
+          {t("ruleVersion")}
+          {ARMENIA_REFUND_RULES_2026_10.version}
+          {t("futureChanges")}{" "}
+          <a
+            href="https://www.arlis.am/hy/acts/230455"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("taxCode")}
+          </a>
+          {t("period")}
+        </p>
+      </details>
     </section>
   );
 }

@@ -2,16 +2,20 @@ import { useEffect, useMemo, useState } from "react";
 import { calculateFinancing } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
 import RefundPanel from "./RefundPanel";
-import { money, number } from "./format";
+import { useWidgetText, WidgetLanguageContext } from "./language";
+import type { WidgetLanguage } from "./messages";
 import { accentForeground } from "./appearance";
 
-export default function FinancingCalculator({
+function CalculatorBody({
   configuration,
   notify,
+  onLanguageChange,
 }: {
   configuration: ResolvedWidget;
   notify: (type: "calculated" | "changed") => void;
+  onLanguageChange: (language: WidgetLanguage) => void;
 }) {
+  const { t, language, money, number } = useWidgetText();
   const initial = configuration.financing;
   const [down, setDown] = useState(String(initial.downPaymentPercent));
   const [duration, setDuration] = useState(String(initial.durationMonths));
@@ -58,7 +62,7 @@ export default function FinancingCalculator({
     } catch {
       return {
         result: null,
-        error: "Ընտրեք գործընկերոջ թույլատրած կանխավճարն ու ժամկետը։",
+        error: true,
       };
     }
   }, [configuration.controls.limits, initial, down, duration]);
@@ -82,10 +86,13 @@ export default function FinancingCalculator({
     <article
       className="vk-card"
       data-theme={configuration.appearance.theme}
+      lang={language}
       style={
         {
           "--vk-accent": configuration.appearance.accentColor,
-          "--vk-on-accent": accentForeground(configuration.appearance.accentColor),
+          "--vk-on-accent": accentForeground(
+            configuration.appearance.accentColor,
+          ),
         } as React.CSSProperties
       }
     >
@@ -100,177 +107,193 @@ export default function FinancingCalculator({
           )}
           <span>{configuration.partner.displayName}</span>
         </div>
-        <span className="vk-badge">Նախնական հաշվարկ</span>
+        <select
+          className="vk-language"
+          aria-label={t("language")}
+          value={language}
+          onChange={(e) => onLanguageChange(e.target.value as WidgetLanguage)}
+        >
+          <option value="hy">Հայ</option>
+          <option value="en">EN</option>
+          <option value="ru">РУ</option>
+        </select>
       </header>
-      <div className="vk-intro">
-        <span className="vk-eyebrow">
-          ՁԵՐ ԲՆԱԿԱՐԱՆԸ · {configuration.apartmentId}
-        </span>
-        <h1>
-          {initial.financingType === "mortgage"
-            ? "Հիփոթեքային ֆինանսավորում"
-            : "Կառուցապատողի ապառիկ"}
-        </h1>
-        <p>Հասկանալի վճարներ։ Տեղեկացված որոշում։</p>
+      <h1>
+        {t(initial.financingType === "mortgage" ? "mortgage" : "installment")}
+      </h1>
+      <div className="vk-price-row">
+        <div>
+          <span>{t("price")}</span>
+          <strong data-testid="apartment-price">
+            {money(initial.apartmentPrice, initial.currency)}
+          </strong>
+        </div>
+        <div className="vk-rate">
+          <span>
+            {t(
+              initial.financingType === "mortgage"
+                ? "annualRate"
+                : "interestFree",
+            )}
+          </span>
+          <strong data-testid="annual-rate">
+            {initial.financingType === "mortgage"
+              ? `${number(initial.annualInterestRatePercent)}%`
+              : "0%"}
+          </strong>
+        </div>
       </div>
-      <div className="vk-main-grid">
-        <div className="vk-inputs">
-          <div className="vk-price">
-            <span>Բնակարանի արժեք</span>
-            <strong data-testid="apartment-price">
-              {money(initial.apartmentPrice, initial.currency)}
-            </strong>
-          </div>
-          <div className="vk-controls">
-            <label>
-              Կանխավճար, %
+      <div className="vk-controls">
+        <label>
+          {t("down")}
+          {configuration.controls.downPaymentPercent ? (
+            <input
+              aria-label={t("down")}
+              type="number"
+              inputMode="decimal"
+              min={limits.downPaymentPercent.min}
+              max={limits.downPaymentPercent.max}
+              step={limits.downPaymentPercent.step}
+              value={down}
+              onChange={(e) => change(setDown, e.target.value)}
+            />
+          ) : (
+            <strong>{number(initial.downPaymentPercent)}%</strong>
+          )}
+        </label>
+        <label>
+          {t("duration")}
+          {configuration.controls.durationMonths ? (
+            limits.supportedDurations.length ? (
+              <select
+                aria-label={t("duration")}
+                value={duration}
+                onChange={(e) => change(setDuration, e.target.value)}
+              >
+                {limits.supportedDurations.map((months) => (
+                  <option key={months} value={months}>
+                    {months} {t("months")}
+                  </option>
+                ))}
+              </select>
+            ) : (
               <div className="vk-input-suffix">
                 <input
-                  aria-label="Կանխավճար, %"
+                  aria-label={t("duration")}
                   type="number"
-                  inputMode="decimal"
-                  min={limits.downPaymentPercent.min}
-                  max={limits.downPaymentPercent.max}
-                  step={limits.downPaymentPercent.step}
-                  value={down}
-                  disabled={!configuration.controls.downPaymentPercent}
-                  onChange={(e) => change(setDown, e.target.value)}
-                />
-                <span>%</span>
-              </div>
-              {configuration.controls.downPaymentPercent && (
-                <small>
-                  Թույլատրելի՝ {number(limits.downPaymentPercent.min)}–
-                  {number(limits.downPaymentPercent.max)}%
-                </small>
-              )}
-            </label>
-            <label>
-              Ֆինանսավորման ժամկետ
-              {configuration.controls.durationMonths &&
-              limits.supportedDurations.length ? (
-                <select
-                  aria-label="Ֆինանսավորման ժամկետ"
+                  inputMode="numeric"
+                  min={limits.durationMonths.min}
+                  max={limits.durationMonths.max}
+                  step={limits.durationMonths.step}
                   value={duration}
                   onChange={(e) => change(setDuration, e.target.value)}
-                >
-                  {limits.supportedDurations.map((months) => (
-                    <option key={months} value={months}>
-                      {months} ամիս
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="vk-input-suffix">
-                  <input
-                    aria-label="Ֆինանսավորման ժամկետ"
-                    type="number"
-                    inputMode="numeric"
-                    min={limits.durationMonths.min}
-                    max={limits.durationMonths.max}
-                    step={limits.durationMonths.step}
-                    value={duration}
-                    disabled={!configuration.controls.durationMonths}
-                    onChange={(e) => change(setDuration, e.target.value)}
-                  />
-                  <span>ամիս</span>
-                </div>
-              )}
-            </label>
-          </div>
-          <div className="vk-rate">
-            <span>
-              {initial.financingType === "mortgage"
-                ? "Տարեկան անվանական տոկոսադրույք"
-                : "Անտոկոս ապառիկ"}
-            </span>
-            <strong data-testid="annual-rate">
-              {initial.financingType === "mortgage"
-                ? `${number(initial.annualInterestRatePercent)}%`
-                : "0%"}
+                />
+                <span>{t("months")}</span>
+              </div>
+            )
+          ) : (
+            <strong>
+              {initial.durationMonths} {t("months")}
             </strong>
-          </div>
-        </div>
-        <div className="vk-payment" aria-live="polite">
-          <span>
-            Ամսական {initial.financingType === "mortgage" ? "բանկային " : ""}
-            վճար
-          </span>
-          <strong data-testid="monthly-payment">
-            {result
-              ? money(result.regularMonthlyPayment, initial.currency)
-              : "—"}
-          </strong>
-          <p>
-            {result?.financedPrincipal === 0
-              ? "Ամբողջական կանխավճար․ ֆինանսավորվող մնացորդ չկա։"
-              : "Վճարումը հաշվարկված է ամբողջ միավորով։ Վերջին վճարումը կարող է տարբերվել։"}
-          </p>
-          {initial.financingType === "mortgage" &&
-            configuration.refund.enabled &&
-            !!result?.schedule.length && (
-              <button
-                className="vk-refund-toggle"
-                aria-expanded={refundOpen}
-                onClick={() => setRefundOpen(!refundOpen)}
-              >
-                {refundOpen
-                  ? "Փակել հետվերադարձի հաշվարկը"
-                  : "Հաշվել եկամտահարկի հետվերադարձով"}
-                <span aria-hidden="true">↗</span>
-              </button>
-            )}
-        </div>
+          )}
+        </label>
       </div>
       {calculated.error && (
         <p role="alert" className="vk-warning">
-          {calculated.error}
+          {t("boundsError")}
         </p>
       )}
+      <div className="vk-payment" aria-live="polite">
+        <span>
+          {t(
+            initial.financingType === "mortgage"
+              ? "bankPayment"
+              : "monthlyPayment",
+          )}
+        </span>
+        <strong data-testid="monthly-payment">
+          {result ? money(result.regularMonthlyPayment, initial.currency) : "—"}
+        </strong>
+        {result?.financedPrincipal === 0 && <p>{t("fullDown")}</p>}
+        {initial.financingType === "mortgage" &&
+          configuration.refund.enabled &&
+          !!result?.schedule.length && (
+            <button
+              className="vk-refund-toggle"
+              aria-expanded={refundOpen}
+              onClick={() => setRefundOpen(!refundOpen)}
+            >
+              {t(refundOpen ? "closeRefund" : "openRefund")}
+              <span aria-hidden="true">{refundOpen ? "−" : "+"}</span>
+            </button>
+          )}
+      </div>
       {result && (
         <>
-          <dl className="vk-totals">
-            {metric(
-              "Սկզբնական կանխավճար",
-              result.downPaymentAmount,
-              "down-payment",
-            )}
-            {metric(
-              "Ֆինանսավորվող գումար",
-              result.financedPrincipal,
-              "principal",
-            )}
-            {metric(
-              "Ընդհանուր տոկոսներ",
-              result.totalInterest,
-              "total-interest",
-            )}
-            {metric(
-              "Ընդհանուր արժեք՝ կանխավճարով",
-              result.totalCostIncludingDownPayment,
-              "total-cost",
-            )}
-          </dl>
+          {refundOpen && (
+            <RefundPanel
+              key={`${down}-${duration}`}
+              financing={result}
+              configuration={configuration}
+            />
+          )}
           <details className="vk-schedule">
             <summary>
-              Վճարումների գրաֆիկ <span>{result.schedule.length} ամիս</span>
+              {t("schedule")}{" "}
+              <span>
+                {result.schedule.length} {t("months")}
+              </span>
             </summary>
+            <dl className="vk-totals">
+              {metric(
+                t("downAmount"),
+                result.downPaymentAmount,
+                "down-payment",
+              )}
+              {metric(t("principal"), result.financedPrincipal, "principal")}
+              {metric(
+                t("totalInterest"),
+                result.totalInterest,
+                "total-interest",
+              )}
+              {metric(
+                t("totalCost"),
+                result.totalCostIncludingDownPayment,
+                "total-cost",
+              )}
+            </dl>
+            <p className="vk-fine">
+              {t("roundingNote")} {t("costNote")}
+            </p>
             {!result.schedule.length ? (
-              <p>Ֆինանսավորվող մնացորդ չկա։</p>
+              <p>{t("noPrincipal")}</p>
             ) : (
               <>
                 <div className="vk-table-wrap">
                   <table>
                     <caption className="vk-sr-only">
-                      Վճարումների գրաֆիկ՝ {initial.currency}
+                      {t("schedule")} · {initial.currency}
                     </caption>
                     <thead>
                       <tr>
-                        <th>Ամիս</th>
-                        <th>Վճար</th>
-                        <th>Մայր գումար</th>
-                        <th>Տոկոս</th>
-                        <th>Մնացորդ</th>
+                        {[
+                          "month",
+                          "payment",
+                          "principalColumn",
+                          "interest",
+                          "balance",
+                        ].map((key) => (
+                          <th key={key}>
+                            {t(
+                              key as
+                                | "month"
+                                | "payment"
+                                | "principalColumn"
+                                | "interest"
+                                | "balance",
+                            )}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
@@ -288,7 +311,7 @@ export default function FinancingCalculator({
                     </tbody>
                     <tfoot>
                       <tr>
-                        <th>Ընդամենը</th>
+                        <th>{t("total")}</th>
                         <td>{number(result.totalFinancedRepayment)}</td>
                         <td>{number(result.financedPrincipal)}</td>
                         <td>{number(result.totalInterest)}</td>
@@ -301,9 +324,9 @@ export default function FinancingCalculator({
                   <button
                     disabled={!page}
                     onClick={() => setPage(page - 1)}
-                    aria-label="Գրաֆիկի նախորդ էջ"
+                    aria-label={t("previousPage")}
                   >
-                    ← Նախորդ
+                    {t("previousArrow")}
                   </button>
                   <span>
                     {page + 1} / {Math.ceil(result.schedule.length / 12)}
@@ -311,41 +334,51 @@ export default function FinancingCalculator({
                   <button
                     disabled={(page + 1) * 12 >= result.schedule.length}
                     onClick={() => setPage(page + 1)}
-                    aria-label="Գրաֆիկի հաջորդ էջ"
+                    aria-label={t("nextPage")}
                   >
-                    Հաջորդ →
+                    {t("nextArrow")}
                   </button>
                 </div>
               </>
             )}
           </details>
-          {refundOpen && (
-            <RefundPanel
-              key={`${down}-${duration}`}
-              financing={result}
-              configuration={configuration}
-            />
-          )}
         </>
       )}
-      {initial.financingType === "developer_installment" && (
-        <p className="vk-muted">
-          Անտոկոս ապառիկի դեպքում հիփոթեքային տոկոսների եկամտահարկի հետվերադարձ չի
-          հաշվարկվում։
-        </p>
-      )}
       <footer className="vk-footer">
-        <p>
-          Գործընկերոջ տրամադրած տվյալներով գնահատական է․ բանկի պաշտոնական
-          առաջարկ կամ վարկի հաստատում չէ։ Գումարները՝ ամբողջ{" "}
-          {initial.currency === "AMD" ? "դրամով" : "դոլարով"}։ Վճարներ,
-          ապահովագրություն և այլ ծախսեր չեն ավելացվում։
-        </p>
-        <a href="https://varkonline.am" target="_blank" rel="noreferrer">
-          Հաշվարկը՝ <strong>Varkonline</strong>
-          <span aria-hidden="true"> ↗</span>
+        <p>{t("estimate")}</p>
+        <a href="https://www.varkonline.am" target="_blank" rel="noreferrer">
+          Varkonline ↗
         </a>
       </footer>
     </article>
+  );
+}
+
+export default function FinancingCalculator(props: {
+  configuration: ResolvedWidget;
+  notify: (type: "calculated" | "changed") => void;
+  initialLanguage?: WidgetLanguage;
+  onLanguageChange?: (language: WidgetLanguage) => void;
+}) {
+  const [language, setLanguage] = useState<WidgetLanguage>(
+    props.initialLanguage ?? "hy",
+  );
+  useEffect(() => {
+    setLanguage(props.initialLanguage ?? "hy");
+  }, [props.initialLanguage]);
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  return (
+    <WidgetLanguageContext.Provider value={language}>
+      <CalculatorBody
+        configuration={props.configuration}
+        notify={props.notify}
+        onLanguageChange={(value) => {
+          setLanguage(value);
+          props.onLanguageChange?.(value);
+        }}
+      />
+    </WidgetLanguageContext.Provider>
   );
 }

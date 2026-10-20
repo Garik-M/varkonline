@@ -20,7 +20,8 @@ export default function PartnerPreview({
     };
   }, []);
   useEffect(() => {
-    if (target.current) sdk.current?.mount(target.current, configuration);
+    if (target.current)
+      sdk.current?.mount(target.current, { language: "hy", ...configuration });
   }, [configuration]);
   return <div ref={target} data-testid="partner-preview" />;
 }

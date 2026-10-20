@@ -148,12 +148,13 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
   const [currency, setCurrency] = useState<Settings["currency"]>(existing?.settings.currency ?? "AMD");
   const [samplePrice, setSamplePrice] = useState(existing && !existing.overrides.includes("apartmentPrice") ? String(existing.settings.apartmentPrice ?? "") : "");
   const [sampleApartmentId, setSampleApartmentId] = useState("");
+  const [widgetLanguage, setWidgetLanguage] = useState<PartnerLanguage>("hy");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [preview, setPreview] = useState<WidgetConfiguration | null>(null);
   let snippet = "";
   if (existing?.active && samplePrice.trim() && Number(samplePrice) >= existing.limits.apartmentPrice.min && Number(samplePrice) <= existing.limits.apartmentPrice.max) {
-    try { snippet = integrationSnippet(window.location.origin, parseWidgetConfiguration({ partner: existing.slug, apartmentId: sampleApartmentId.trim() || "APARTMENT_ID", currency: existing.settings.currency, apartmentPrice: Number(samplePrice) })); } catch { /* Keep invalid sample values out of integration code. */ }
+    try { snippet = integrationSnippet(window.location.origin, parseWidgetConfiguration({ partner: existing.slug, language: widgetLanguage, apartmentId: sampleApartmentId.trim() || "APARTMENT_ID", currency: existing.settings.currency, apartmentPrice: Number(samplePrice) })); } catch { /* Keep invalid sample values out of integration code. */ }
   }
   return <div className="space-y-6">
     <section className="rounded-xl border bg-card p-5 space-y-3">
@@ -196,10 +197,11 @@ function CompanyWorkspace({ company, lang, busy, save }: { company: Company; lan
       <label className="block text-sm space-y-2 max-w-md">{c.sampleApartmentId}<Input maxLength={120} value={sampleApartmentId} placeholder="A-101" onChange={event => { setSampleApartmentId(event.target.value); setCopied(false); setPreview(null); }} /></label>
       <p className="text-sm text-muted-foreground">{c.sampleApartmentHelp}</p>
       <label className="block text-sm space-y-2 max-w-md">{c.samplePrice} ({existing.settings.currency})<Input type="number" min={existing.limits.apartmentPrice.min} max={existing.limits.apartmentPrice.max} step={1} value={samplePrice} disabled={!existing.overrides.includes("apartmentPrice")} onChange={event => { setSamplePrice(event.target.value); setCopied(false); setPreview(null); }} /></label>
+      <label className="block text-sm space-y-2 max-w-md">{c.widgetLanguage}<select aria-label={c.widgetLanguage} className="block border rounded-lg p-2 w-full bg-background" value={widgetLanguage} onChange={event => { setWidgetLanguage(event.target.value as PartnerLanguage); setCopied(false); setPreview(null); }}><option value="hy">Հայերեն</option><option value="en">English</option><option value="ru">Русский</option></select></label>
       <pre data-testid="partner-sdk-code" className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg bg-muted p-4 text-xs">{snippet || c.enterSample}</pre>
       <div className="flex flex-wrap gap-3">
         <Button disabled={!snippet} onClick={async () => { try { await navigator.clipboard.writeText(snippet); setCopied(true); setCopyError(false); } catch { setCopyError(true); } }}>{copied ? c.copied : c.copy}</Button>
-        <Button variant="outline" disabled={!snippet} onClick={() => { if (existing && snippet) setPreview({ partner: existing.slug, apartmentId: sampleApartmentId.trim() || "PREVIEW", apartmentPrice: Number(samplePrice), currency: existing.settings.currency }); }}>{c.preview}</Button>
+        <Button variant="outline" disabled={!snippet} onClick={() => { if (existing && snippet) setPreview({ partner: existing.slug, language: widgetLanguage, apartmentId: sampleApartmentId.trim() || "PREVIEW", apartmentPrice: Number(samplePrice), currency: existing.settings.currency }); }}>{c.preview}</Button>
       </div>
       {copyError && <p role="status">{c.copyManually}</p>}
       {preview && <PartnerPreview key={existing.revision} configuration={preview} />}

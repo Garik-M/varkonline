@@ -14,6 +14,7 @@ export function integrationSnippet(
   const attrs: Record<string, string | number | undefined> = {
     class: "varkonline-widget",
     "data-partner": config.partner,
+    "data-language": config.language,
     "data-apartment-id": config.apartmentId,
     [config.currency === "USD" ? "data-price-usd" : "data-price-amd"]:
       config.apartmentPrice,

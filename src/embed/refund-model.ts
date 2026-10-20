@@ -69,9 +69,7 @@ export const emptyPayroll = (): PayrollForm => ({
 });
 export function wholeAmount(raw: string): number {
   if (!/^(0|[1-9]\d*)$/.test(raw) || Number(raw) > 1e12)
-    throw new Error(
-      "Մուտքագրեք ամբողջ ոչ բացասական գումար՝ առավելագույնը 1 տրիլիոն դրամ։",
-    );
+    throw new Error("INVALID_AMOUNT");
   return Number(raw);
 }
 export function payrollParticipant(
