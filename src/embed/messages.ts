@@ -3,6 +3,31 @@ import type { WidgetLanguage } from "./sdk-messages";
 export { widgetLanguage } from "./sdk-messages";
 export type { WidgetLanguage } from "./sdk-messages";
 export const widgetMessages = {
+  monthlyBreakdown: {
+    hy: "Ձեր ամսական ծախսը՝ հետվերադարձով",
+    en: "Your monthly cost with the refund",
+    ru: "Ваши расходы в месяц с учётом возврата",
+  },
+  averageRefund: {
+    hy: "Միջին ամսական հետվերադարձ",
+    en: "Average monthly refund",
+    ru: "Средний возврат в месяц",
+  },
+  monthlyNetCost: {
+    hy: "Միջին ամսական ծախս",
+    en: "Average monthly cost",
+    ru: "Средние расходы в месяц",
+  },
+  monthlyRoundingNote: {
+    hy: "Վերջին վճարումն ու կլորացումը ազդում են միջինի վրա։",
+    en: "The final payment and rounding affect the average.",
+    ru: "Последний платёж и округление влияют на среднее значение.",
+  },
+  monthlyRefundNote: {
+    hy: "Միջին ամսական գնահատական է։ Հետվերադարձը՝ եռամսյակային, բանկի վճարը չի փոխվում։",
+    en: "Estimated monthly average. Refunds are quarterly; the bank payment stays unchanged.",
+    ru: "Среднее за месяц — оценка. Возврат поквартальный; платёж банку не меняется.",
+  },
   gross: {
     hy: "Գրանցված ամսական համախառն աշխատավարձ, ֏",
     en: "Registered gross monthly salary, ֏",

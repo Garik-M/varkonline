@@ -22,12 +22,17 @@ const selectedTax = () =>
       .querySelector("strong")
       ?.textContent?.replace(/[^\d]/g, "") ?? NaN,
   );
-function fixture(unreviewed = false, price = 35000000, durationMonths = 3) {
+function fixture(
+  unreviewed = false,
+  price = 35000000,
+  durationMonths = 3,
+  annualInterestRatePercent = 9,
+) {
   const input = {
     financingType: "mortgage",
     currency: "AMD",
     apartmentPrice: price,
-    annualInterestRatePercent: 9,
+    annualInterestRatePercent,
     downPaymentPercent: 20,
     durationMonths,
   } as const;
@@ -189,8 +194,10 @@ describe("compact multilingual widget and total refund", () => {
     unreviewed = false,
     months = 3,
     gross = "500000",
+    price = 35000000,
+    rate = 9,
   ) {
-    const { configuration } = fixture(unreviewed, 35000000, months);
+    const { configuration } = fixture(unreviewed, price, months, rate);
     render(
       <FinancingCalculator
         configuration={configuration}
@@ -222,9 +229,37 @@ describe("compact multilingual widget and total refund", () => {
     // At 50000 AMD gross, tax = 10000/month. Each quarter has sufficient interest,
     // so two full quarters return 2 * (3 * 10000), not just one quarter's 30000.
     expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(total);
+    expect(numeric(screen.getByTestId("monthly-refund").textContent)).toBe(
+      total / 6,
+    );
     expect(
       screen.getByText(translate("en", "refundPeriod", { months: 6 })),
     ).toBeVisible();
+  });
+  it("uses an approximate sign when the final installment and averaging do not equal the regular payment subtraction", () => {
+    const t = setup("en", false, 3, "500000", 1251, 12);
+    for (const key of ["employee", "owner", "identity"] as const)
+      amount(t(key), "yes");
+    amount(t("prior"), "none");
+    amount(t("tuition"), "no");
+    amount(t("allocation"), "0");
+    amount(t("settlement"), "projected");
+    for (const key of ["documentsChecked", "constantForecast"] as const)
+      fireEvent.click(screen.getByLabelText(t(key)));
+    fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
+    // 1251 - round(20%) = 1001 principal. Interest 10 + 7 + 3 = 20.
+    // Payments: 340, 340, 341. Refund/month rounds 20/3 to 7;
+    // exact net cost/month rounds 1001/3 to 334, rather than 340-7=333.
+    expect(numeric(screen.getByTestId("monthly-payment").textContent)).toBe(
+      340,
+    );
+    expect(numeric(screen.getByTestId("monthly-refund").textContent)).toBe(7);
+    expect(numeric(screen.getByTestId("monthly-net-payment").textContent)).toBe(
+      334,
+    );
+    expect(screen.getByTestId("payment-breakdown")).toHaveTextContent("≈");
+    amount(t("down"), "30");
+    expect(screen.queryByTestId("payment-breakdown")).not.toBeInTheDocument();
   });
   it.each(languages)(
     "shows the independent 300000 AMD full-term refund reference in %s",
@@ -256,6 +291,19 @@ describe("compact multilingual widget and total refund", () => {
       expect(numeric(screen.getByTestId("monthly-payment").textContent)).toBe(
         9473682,
       );
+      expect(numeric(screen.getByTestId("monthly-refund").textContent)).toBe(
+        100000,
+      );
+      expect(
+        numeric(screen.getByTestId("monthly-net-payment").textContent),
+      ).toBe(9373682);
+      expect(screen.getByTestId("payment-breakdown")).toHaveTextContent("=");
+      fireEvent.click(screen.getByRole("button", { name: t("closeRefund") }));
+      expect(screen.getByTestId("payment-breakdown")).toBeVisible();
+      fireEvent.click(screen.getByRole("button", { name: t("openRefund") }));
+      expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+        300000,
+      );
       expect(
         screen.getByText(translate(language, "refundPeriod", { months: 3 })),
       ).toBeVisible();
@@ -276,6 +324,7 @@ describe("compact multilingual widget and total refund", () => {
       ).toHaveValue("500000");
       amount("Registered gross monthly salary, ֏", "600000");
       expect(screen.queryByTestId("total-refund")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("payment-breakdown")).not.toBeInTheDocument();
     },
   );
   it.each(languages)(
@@ -285,6 +334,7 @@ describe("compact multilingual widget and total refund", () => {
       expect(screen.getByTestId("total-refund")).toHaveTextContent(
         t("unresolved"),
       );
+      expect(screen.queryByTestId("payment-breakdown")).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: t("calculateRefund") }),
       ).not.toBeInTheDocument();

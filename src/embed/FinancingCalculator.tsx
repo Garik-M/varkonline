@@ -5,6 +5,8 @@ import RefundPanel from "./RefundPanel";
 import { useWidgetText, WidgetLanguageContext } from "./language";
 import type { WidgetLanguage } from "./messages";
 import { accentForeground } from "./appearance";
+import type { MortgageRefundResult } from "@/lib/financing/income-tax-refund";
+import { roundRatio, toWholeAmount } from "@/lib/financing/arithmetic";
 
 function CalculatorBody({
   configuration,
@@ -21,6 +23,8 @@ function CalculatorBody({
   const [duration, setDuration] = useState(String(initial.durationMonths));
   const [page, setPage] = useState(0);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [refundProjection, setRefundProjection] =
+    useState<MortgageRefundResult | null>(null);
   const calculated = useMemo(() => {
     try {
       if (down === "" || duration === "") throw new Error("EMPTY");
@@ -72,9 +76,25 @@ function CalculatorBody({
   const change = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
+    setRefundProjection(null);
     notify("changed");
   };
   const result = calculated.result;
+  const refundSummary =
+    result?.currency === "AMD" &&
+    refundProjection?.totalEstimatedRefundAMD !== null &&
+    refundProjection?.totalEstimatedRefundAMD !== undefined &&
+    refundProjection.effectiveAverageMonthlyFinancingCostAMD !== null
+      ? {
+          refund: toWholeAmount(
+            roundRatio(
+              BigInt(refundProjection.totalEstimatedRefundAMD),
+              BigInt(result.durationMonths),
+            ),
+          ),
+          cost: refundProjection.effectiveAverageMonthlyFinancingCostAMD,
+        }
+      : null;
   const limits = configuration.controls.limits;
   const metric = (label: string, amount: number, testId?: string) => (
     <div>
@@ -204,16 +224,63 @@ function CalculatorBody({
         </p>
       )}
       <div className="vk-payment" aria-live="polite">
-        <span>
-          {t(
-            initial.financingType === "mortgage"
-              ? "bankPayment"
-              : "monthlyPayment",
-          )}
-        </span>
-        <strong data-testid="monthly-payment">
-          {result ? money(result.regularMonthlyPayment, initial.currency) : "—"}
-        </strong>
+        {refundSummary && result ? (
+          <>
+            <span>{t("monthlyBreakdown")}</span>
+            <div
+              className="vk-payment-equation"
+              role="group"
+              aria-label={t("monthlyBreakdown")}
+              data-testid="payment-breakdown"
+            >
+              <div>
+                <span>{t("bankPayment")}</span>
+                <strong data-testid="monthly-payment">
+                  {money(result.regularMonthlyPayment)}
+                </strong>
+              </div>
+              <span className="vk-equation-symbol" aria-hidden="true">
+                −
+              </span>
+              <div>
+                <span>{t("averageRefund")}</span>
+                <strong data-testid="monthly-refund">
+                  {money(refundSummary.refund)}
+                </strong>
+              </div>
+              <span className="vk-equation-symbol" aria-hidden="true">
+                {result.regularMonthlyPayment - refundSummary.refund ===
+                refundSummary.cost
+                  ? "="
+                  : "≈"}
+              </span>
+              <div className="vk-equation-result">
+                <span>{t("monthlyNetCost")}</span>
+                <strong data-testid="monthly-net-payment">
+                  {money(refundSummary.cost)}
+                </strong>
+              </div>
+            </div>
+            <p>{t("monthlyRefundNote")}</p>
+            {result.regularMonthlyPayment - refundSummary.refund !==
+              refundSummary.cost && <p>{t("monthlyRoundingNote")}</p>}
+          </>
+        ) : (
+          <>
+            <span>
+              {t(
+                initial.financingType === "mortgage"
+                  ? "bankPayment"
+                  : "monthlyPayment",
+              )}
+            </span>
+            <strong data-testid="monthly-payment">
+              {result
+                ? money(result.regularMonthlyPayment, initial.currency)
+                : "—"}
+            </strong>
+          </>
+        )}
         {result?.financedPrincipal === 0 && <p>{t("fullDown")}</p>}
         {initial.financingType === "mortgage" &&
           configuration.refund.enabled &&
@@ -230,12 +297,15 @@ function CalculatorBody({
       </div>
       {result && (
         <>
-          {refundOpen && (
-            <RefundPanel
-              key={`${down}-${duration}`}
-              financing={result}
-              configuration={configuration}
-            />
+          {(refundOpen || refundProjection !== null) && (
+            <div hidden={!refundOpen}>
+              <RefundPanel
+                key={`${down}-${duration}`}
+                financing={result}
+                configuration={configuration}
+                onProjectionChange={setRefundProjection}
+              />
+            </div>
           )}
           <details className="vk-schedule">
             <summary>

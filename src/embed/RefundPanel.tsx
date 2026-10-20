@@ -154,9 +154,11 @@ function EligibilityFields({ value, onChange, title }: PayrollFieldsProps) {
 export default function RefundPanel({
   financing,
   configuration,
+  onProjectionChange,
 }: {
   financing: FinancingResult;
   configuration: ResolvedWidget;
+  onProjectionChange?: (projection: MortgageRefundResult | null) => void;
 }) {
   const { t, money, language } = useWidgetText();
   const id = useId();
@@ -177,6 +179,9 @@ export default function RefundPanel({
   const [projection, setProjection] = useState<MortgageRefundResult | null>(
     null,
   );
+  useEffect(() => {
+    onProjectionChange?.(projection);
+  }, [projection, onProjectionChange]);
   const [tax, setTax] = useState<number | null>(null);
   const [error, setError] = useState<MessageKey | null>(null);
   const [page, setPage] = useState(0);
