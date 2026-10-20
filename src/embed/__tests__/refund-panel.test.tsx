@@ -252,7 +252,127 @@ describe("compact multilingual widget and total refund", () => {
     );
     expect(screen.getByTestId("payment-breakdown")).toHaveTextContent("≈");
     amount(t("down"), "30");
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(18);
+    expect(numeric(screen.getByTestId("monthly-net-payment").textContent)).toBe(
+      292,
+    );
+    expect(
+      screen.getByRole("region", { name: t("refundTitle") }),
+    ).toBeVisible();
+  });
+  it("recalculates changed terms in place without losing payroll, dates, acknowledgement or typing focus", () => {
+    const t = setup("en", true, 240);
+    fireEvent.click(screen.getByLabelText(t("includeCo")));
+    const co = within(screen.getByRole("group", { name: t("coSalary") }));
+    amount(t("gross"), "250000", co);
+    amount(t("withheld"), "0", co);
+    fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
+    fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
+    const salary = within(
+      screen.getByRole("group", { name: t("borrowerSalary"), hidden: true }),
+    ).getByLabelText(t("gross"));
+    const down = screen.getByLabelText(t("down"));
+    down.focus();
+    amount(t("down"), "30");
+    // Independent Decimal reference: 24.5m principal, 240 months, 9%, unchanged payroll.
+    expect(numeric(screen.getByTestId("monthly-payment").textContent)).toBe(
+      220433,
+    );
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+      20409941,
+    );
+    expect(numeric(screen.getByTestId("monthly-net-payment").textContent)).toBe(
+      135391,
+    );
+    expect(down).toHaveFocus();
+    const term = screen.getByLabelText(t("duration"));
+    term.focus();
+    amount(t("duration"), "");
     expect(screen.queryByTestId("payment-breakdown")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: t("refundTitle") }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: t("closeRefund") }),
+    ).toHaveAttribute("aria-expanded", "true");
+    amount(t("duration"), "0");
+    expect(screen.getByRole("alert")).toBeVisible();
+    amount(t("duration"), "180");
+    expect(term).toHaveFocus();
+    expect(term).toBe(screen.getByLabelText(t("duration")));
+    expect(numeric(screen.getByTestId("monthly-payment").textContent)).toBe(
+      248495,
+    );
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+      14899059,
+    );
+    expect(numeric(screen.getByTestId("total-net-payment").textContent)).toBe(
+      29830153,
+    );
+    expect(numeric(screen.getByTestId("monthly-net-payment").textContent)).toBe(
+      165723,
+    );
+    expect(
+      screen.getByRole("button", { name: t("calculateRefund"), hidden: true }),
+    ).not.toBeVisible();
+    fireEvent.click(screen.getByText(t("editRefund")));
+    expect(salary).toBeInTheDocument();
+    expect(salary).toHaveValue("500000");
+    expect(co.getByLabelText(t("gross"))).toHaveValue("250000");
+    expect(co.getByLabelText(t("withheld"))).toHaveValue("0");
+    expect(screen.getByLabelText(t("includeCo"))).toBeChecked();
+    expect(
+      screen.getByLabelText(t("financialScenarioAssumptions")),
+    ).toBeChecked();
+    expect(screen.getByLabelText(t("loanDate"))).toHaveValue("2026-01-01");
+    expect(screen.getByLabelText(t("firstPayment"))).toHaveValue("2026-01-31");
+  });
+  it("keeps a manually closed refund section closed while recalculating a selected term", () => {
+    const { configuration } = fixture(true);
+    configuration.controls.limits.supportedDurations = [3, 6];
+    render(
+      <FinancingCalculator
+        configuration={configuration}
+        initialLanguage="en"
+        notify={() => {}}
+      />,
+    );
+    const t = (key: keyof typeof widgetMessages) => translate("en", key);
+    fireEvent.click(screen.getByRole("button", { name: t("openRefund") }));
+    amount(t("loanDate"), "2026-01-01");
+    amount(t("firstPayment"), "2026-01-31");
+    amount(t("gross"), "50000");
+    fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
+    fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
+    fireEvent.click(screen.getByRole("button", { name: t("closeRefund") }));
+    amount(t("duration"), "6");
+    expect(
+      screen.getByRole("button", { name: t("openRefund") }),
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(numeric(screen.getByTestId("monthly-refund").textContent)).toBe(
+      10000,
+    );
+    fireEvent.click(screen.getByRole("button", { name: t("openRefund") }));
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(60000);
+    expect(screen.getByLabelText(t("gross"))).toHaveValue("50000");
+  });
+  it("handles 100% down payment and restores the existing refund when principal returns", () => {
+    const t = setup("en");
+    fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
+    fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
+    amount(t("down"), "100");
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(0);
+    expect(numeric(screen.getByTestId("total-bank-payment").textContent)).toBe(
+      0,
+    );
+    expect(
+      screen.getByRole("button", { name: t("closeRefund") }),
+    ).toBeVisible();
+    amount(t("down"), "20");
+    expect(numeric(screen.getByTestId("total-refund").textContent)).toBe(
+      300000,
+    );
+    expect(screen.getByLabelText(t("gross"))).toHaveValue("500000");
   });
   it.each(languages)(
     "shows the independent 300000 AMD full-term refund reference in %s",

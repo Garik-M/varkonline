@@ -63,18 +63,20 @@ export function payrollParticipant(
   return {
     id: role,
     role,
-    incomePeriods: [
-      {
-        ...quarterIncomeRange(dates),
-        grossRegisteredSalaryAMD: wholeAmount(form.gross),
-        ...(form.withheld === ""
-          ? {}
-          : { actualIncomeTaxWithheldAMD: wholeAmount(form.withheld) }),
-        tuitionRefundClaimed: false,
-        taxAlreadyAllocatedAMD: 0,
-        taxPaymentStatus: "projected",
-      },
-    ],
+    incomePeriods: dates.length
+      ? [
+          {
+            ...quarterIncomeRange(dates),
+            grossRegisteredSalaryAMD: wholeAmount(form.gross),
+            ...(form.withheld === ""
+              ? {}
+              : { actualIncomeTaxWithheldAMD: wholeAmount(form.withheld) }),
+            tuitionRefundClaimed: false,
+            taxAlreadyAllocatedAMD: 0,
+            taxPaymentStatus: "projected",
+          },
+        ]
+      : [],
   };
 }
 export function refundProjection(

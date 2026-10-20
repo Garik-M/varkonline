@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   FinancingCalculationError,
   type FinancingResult,
@@ -64,14 +64,34 @@ function SalaryFields({ value, onChange, title }: PayrollFieldsProps) {
   );
 }
 
+function messageForError(cause: unknown): MessageKey {
+  return cause instanceof FinancingCalculationError
+    ? "financialError"
+    : cause instanceof Error &&
+        ["historicalTaxError", "propertyError", "assumptionsError"].includes(
+          cause.message,
+        )
+      ? (cause.message as MessageKey)
+      : cause instanceof Error && cause.message === "INVALID_AMOUNT"
+        ? "amountError"
+        : cause instanceof Error && cause.message === "INVALID_DATE"
+          ? "dateError"
+          : "inputError";
+}
+
 export default function RefundPanel({
   financing,
   configuration,
   onProjectionChange,
+  onCalculate,
 }: {
-  financing: FinancingResult;
+  financing: FinancingResult | null;
   configuration: ResolvedWidget;
-  onProjectionChange?: (projection: MortgageRefundResult | null) => void;
+  onProjectionChange?: (
+    projection: MortgageRefundResult | null,
+    financing: FinancingResult | null,
+  ) => void;
+  onCalculate?: () => void;
 }) {
   const { t, money, language } = useWidgetText();
   const [borrower, setBorrower] = useState(emptyPayroll);
@@ -84,80 +104,85 @@ export default function RefundPanel({
     configuration.refund.loanOriginationDate?.value ?? "",
   );
   const [constant, setConstant] = useState(false);
-  const [projection, setProjection] = useState<MortgageRefundResult | null>(
-    null,
-  );
-  useEffect(() => {
-    onProjectionChange?.(projection);
-  }, [projection, onProjectionChange]);
-  const [tax, setTax] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState<{
+    borrower: PayrollForm;
+    co: PayrollForm;
+    includeCo: boolean;
+    first: string;
+    loan: string;
+  } | null>(null);
   const [error, setError] = useState<MessageKey | null>(null);
   const [page, setPage] = useState(0);
+  useEffect(() => {
+    setPage(0);
+  }, [financing]);
   const invalidate = () => {
-    setProjection(null);
+    setSubmitted(null);
     setError(null);
   };
   const change = (value: PayrollForm, secondary = false) => {
-    const previous = secondary ? co : borrower;
     (secondary ? setCo : setBorrower)(value);
-    if (value.gross !== previous.gross || value.withheld !== previous.withheld)
-      setTax(null);
     invalidate();
   };
-  function showError(cause: unknown) {
-    setError(
-      cause instanceof FinancingCalculationError
-        ? "financialError"
-        : cause instanceof Error &&
-            [
-              "historicalTaxError",
-              "propertyError",
-              "assumptionsError",
-            ].includes(cause.message)
-          ? (cause.message as MessageKey)
-          : cause instanceof Error && cause.message === "INVALID_AMOUNT"
-            ? "amountError"
-            : cause instanceof Error && cause.message === "INVALID_DATE"
-              ? "dateError"
-              : "inputError",
-    );
-  }
-  function selectedSalaryTax() {
-    const month = first.slice(0, 7);
-    const primary = salaryEstimate(borrower, month).selectedIncomeTaxAMD;
-    const secondary = includeCo
-      ? salaryEstimate(co, month).selectedIncomeTaxAMD
-      : 0;
-    if (primary === null || secondary === null)
-      throw new Error("historicalTaxError");
-    return primary + secondary;
-  }
-  function calculate(event: React.FormEvent) {
-    event.preventDefault();
-    invalidate();
+  const outcome = useMemo(() => {
+    if (!submitted || !financing)
+      return { projection: null, tax: null, error: null };
     try {
-      if (!constant) throw new Error("assumptionsError");
+      const { borrower, co, includeCo, first, loan } = submitted;
       const dates = paymentDates(first, financing.schedule.length);
-      const payroll = [
+      const primary = salaryEstimate(
+        borrower,
+        first.slice(0, 7),
+      ).selectedIncomeTaxAMD;
+      const secondary = includeCo
+        ? salaryEstimate(co, first.slice(0, 7)).selectedIncomeTaxAMD
+        : 0;
+      if (primary === null || secondary === null)
+        throw new Error("historicalTaxError");
+      const participants = [
         payrollParticipant(borrower, dates, "borrower"),
         ...(includeCo ? [payrollParticipant(co, dates, "co_borrower")] : []),
       ];
-      setTax(selectedSalaryTax());
-      setProjection(refundProjection(financing, first, loan, payroll));
-      setPage(0);
+      return {
+        projection: refundProjection(financing, first, loan, participants),
+        tax: primary + secondary,
+        error: null,
+      };
     } catch (cause) {
-      showError(cause);
+      return { projection: null, tax: null, error: messageForError(cause) };
     }
+  }, [submitted, financing]);
+  const { projection, tax } = outcome;
+  const visibleError = error ?? outcome.error;
+  useEffect(() => {
+    onProjectionChange?.(projection, financing);
+  }, [projection, financing, onProjectionChange]);
+  function calculate(event: React.FormEvent) {
+    event.preventDefault();
+    if (!constant) {
+      setError("assumptionsError");
+      return;
+    }
+    if (!financing) return;
+    setError(null);
+    setPage(0);
+    onCalculate?.();
+    setSubmitted({ borrower, co, includeCo, first, loan });
   }
   return (
     <section className="vk-refund" aria-label={t("refundTitle")}>
       <h2>{t("refundTitle")}</h2>
       <p className="vk-muted">{t("privacy")}</p>
-      {financing.currency === "USD" && (
+      {financing?.currency === "USD" && (
         <p className="vk-warning">{t("usdWarning")}</p>
       )}
-      <details className="vk-refund-form" open={!projection}>
-        <summary hidden={!projection}>{t("editRefund")}</summary>
+      <details
+        className="vk-refund-form"
+        open={!submitted || outcome.error !== null}
+      >
+        <summary hidden={!submitted || outcome.error !== null}>
+          {t("editRefund")}
+        </summary>
         <form onSubmit={calculate} onChange={invalidate}>
           <div className="vk-refund-step" data-testid="refund-step-income">
             <div className="vk-grid">
@@ -170,7 +195,6 @@ export default function RefundPanel({
                   value={first}
                   onChange={(event) => {
                     setFirst(event.target.value);
-                    setTax(null);
                   }}
                 />
                 <small>{t("firstPaymentHelp")}</small>
@@ -198,7 +222,6 @@ export default function RefundPanel({
                 checked={includeCo}
                 onChange={(event) => {
                   setIncludeCo(event.target.checked);
-                  setTax(null);
                 }}
               />
               {t("includeCo")}
@@ -219,16 +242,16 @@ export default function RefundPanel({
               />
               {t("financialScenarioAssumptions")}
             </label>
-            <button className="vk-button" type="submit">
+            <button className="vk-button" type="submit" disabled={!financing}>
               {t("calculateRefund")}
             </button>
           </div>
         </form>
       </details>
-      {error && (
+      {visibleError && (
         <p className="vk-warning" role="alert">
           {t("inputErrorPrefix")}
-          {t(error)}
+          {t(visibleError)}
         </p>
       )}
       {tax !== null && (
@@ -237,7 +260,7 @@ export default function RefundPanel({
           <strong>{money(tax)}</strong>
         </p>
       )}
-      {projection && (
+      {projection && financing && (
         <div
           className={`vk-refund-result${projection.eligibility.status === "requires_verification" ? " vk-refund-result--unresolved" : ""}`}
           aria-live="polite"
@@ -341,7 +364,7 @@ export default function RefundPanel({
         {projection?.eligibility.status === "requires_verification" && (
           <p>{t("projectionUnresolved")}</p>
         )}
-        {projection && (
+        {projection && financing && (
           <ul>
             {refundMessages(projection.eligibility.reasons, language).map(
               (text) => (

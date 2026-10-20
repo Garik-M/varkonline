@@ -137,6 +137,8 @@ The caller explicitly chooses the pure `calculateMortgageRefundScenario` API. It
 
 The basic UI projects constant monthly income and answers throughout complete calendar quarters using the explicit `AM-160-1321N-2026-10-17` rules snapshot. It assumes fully paid salary tax, no tuition/other tax allocations and no interest subsidy. Variable payroll histories, subsidized/irregular contracts and bank-certified USD-to-AMD schedules require a richer model. Future law, income and eligibility changes are not predicted.
 
+After the first refund calculation, changes to the down payment or financing term automatically recalculate the illustration in place. Salary, optional co-borrower values, dates, acknowledgement and the open/closed state of the refund section are preserved. Empty or invalid intermediate values suspend the displayed estimate until corrected; they do not reset the form or steal typing focus. Changing the apartment still resets private refund inputs.
+
 The full bank repayment is visible before opening the refund form. After calculation, original monthly and full-term amounts are crossed out alongside estimated costs after refund. The full-term deduction uses the exact total quarterly refund, never a rounded monthly average multiplied by duration. These are cost comparisons: actual bank payments remain unchanged. Quarterly refunds are separate transfers. Costs shown with bank repayments exclude the down payment.
 
 ## Partner meeting and working demo

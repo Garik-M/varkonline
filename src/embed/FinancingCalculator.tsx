@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { calculateFinancing } from "@/lib/financing";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { calculateFinancing, type FinancingResult } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
 import RefundPanel from "./RefundPanel";
 import { useWidgetText, WidgetLanguageContext } from "./language";
@@ -23,16 +23,36 @@ function CalculatorBody({
   const [duration, setDuration] = useState(String(initial.durationMonths));
   const [page, setPage] = useState(0);
   const [refundOpen, setRefundOpen] = useState(false);
-  const [refundProjection, setRefundProjection] =
-    useState<MortgageRefundResult | null>(null);
+  const [refundMounted, setRefundMounted] = useState(false);
+  const [refundState, setRefundState] = useState<{
+    financing: FinancingResult;
+    projection: MortgageRefundResult;
+  } | null>(null);
+  const focusRequested = useRef(false);
+  const requestRefundFocus = useCallback(() => {
+    focusRequested.current = true;
+  }, []);
+  const publishRefund = useCallback(
+    (
+      projection: MortgageRefundResult | null,
+      financing: FinancingResult | null,
+    ) => {
+      setRefundState(
+        projection && financing ? { financing, projection } : null,
+      );
+    },
+    [],
+  );
   const paymentPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!refundState || !focusRequested.current) return;
+    focusRequested.current = false;
     if (
-      refundProjection?.financingCurrency === "AMD" &&
-      refundProjection.totalEstimatedRefundAMD !== null
+      refundState.projection.financingCurrency === "AMD" &&
+      refundState.projection.totalEstimatedRefundAMD !== null
     )
       paymentPanel.current?.focus();
-  }, [refundProjection]);
+  }, [refundState]);
   const calculated = useMemo(() => {
     try {
       if (down === "" || duration === "") throw new Error("EMPTY");
@@ -84,10 +104,11 @@ function CalculatorBody({
   const change = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
-    setRefundProjection(null);
     notify("changed");
   };
   const result = calculated.result;
+  const refundProjection =
+    refundState?.financing === result ? refundState?.projection : null;
   const refundSummary =
     result?.currency === "AMD" &&
     refundProjection?.totalEstimatedRefundAMD !== null &&
@@ -344,29 +365,32 @@ function CalculatorBody({
         {result?.financedPrincipal === 0 && <p>{t("fullDown")}</p>}
         {initial.financingType === "mortgage" &&
           configuration.refund.enabled &&
-          !!result?.schedule.length && (
+          (!!result?.schedule.length || refundMounted) && (
             <button
               className="vk-refund-toggle"
               aria-expanded={refundOpen}
-              onClick={() => setRefundOpen(!refundOpen)}
+              onClick={() => {
+                setRefundMounted(true);
+                setRefundOpen(!refundOpen);
+              }}
             >
               {t(refundOpen ? "closeRefund" : "openRefund")}
               <span aria-hidden="true">{refundOpen ? "−" : "+"}</span>
             </button>
           )}
       </div>
+      {refundMounted && (
+        <div hidden={!refundOpen}>
+          <RefundPanel
+            financing={result}
+            configuration={configuration}
+            onProjectionChange={publishRefund}
+            onCalculate={requestRefundFocus}
+          />
+        </div>
+      )}
       {result && (
         <>
-          {(refundOpen || refundProjection !== null) && (
-            <div hidden={!refundOpen}>
-              <RefundPanel
-                key={`${down}-${duration}`}
-                financing={result}
-                configuration={configuration}
-                onProjectionChange={setRefundProjection}
-              />
-            </div>
-          )}
           <details className="vk-schedule">
             <summary>
               {t("schedule")}{" "}
