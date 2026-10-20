@@ -2,7 +2,7 @@ import type { FinancingCurrency } from "../input";
 import type { EvidenceMode, EligibilityStatus, IncomePeriod, RefundRuleSet } from "./input";
 
 export type RefundReasonCode =
-  | "CONDITIONS_VERIFIED" | "CONDITIONS_DECLARED" | "NOT_A_MORTGAGE" | "NO_FINANCED_PRINCIPAL"
+  | "ELIGIBILITY_NOT_ASSESSED" | "CONDITIONS_VERIFIED" | "CONDITIONS_DECLARED" | "NOT_A_MORTGAGE" | "NO_FINANCED_PRINCIPAL"
   | "FACT_REQUIRES_VERIFICATION" | "NON_RESIDENT_FINANCIAL_LENDER" | "NOT_USED_FOR_HOUSING"
   | "ACQUISITION_NOT_ELIGIBLE" | "SPECIAL_ACQUISITION_REVIEW" | "LEGACY_LOAN_REVIEW"
   | "CONTRACT_PRICE_EXCEEDS_LIMIT" | "CONTRACT_PRICE_MISMATCH" | "OUTSIDE_ARMENIA"
@@ -70,6 +70,7 @@ export interface QuarterlyRefundResult {
 
 export interface MortgageRefundResult {
   readonly isEstimate: true;
+  readonly calculationBasis: "eligibility_evaluation" | "financial_scenario";
   readonly evidenceMode: EvidenceMode;
   readonly refundCurrency: "AMD";
   readonly financingCurrency: FinancingCurrency;

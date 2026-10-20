@@ -2,11 +2,13 @@
 
 ## Current workflow - 20 October 2026
 
-The normal integration workflow requires company approval, website access, calculator settings/appearance and SDK delivery. The staff **Refund review** tab, development/apartment record counts, document-reference editor and visitor documentary self-checks have been removed. Existing saved configuration remains compatible; there are no migrations or production record deletions for this cleanup.
+The integration workflow requires company approval, website access, calculator settings/appearance and SDK delivery. Staff document review, development/apartment record counts and visitor eligibility questionnaires have been removed from normal calculator use. Existing stored configuration remains compatible and no migrations are needed.
 
-Refunds use an explicit conditional scenario from visitor declarations and accepted assumptions. Missing inputs remain unresolved. Known exclusions, geographic rules, quarterly caps and exact Phase 1 arithmetic remain in force. The pure engine defaults to verified evidence; only consumers explicitly choosing `evidenceMode: "declared"` can evaluate unverified scenario inputs. Results expose the evidence mode and never upgrade input verification flags. The UI says **Conditional refund estimate** in Armenian, English and Russian and retains the bank-payment-minus-refund breakdown. Salary and personal answers stay inside the iframe.
+The refund UI now uses a single financial form: salary, loan date, first payment date, optional actual withheld tax and optional co-borrower salary, plus an explicit illustration acknowledgement. The pure `calculateMortgageRefundScenario` entry point shares the original financial arithmetic but does not assess legal eligibility or invent positive legal facts. Its result exposes `calculationBasis: "financial_scenario"` and `eligibility.status: "not_assessed"`. The existing entitlement API remains strict. Whole-unit totals, quarterly shared caps and bank-payment-minus-refund comparisons are preserved. Salary stays in iframe memory.
 
-See the current [integration guide](../public/docs/financing-integration.md) and [refund engine API](../src/lib/financing/income-tax-refund/README.md). The dated sections below describe earlier releases and are historical where they differ from this workflow.
+The dedicated `/examples/financing-demo.html` page uses the real SDK with Varkonline's own clearly labelled demo integration. Its 20-year salary/refund example is independently calculated with Python Decimal. The explicit `backend/scripts/ensure-financing-demo.ts --create --allow-production` command inserts only `varkonline-demo`; it never edits an existing company or runs automatically at startup. It refuses to overwrite conflicting existing settings. The local runner sets up the same demo in its disposable database and exercises its actual browser flow.
+
+See the [working demo](https://www.varkonline.am/examples/financing-demo.html), [integration and meeting guide](../public/docs/financing-integration.md), and [refund engine API](../src/lib/financing/income-tax-refund/README.md). The dated sections below describe earlier releases and are historical where they differ from this workflow.
 
 ## Original implementation record
 

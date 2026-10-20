@@ -1,5 +1,11 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import RefundPanel from "../RefundPanel";
 import { calculateFinancing } from "@/lib/financing";
 import { sample } from "@/lib/financing/income-tax-refund/__tests__/fixtures";
@@ -8,7 +14,6 @@ import FinancingCalculator from "../FinancingCalculator";
 import { translate, widgetMessages, type WidgetLanguage } from "../messages";
 
 afterEach(cleanup);
-const nextLabel = "Շարունակել՝ ստուգել պայմանները";
 const selectedTax = () =>
   Number(
     screen
@@ -71,45 +76,49 @@ function fixture(
   };
   return { financing, configuration };
 }
-function amount(label: string | RegExp, value: string, root = screen) {
+function amount(
+  label: string | RegExp,
+  value: string,
+  root: Pick<typeof screen, "getByLabelText"> = screen,
+) {
   fireEvent.change(root.getByLabelText(label), { target: { value } });
 }
-function firstStep(gross = "500000", date = "2026-01-31") {
-  amount("Առաջին ամսական վճարման ամսաթիվ", date);
-  amount("Գրանցված ամսական համախառն աշխատավարձ, ֏", gross);
-}
 const hy = (key: keyof typeof widgetMessages) => translate("hy", key);
-function conditions(completeProperty = true) {
-  amount(hy("loanDate"), "2026-01-01");
-  if (completeProperty) {
-    amount(hy("purchaseSource"), "developer_apartment");
-    amount(hy("propertyRegion"), "kotayk");
-  }
-  for (const key of ["employee", "owner"] as const) amount(hy(key), "yes");
-  amount(hy("prior"), "none");
-  amount(hy("tuition"), "no");
-  amount(hy("allocation"), "0");
-  amount(hy("settlement"), "projected");
-  for (const key of ["noSubsidy", "scenarioAssumptions"] as const) {
-    const checkbox = screen.getByLabelText(hy(key)) as HTMLInputElement;
-    if (!checkbox.checked) fireEvent.click(checkbox);
-  }
+function fillIncome(
+  gross = "500000",
+  date = "2026-01-31",
+  loan = "2026-01-01",
+) {
+  amount(hy("firstPayment"), date);
+  amount(hy("loanDate"), loan);
+  amount(hy("gross"), gross);
 }
-describe("self-service conditional refund", () => {
-  it("estimates without any staff property or development records", () => {
+function estimate() {
+  fireEvent.click(screen.getByLabelText(hy("financialScenarioAssumptions")));
+  fireEvent.click(screen.getByRole("button", { name: hy("calculateRefund") }));
+}
+describe("salary-only financial refund scenario", () => {
+  it("calculates without property or borrower questionnaires and never verifies entitlement", () => {
     const value = fixture(true);
     const original = JSON.stringify(value.configuration);
-    render(<RefundPanel {...value} />);
-    firstStep();
-    expect(
-      screen.queryByLabelText(hy("propertyRegion")),
-    ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
+    const changed = vi.fn();
+    render(<RefundPanel {...value} onProjectionChange={changed} />);
+    for (const key of [
+      "propertyRegion",
+      "purchaseSource",
+      "employee",
+      "owner",
+      "prior",
+      "tuition",
+      "allocation",
+      "settlement",
+      "identity",
+      "documentsChecked",
+    ] as const)
+      expect(screen.queryByLabelText(hy(key))).not.toBeInTheDocument();
+    fillIncome();
+    estimate();
     expect(selectedTax()).toBe(100000);
-    conditions();
-    fireEvent.click(
-      screen.getByRole("button", { name: hy("calculateRefund") }),
-    );
     expect(
       Number(
         screen.getByTestId("total-refund").textContent?.replace(/[^\d]/g, ""),
@@ -118,67 +127,47 @@ describe("self-service conditional refund", () => {
     expect(
       screen.getByRole("heading", { name: hy("conditionalEstimate") }),
     ).toBeVisible();
-    fireEvent.click(screen.getByText(hy("refundDetails")));
-    expect(screen.getByText(hy("conditionalNotice"))).toBeVisible();
-    expect(screen.queryByLabelText(hy("identity"))).not.toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(hy("documentsChecked")),
-    ).not.toBeInTheDocument();
+    expect(changed.mock.lastCall?.[0]).toMatchObject({
+      calculationBasis: "financial_scenario",
+      eligibility: { status: "not_assessed" },
+    });
     expect(JSON.stringify(value.configuration)).toBe(original);
   });
-  it("keeps missing property facts unresolved instead of inventing eligibility", () => {
+  it("requires an explicit acknowledgement, then preserves salary when editing", () => {
     render(<RefundPanel {...fixture(true)} />);
-    firstStep();
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
-    conditions(false);
-    fireEvent.click(
-      screen.getByRole("button", { name: hy("calculateRefund") }),
-    );
-    expect(screen.getByTestId("total-refund")).toHaveTextContent(
-      hy("unresolved"),
-    );
-  });
-  it("rejects a known excluded purchase and allows correcting the answer", () => {
-    render(<RefundPanel {...fixture(true)} />);
-    firstStep();
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
-    conditions();
-    amount(hy("purchaseSource"), "secondary_market");
-    fireEvent.click(
-      screen.getByRole("button", { name: hy("calculateRefund") }),
-    );
-    expect(screen.getByTestId("total-refund")).toHaveTextContent("0");
-    fireEvent.click(screen.getByText(hy("editRefund")));
-    amount(hy("purchaseSource"), "developer_apartment");
-    fireEvent.click(
-      screen.getByRole("button", { name: hy("calculateRefund") }),
-    );
-    expect(
-      Number(
-        screen.getByTestId("total-refund").textContent?.replace(/[^\d]/g, ""),
-      ),
-    ).toBe(300000);
-  });
-  it("requires explicit assumptions before calculating and retains salary on back navigation", () => {
-    render(<RefundPanel {...fixture(true)} />);
-    firstStep();
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
-    amount(hy("loanDate"), "2026-01-01");
+    fillIncome();
     fireEvent.click(
       screen.getByRole("button", { name: hy("calculateRefund") }),
     );
     expect(screen.getByRole("alert")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: hy("back") }));
+    estimate();
+    fireEvent.click(screen.getByText(hy("editRefund")));
     expect(screen.getByLabelText(hy("gross"))).toHaveValue("500000");
+    amount(hy("gross"), "600000");
+    expect(screen.queryByTestId("total-refund")).not.toBeInTheDocument();
   });
-  it("preserves actual zero withholding and validates unsupported historical tax", () => {
+  it("preserves zero actual tax and unsupported historical salary rules", () => {
     render(<RefundPanel {...fixture(true)} />);
-    firstStep("500000", "2019-01-31");
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
+    fillIncome("500000", "2019-01-31", "2019-01-01");
+    estimate();
     expect(screen.getByRole("alert")).toBeVisible();
     amount(hy("withheld"), "0");
-    fireEvent.click(screen.getByRole("button", { name: nextLabel }));
+    fireEvent.click(
+      screen.getByRole("button", { name: hy("calculateRefund") }),
+    );
     expect(selectedTax()).toBe(0);
+    expect(screen.getByTestId("total-refund")).toHaveTextContent("0");
+  });
+  it("supports a distinct co-borrower without duplicating their tax", () => {
+    render(<RefundPanel {...fixture(true)} />);
+    fillIncome();
+    fireEvent.click(screen.getByLabelText(hy("includeCo")));
+    const other = within(screen.getByRole("group", { name: hy("coSalary") }));
+    amount(hy("gross"), "250000", other);
+    amount(hy("withheld"), "0", other);
+    estimate();
+    expect(selectedTax()).toBe(100000);
+    expect(screen.getByTestId("total-refund")).toHaveTextContent("300");
   });
 });
 
@@ -220,7 +209,7 @@ describe("compact multilingual widget and total refund", () => {
     fireEvent.click(screen.getByRole("button", { name: t("openRefund") }));
     amount(t("firstPayment"), "2026-01-31");
     amount(t("gross"), gross);
-    fireEvent.click(screen.getByRole("button", { name: t("continue") }));
+    amount(t("loanDate"), "2026-01-01");
     return t;
   }
   it.each([
@@ -228,13 +217,7 @@ describe("compact multilingual widget and total refund", () => {
     ["0", 0],
   ] as const)("shows a full six-month total for salary %s", (gross, total) => {
     const t = setup("en", false, 6, gross);
-    for (const key of ["employee", "owner"] as const) amount(t(key), "yes");
-    amount(t("prior"), "none");
-    amount(t("tuition"), "no");
-    amount(t("allocation"), "0");
-    amount(t("settlement"), "projected");
-    for (const key of ["scenarioAssumptions"] as const)
-      fireEvent.click(screen.getByLabelText(t(key)));
+    fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
     fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
     // At 50000 AMD gross, tax = 10000/month. Each quarter has sufficient interest,
     // so two full quarters return 2 * (3 * 10000), not just one quarter's 30000.
@@ -248,13 +231,7 @@ describe("compact multilingual widget and total refund", () => {
   });
   it("uses an approximate sign when the final installment and averaging do not equal the regular payment subtraction", () => {
     const t = setup("en", false, 3, "500000", 1251, 12);
-    for (const key of ["employee", "owner"] as const) amount(t(key), "yes");
-    amount(t("prior"), "none");
-    amount(t("tuition"), "no");
-    amount(t("allocation"), "0");
-    amount(t("settlement"), "projected");
-    for (const key of ["scenarioAssumptions"] as const)
-      fireEvent.click(screen.getByLabelText(t(key)));
+    fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
     fireEvent.click(screen.getByRole("button", { name: t("calculateRefund") }));
     // 1251 - round(20%) = 1001 principal. Interest 10 + 7 + 3 = 20.
     // Payments: 340, 340, 341. Refund/month rounds 20/3 to 7;
@@ -281,15 +258,7 @@ describe("compact multilingual widget and total refund", () => {
     "shows the independent 300000 AMD full-term refund reference in %s",
     (language) => {
       const t = setup(language);
-      for (const key of ["employee", "owner"] as const) amount(t(key), "yes");
-      amount(t("prior"), "none");
-      amount(t("tuition"), "no");
-      amount(t("allocation"), "0");
-      amount(t("settlement"), "projected");
-      for (const key of ["noSubsidy", "scenarioAssumptions"] as const) {
-        const checkbox = screen.getByLabelText(t(key)) as HTMLInputElement;
-        if (!checkbox.checked) fireEvent.click(checkbox);
-      }
+      fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
       fireEvent.click(
         screen.getByRole("button", { name: t("calculateRefund") }),
       );
@@ -345,7 +314,6 @@ describe("compact multilingual widget and total refund", () => {
         300000,
       );
       fireEvent.click(screen.getByText("Edit salary or conditions"));
-      fireEvent.click(screen.getByRole("button", { name: "Previous step" }));
       expect(
         screen.getByLabelText("Registered gross monthly salary, ֏"),
       ).toHaveValue("500000");
@@ -357,16 +325,18 @@ describe("compact multilingual widget and total refund", () => {
     },
   );
   it.each(languages)(
-    "keeps unreviewed totals unresolved and localizes validation in %s",
+    "requires financial inputs without legal questions in %s",
     (language) => {
       const t = setup(language, true);
       expect(screen.queryByTestId("payment-breakdown")).not.toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: t("calculateRefund") }),
       ).toBeVisible();
-      fireEvent.click(screen.getByRole("button", { name: t("back") }));
       amount(t("gross"), "-1");
-      fireEvent.click(screen.getByRole("button", { name: t("continue") }));
+      fireEvent.click(screen.getByLabelText(t("financialScenarioAssumptions")));
+      fireEvent.click(
+        screen.getByRole("button", { name: t("calculateRefund") }),
+      );
       expect(screen.getByRole("alert")).toHaveTextContent(t("amountError"));
     },
   );

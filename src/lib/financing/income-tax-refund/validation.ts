@@ -1,6 +1,6 @@
 import { validateFinancingInput, FINANCING_LIMITS } from "../validation";
 import { isDate, isMonth, invalid, monthIndex } from "./calendar";
-import type { MortgageEligibilityContext, MortgageRefundInput, RefundRuleSet, SalaryIncomeTaxInput } from "./input";
+import type { MortgageEligibilityContext, MortgageRefundInput, MortgageRefundScenarioInput, RefundRuleSet, SalaryIncomeTaxInput } from "./input";
 
 const MAX_AMOUNT = FINANCING_LIMITS.maxApartmentPrice;
 const regions = ["aragatsotn", "ararat", "armavir", "kotayk", "shirak", "lori", "tavush", "gegharkunik", "syunik", "vayots_dzor"];
@@ -256,4 +256,21 @@ export function validateMortgageRefundInput(input: unknown): asserts input is Mo
       if ((selected === 0 && amounts.interest !== 0) || (payment.subsidizedInterest === 0 && amounts.subsidizedInterest !== 0)) invalid("AMD equivalents contradict zero interest/subsidy amounts.", `${path}.amountsAMD`);
     }
   }
+}
+
+/** Reuse full financial validation with absent legal evidence, never invented positive facts. */
+export function validateRefundScenario(input: MortgageRefundScenarioInput): MortgageRefundInput {
+  const data = shape(input, "scenario", ["financing", "loanOriginationDate", "participants", "payments"]);
+  array(data.participants, "participants", 20);
+  const participants = data.participants.map((value, index) => {
+    const person = shape(value, `participants.${index}`, ["id", "role", "incomePeriods"]);
+    return { ...person, eligibility: { employee: null, ownerOrCoOwner: null,
+      requiredIdentityOrResidenceDocument: null, priorBenefitUse: null } };
+  });
+  const normalized = { ...data, evidenceMode: "declared", originationDateVerified: false,
+    eligibility: { residentFinancialLender: null, fundsUsedForHousing: null, acquisitionType: null,
+      contractPriceAMD: null, location: null, permitDecisionDate: null, propertyRightsRegistered: null,
+      requiredDocumentsAvailable: null, validSelfBuildPermit: null }, participants };
+  validateMortgageRefundInput(normalized);
+  return normalized;
 }

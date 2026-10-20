@@ -3,6 +3,16 @@ import type { WidgetLanguage } from "./sdk-messages";
 export { widgetLanguage } from "./sdk-messages";
 export type { WidgetLanguage } from "./sdk-messages";
 export const widgetMessages = {
+  financialScenarioNotice: {
+    hy: "Գնահատական՝ հետվերադարձի իրավունք ունենալու դեպքում։ Իրավունքը չի ստուգվում։ Բանկի վճարումները չեն փոխվում։",
+    en: "Illustration if eligible for a refund. Eligibility is not checked. Bank payments stay unchanged.",
+    ru: "Иллюстрация при наличии права на возврат. Право не проверяется. Платежи банку не меняются.",
+  },
+  financialScenarioAssumptions: {
+    hy: "Հաշվել՝ ենթադրելով հետվերադարձի իրավունք, կայուն գրանցված աշխատավարձ, ամբողջությամբ վճարված եկամտային հարկ, առանց տոկոսների սուբսիդավորման և այլ հարկային հետվերադարձների։",
+    en: "Calculate assuming refund eligibility, constant registered salary, fully paid income tax, no interest subsidy and no other tax-refund claims.",
+    ru: "Рассчитать при условии права на возврат, постоянной официальной зарплаты, полностью уплаченного налога, без субсидии процентов и других заявлений на возврат налога.",
+  },
   totalWithRefund: {
     hy: "Ամբողջ ժամկետի ծախսը՝ հետվերադարձով",
     en: "Full-term cost with the refund",

@@ -10,7 +10,15 @@ deployments. Salary inputs are not persisted or logged.
 
 Existing callers default to `evidenceMode: "verified"`: missing or unverified evidence remains unresolved. For an explicitly conditional estimate, pass `evidenceMode: "declared"` to either the full calculation or standalone eligibility evaluator. That mode uses supplied unverified values and the supplied actual/planned loan date as scenario inputs; it never changes `verified` flags, fills missing facts or overrides exclusions. Null remains unknown in both modes. Inputs still pass the same strict validation.
 
-Results include `evidenceMode`; a successful declared scenario uses `CONDITIONS_DECLARED` rather than `CONDITIONS_VERIFIED`. Its `eligible` status means that the declared scenario satisfies the selected rule snapshot, not that actual entitlement has been established. Consumers must label it conditional and retain its assumptions. The hosted widget uses declared mode; it does not require a staff document registry. Pure-engine callers can continue using the default strict mode.
+Results include `evidenceMode`; a successful declared scenario uses `CONDITIONS_DECLARED` rather than `CONDITIONS_VERIFIED`. Its `eligible` status means that the declared scenario satisfies the selected rule snapshot, not that actual entitlement has been established. Consumers must label it conditional and retain its assumptions. The hosted widget now uses the separate financial-scenario API below; declared mode remains available for consumers supplying unverified legal facts. Pure-engine callers can continue using the default strict mode.
+
+## Financial illustration API
+
+`calculateMortgageRefundScenario(input, rules)` accepts Phase 1 financing, an explicit loan date, dated payments and participants with income periods, without legal eligibility fields. It reuses the same financial validation, salary-tax calculations, calendar-quarter grouping and shared caps. It never creates positive employment, ownership, acquisition, location or identity facts.
+
+Results carry `calculationBasis: "financial_scenario"` and `eligibility.status: "not_assessed"` when a complete amount can be illustrated. Loan, quarterly and participant eligibility also remain not assessed; a number never means actual entitlement. Missing financial data still remains unresolved and unsupported fields/combinations are rejected. Existing entitlement calculations return `calculationBasis: "eligibility_evaluation"` and retain their prior verified/declared behavior.
+
+The UI explicitly accepts a forecast with constant salary, fully settled salary tax, no subsidy and no competing tax-refund claims. These are financial scenario assumptions, not assertions about actual legal facts. The widget does not ask employment, owner, prior-use, tuition, tax-allocation or property questions. Do not use the illustration API to certify eligibility or submit a refund claim.
 
 ## Public API and example
 

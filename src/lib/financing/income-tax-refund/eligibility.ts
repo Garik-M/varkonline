@@ -127,3 +127,10 @@ export function evaluateParticipant(participant: RefundParticipant, mode: Eviden
     "This person has used the post-2018 benefit on another mortgage; exclude their income tax.", "ineligible", "priorBenefitUse", participant.id));
   return decision(reasons, mode);
 }
+
+/** A financial scenario must never claim that eligibility conditions were checked. */
+export function scenarioDecision(result: RefundEligibilityResult): RefundEligibilityResult {
+  const reasons = result.reasons.filter(item => item.code !== "CONDITIONS_VERIFIED" && item.code !== "CONDITIONS_DECLARED" && item.code !== "ELIGIBILITY_NOT_ASSESSED");
+  return { status: result.status === "eligible" ? "not_assessed" : result.status,
+    reasons: [...reasons, reason("ELIGIBILITY_NOT_ASSESSED", "Illustration assuming an eligible mortgage and participant; legal entitlement is not assessed.", "information")] };
+}

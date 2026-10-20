@@ -17,7 +17,9 @@ For an expired invitation or account recovery, contact Varkonline at info@varkon
 
 In Calculator settings, enable **Show income-tax refund calculator for mortgages**, then save. New integrations enable this by default. Enter a sample apartment price and open the live preview. The sample ID identifies the apartment; no staff-created apartment or development record is required.
 
-The refund form has two steps: salary and payment date, then essential property and borrower answers. It can estimate a possible refund from visitor declarations and explicit assumptions. The result is labelled **Conditional refund estimate**, not confirmed entitlement. Unknown answers remain unresolved; excluded cases return no applicable refund. Interest-free installments have no mortgage-interest refund. USD refund amounts remain unresolved without explicit AMD payment/interest amounts; the basic form never invents exchange rates. Salary stays inside the iframe and is not submitted to Varkonline.
+The compact refund form asks only for registered gross salary, loan date, first payment date, an optional actual withheld-tax override and an optional co-borrower salary. One acknowledgement selects an illustration assuming eligibility, constant income, fully settled salary tax, no interest subsidy and no other tax-refund claims. There are no property, employment, ownership, prior-benefit, tuition or employer-payment questionnaires.
+
+The result means **the financial amount if eligible**, not an entitlement determination. Missing legal evidence does not block this illustration because it does not assess legal conditions. Missing financial inputs still block or leave amounts unresolved. Interest-free installments have no mortgage-interest refund. USD refund amounts remain unresolved without explicit AMD payment/interest amounts; the basic form never invents exchange rates. Salary stays inside the iframe and is not submitted to Varkonline.
 
 ## Quick integration
 
@@ -125,19 +127,39 @@ document.addEventListener('varkonline:error', event => console.warn(event.detail
 
 Events bubble from the widget and contain only `partner`, `apartmentId`, `instance`, and optional error `code`. No salary, tax, legal responses or calculated amounts are emitted. Do not put private information in apartment IDs. No third-party tracking is added. Cross-window messages require the exact origin, iframe/parent window identity, protocol version and random instance ID; responses use explicit target origins.
 
-## Conditional refund estimates
+## Refund illustrations
 
-The iframe reuses Phase 2 formulas, quarterly caps and geographic rules. Salary inputs and personal answers are memory-only; no API, cookie, localStorage or analytics writes contain them. They reset on apartment/revision changes and iframe destruction. One borrower plus an optional co-borrower is supported in the UI.
+The iframe reuses Phase 2 salary-tax, quarterly-cap and interest arithmetic. Salary and personal answers are memory-only; no API, cookie, localStorage or analytics writes contain them. They reset on apartment/revision changes and iframe destruction. The UI supports one borrower plus an optional distinct co-borrower.
 
-No development registry, apartment/mortgage registry, document references, document uploads or documentary self-checks are required. Partners supply apartment prices and financing terms through their existing website. Visitors answer the relevant purchase type, property location, loan date, employment/ownership and tax-benefit questions. Yerevan permit and historic valuation-zone questions, regional border exceptions and contractual AMD prices appear only where relevant. Uncertain answers stay unknown.
+No property or borrower eligibility questionnaire, apartment registry, document references or documentary self-checks are required. The financial illustration assumes an eligible mortgage and eligible participants. It does not assess property location, acquisition type, the contractual price eligibility limit, employment, ownership, identity, prior use or competing legal benefits. A number is not confirmation of entitlement; those restrictions still apply in reality.
 
-The visitor explicitly accepts a scenario of constant registered income, a resident Armenian financial lender, housing use, compliant registration/identity/documents, and no interest subsidy. A future purchase can be modelled under those assumptions without pretending that title or a loan already exists. This is a conditional estimate, never verified entitlement or SRC approval. Secondary-market exclusions, price limits, prior-benefit restrictions, tuition overlaps and regional restrictions still apply to supplied answers.
+The caller explicitly chooses the pure `calculateMortgageRefundScenario` API. It returns `calculationBasis: "financial_scenario"` and `eligibility.status: "not_assessed"` for a complete illustration, even when amounts are numeric. It never fabricates positive legal evidence. The existing `calculateMortgageIncomeTaxRefund` API and standalone evaluator retain their strict entitlement checks for consumers that actually supply legal facts. Formula and calendar arithmetic are shared rather than duplicated.
 
-The pure engine defaults to strict verified evidence for existing consumers. The widget explicitly selects `evidenceMode: "declared"`, supplies unverified answers, and receives the same basis in the result. Missing facts still produce `requires_verification`; no verification flags are upgraded and no legal rules are bypassed. Legacy stored evidence remains readable for compatibility, but no staff record is a prerequisite and there is no evidence editor in normal administration.
+The basic UI projects constant monthly income and answers throughout complete calendar quarters using the explicit `AM-160-1321N-2026-10-17` rules snapshot. It assumes fully paid salary tax, no tuition/other tax allocations and no interest subsidy. Variable payroll histories, subsidized/irregular contracts and bank-certified USD-to-AMD schedules require a richer model. Future law, income and eligibility changes are not predicted.
 
-The basic UI projects constant monthly income and answers throughout complete calendar quarters, using the explicit `AM-160-1321N-2026-10-17` rules snapshot. It does not model variable payroll histories, subsidized/irregular contracts or bank-certified USD-to-AMD schedules. Changes in law, income or circumstances require a new calculation.
+The full bank repayment is visible before opening the refund form. After calculation, original monthly and full-term amounts are crossed out alongside estimated costs after refund. The full-term deduction uses the exact total quarterly refund, never a rounded monthly average multiplied by duration. These are cost comparisons: actual bank payments remain unchanged. Quarterly refunds are separate transfers. Costs shown with bank repayments exclude the down payment.
 
-The full bank repayment is visible before opening the refund form. After a resolved projection, original monthly and full-term amounts are crossed out alongside the estimated costs after refund. The full-term deduction uses the exact total quarterly refund, never the rounded monthly average multiplied by duration. These are cost comparisons: the actual bank payments remain unchanged. Quarterly refunds are separate transfers. Effective cost excludes the down payment and does not predict a reduced bank bill or refund receipt date.
+## Partner meeting and working demo
+
+Open [the working SDK demo](https://www.varkonline.am/examples/financing-demo.html). It uses an active, clearly labelled **Varkonline demo** integration restricted to Varkonline's own website. It is not a bank/developer endorsement and is separate from the paused mock company records. It uses the real deployed SDK, public resolver and iframe, not a visual mockup.
+
+Demo sequence:
+
+1. Select apartment A: 35,000,000 AMD, 9% annual nominal rate, 20% down payment, 240 months.
+2. Show the bank payment (251,923 AMD) and full bank repayment (60,461,718 AMD).
+3. Open the refund calculator. The demonstration explicitly supplies loan date 2026-01-01 and first monthly payment 2026-01-31. Enter gross salary 500,000 AMD, leave actual withheld tax blank, accept the illustration assumptions, then calculate.
+4. Show the exact total illustrated refund of 20,950,438 AMD, average monthly refund of 87,293 AMD, average monthly cost after refund of 164,630 AMD, and full-term cost after refund of 39,511,280 AMD. The down payment of 7,000,000 AMD is separate; total cost including it would be 46,511,280 AMD.
+5. Explain why the monthly refund is an average, not a guaranteed 100,000 AMD deduction every month: interest falls as the principal is repaid. Actual bank payments continue in full, with separate quarterly refunds if entitled.
+6. Switch Armenian/English/Russian; the result is retained. Change the down payment or term to recalculate. Changing apartments clears the previous salary/refund result.
+7. Select apartment B to demonstrate different page-supplied terms. Select interest-free installments to show the separate formula: 30,000,000 AMD, 20% down, 36 months, regular installment 666,667 AMD, with the final payment adjusted for rounding and no mortgage-interest refund.
+
+The 20-year reference was independently verified using 80-digit Python Decimal arithmetic, half-up whole-AMD interest, monthly balance reconciliation and calendar-quarter minima. At 250,000 AMD salary, the same illustration returns 11,312,474 AMD in total, with average monthly cost 204,789 AMD. All example amounts are illustrative and hold the selected rule snapshot constant.
+
+Partner onboarding: application and acknowledgement at `/financing-partners`; staff review/acceptance; private invitation manually shared within its 72-hour validity; account activation; settings saved in `/partner`; SDK code copied into the partner's shared apartment template. The sample apartment price generates code but is not an inventory import. Website prices and allowed per-apartment rates/down payments/terms remain authoritative. Changes to shared defaults or appearance are available in the partner workspace.
+
+For the meeting, collect the company's website/CMS, live and staging origins, mortgage/installment models, apartment price and term data sources, default language, brand colour and technical contact. Agree separately on commercial pricing, support expectations and contractual terms; the product does not define a commercial offer, SLA or guaranteed approval/refund. Do not promise automatic invitation email, lead capture from salary forms, eligibility scoring, ACRA checks or an official bank offer: those are not part of this feature.
+
+Integration normally needs the script once in the website layout and a div in the existing apartment template. No apartment synchronization or per-apartment Varkonline record is required. The partner's developer binds the real apartment ID, price and terms in that template and confirms its own CSP allows the SDK and iframe domains. Implementation effort depends on the website; no universal installation deadline is promised.
 
 ## APIs and storage
 

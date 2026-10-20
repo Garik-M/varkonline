@@ -1,6 +1,6 @@
 import { decimalRatio, roundRatio, toWholeAmount } from "../arithmetic";
 import { invalid } from "./calendar";
-import { decision, evaluateParticipant, reason } from "./eligibility";
+import { decision, evaluateParticipant, reason, scenarioDecision } from "./eligibility";
 import type { EvidenceMode, RefundParticipant, RefundRuleSet, SalaryIncomeTaxInput } from "./input";
 import type { MonthlyIncomeTaxResult, QuarterlyParticipantTax, RefundReason, SalaryIncomeTaxResult } from "./output";
 import { validateRefundRules, validateSalaryTaxInput } from "./validation";
@@ -33,9 +33,9 @@ function salaryTax(input: SalaryIncomeTaxInput, rules: RefundRuleSet): SalaryInc
 }
 
 export function quarterParticipantTax(
-  participant: RefundParticipant, months: readonly string[], rules: RefundRuleSet, mode: EvidenceMode = "verified",
+  participant: RefundParticipant, months: readonly string[], rules: RefundRuleSet, mode: EvidenceMode = "verified", scenario = false,
 ): { result: QuarterlyParticipantTax; monthly: MonthlyIncomeTaxResult[]; projected: boolean } {
-  const legal = evaluateParticipant(participant, mode);
+  const legal = scenario ? scenarioDecision(decision([], "declared")) : evaluateParticipant(participant, mode);
   const reasons: RefundReason[] = legal.status === "eligible" ? [] : [...legal.reasons];
   const monthly: MonthlyIncomeTaxResult[] = [];
   let available = 0n;
@@ -68,8 +68,9 @@ export function quarterParticipantTax(
       available += BigInt(tax.selectedIncomeTaxAMD - period.taxAlreadyAllocatedAMD);
     }
   }
-  const eligibility = decision(reasons, mode);
+  const assessed = decision(reasons, mode);
+  const eligibility = scenario ? scenarioDecision(assessed) : assessed;
   return { result: { participantId: participant.id, eligibility,
-    eligibleIncomeTaxAMD: eligibility.status === "eligible" ? toWholeAmount(available) :
+    eligibleIncomeTaxAMD: (eligibility.status === "eligible" || eligibility.status === "not_assessed") ? toWholeAmount(available) :
       eligibility.status === "ineligible" ? 0 : null }, monthly, projected };
 }

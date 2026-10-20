@@ -22,23 +22,22 @@ describe("refund presentation adapter", () => {
       toMonth: "2026-06",
     });
   });
-  it("preserves unknown allocations and unverified personal evidence", () => {
-    const form = { ...emptyPayroll(), gross: "500000", employee: "yes" };
-    const result = payrollParticipant(form, ["2026-02-28"], "borrower");
-    expect(result.eligibility.employee).toEqual({
-      value: true,
-      verified: false,
-    });
+  it("constructs explicit financial assumptions without inventing legal facts", () => {
+    const result = payrollParticipant(
+      { ...emptyPayroll(), gross: "500000" },
+      ["2026-01-31"],
+      "borrower",
+    );
+    expect(result).not.toHaveProperty("eligibility");
     expect(result.incomePeriods[0]).toMatchObject({
-      taxAlreadyAllocatedAMD: null,
-      tuitionRefundClaimed: null,
-      taxPaymentStatus: "unknown",
+      taxPaymentStatus: "projected",
+      tuitionRefundClaimed: false,
+      taxAlreadyAllocatedAMD: 0,
     });
-    expect(result.incomePeriods[0].actualIncomeTaxWithheldAMD).toBeUndefined();
   });
   it("zero withheld tax explicitly overrides estimation and money uses whole AMD", () => {
     const result = payrollParticipant(
-      { ...emptyPayroll(), gross: "500000", withheld: "0", allocation: "0" },
+      { ...emptyPayroll(), gross: "500000", withheld: "0" },
       ["2026-01-31"],
       "borrower",
     );

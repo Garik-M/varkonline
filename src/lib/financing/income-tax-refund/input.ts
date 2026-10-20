@@ -3,7 +3,7 @@ import type { FinancingResult } from "../output";
 /** Verification is supplied by the caller, never performed by this pure engine. */
 export type Evidence<T> = { readonly value: T; readonly verified: boolean } | null;
 export type EvidenceMode = "verified" | "declared";
-export type EligibilityStatus = "eligible" | "ineligible" | "requires_verification";
+export type EligibilityStatus = "eligible" | "ineligible" | "requires_verification" | "not_assessed";
 export type ArmenianRegion = "aragatsotn" | "ararat" | "armavir" | "kotayk" |
   "shirak" | "lori" | "tavush" | "gegharkunik" | "syunik" | "vayots_dzor";
 
@@ -95,6 +95,14 @@ export interface MortgageRefundInput {
   readonly originationDateVerified: boolean;
   readonly eligibility: MortgageEligibilityFacts;
   readonly participants: readonly RefundParticipant[];
+  readonly payments: readonly DatedMortgagePayment[];
+}
+
+/** Financial illustration only: no legal eligibility facts are supplied or inferred. */
+export interface MortgageRefundScenarioInput {
+  readonly financing: FinancingResult;
+  readonly loanOriginationDate: string;
+  readonly participants: readonly Omit<RefundParticipant, "eligibility">[];
   readonly payments: readonly DatedMortgagePayment[];
 }
 
