@@ -214,7 +214,7 @@
   background: var(--vk-soft);
   color: inherit;
 }
-.vk-widget .vk-rate-control input {
+.vk-widget .vk-rate-control .vk-input-suffix input {
   padding: 8px 26px 8px 10px;
   font-size: 18px;
   font-weight: 700;
