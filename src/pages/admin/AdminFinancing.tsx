@@ -567,11 +567,13 @@ export default function AdminFinancing({
                         Annual nominal rate, %
                         <Input
                           required={
+                            config.calculator?.priceRateRule?.currency !==
+                              config.defaults.currency &&
                             !config.overrides.includes(
                               "annualInterestRatePercent",
                             )
                           }
-                          placeholder="Optional when each apartment supplies a rate"
+                          placeholder="Optional: use the saved price-rate rule"
                           type="number"
                           min={0}
                           max={100}
@@ -594,15 +596,47 @@ export default function AdminFinancing({
                       />
                     </label>
                     <label className={label}>
-                      Duration in months
+                      {config.defaults.financingType === "mortgage"
+                        ? "Duration in years"
+                        : "Duration in months"}
                       <Input
                         required
                         type="number"
-                        min={1}
-                        max={600}
-                        step={1}
-                        value={fields.duration}
-                        onChange={(e) => field("duration", e.target.value)}
+                        min={
+                          config.limits.durationMonths.min /
+                          (config.defaults.financingType === "mortgage"
+                            ? 12
+                            : 1)
+                        }
+                        max={
+                          config.limits.durationMonths.max /
+                          (config.defaults.financingType === "mortgage"
+                            ? 12
+                            : 1)
+                        }
+                        step="any"
+                        value={
+                          fields.duration === ""
+                            ? ""
+                            : Number(fields.duration) /
+                              (config.defaults.financingType === "mortgage"
+                                ? 12
+                                : 1)
+                        }
+                        onChange={(e) =>
+                          field(
+                            "duration",
+                            e.target.value === ""
+                              ? ""
+                              : String(
+                                  Number(e.target.value) *
+                                    (config.defaults.financingType ===
+                                    "mortgage"
+                                      ? 12
+                                      : 1),
+                                ),
+                          )
+                        }
                       />
                     </label>
                   </div>

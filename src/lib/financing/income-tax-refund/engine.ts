@@ -1,6 +1,6 @@
 import { roundRatio, toWholeAmount } from "../arithmetic";
 import { quarterFor } from "./calendar";
-import { allocateQuarterRefund } from "./allocation";
+import { allocateAmount, allocateQuarterRefund } from "./allocation";
 import {
   decision,
   evaluateLoanEligibility,
@@ -55,10 +55,21 @@ export function calculateMortgageRefundScenario(
   return calculateProjection(validateRefundScenario(input), rules, true);
 }
 
+/** Conservative monthly illustration: no tax is shifted between months.
+ * The quarterly cap still applies; this is not a statutory entitlement. */
+export function calculateMonthlyMortgageRefundEstimate(
+  input: MortgageRefundScenarioInput,
+  rules: RefundRuleSet,
+): MortgageRefundResult {
+  validateRefundRules(rules);
+  return calculateProjection(validateRefundScenario(input), rules, true, true);
+}
+
 function calculateProjection(
   input: MortgageRefundInput,
   rules: RefundRuleSet,
   scenario: boolean,
+  monthlyTaxLimit = false,
 ): MortgageRefundResult {
   const mode = input.evidenceMode ?? "verified";
   const loanEligibility = scenario
@@ -187,7 +198,7 @@ function calculateProjection(
     }
     const assessed = decision(reasons, mode);
     const eligibility = scenario ? scenarioDecision(assessed) : assessed;
-    const estimatedRefundAMD =
+    let estimatedRefundAMD =
       eligibility.status === "ineligible"
         ? 0
         : eligibility.status === "requires_verification" ||
@@ -204,21 +215,42 @@ function calculateProjection(
     const monthlyTaxes = indices.map((index) => {
       const month = input.payments[index].paymentDate.slice(0, 7);
       return sum(
-        taxes.map(
-          (tax) =>
-            tax.monthly.find((row) => row.month === month)
-              ?.selectedIncomeTaxAMD ?? null,
-        ),
+        taxes.map((tax, personIndex) => {
+          const value = tax.monthly.find(
+            (row) => row.month === month,
+          )?.selectedIncomeTaxAMD;
+          if (!monthlyTaxLimit) return value ?? null;
+          if (tax.result.eligibleIncomeTaxAMD === 0) return 0;
+          if (tax.result.eligibleIncomeTaxAMD === null) return null;
+          const income = input.participants[personIndex].incomePeriods.find(
+            (row) => row.fromMonth <= month && row.toMonth >= month,
+          );
+          return value == null || income?.taxAlreadyAllocatedAMD == null
+            ? null
+            : value - income.taxAlreadyAllocatedAMD;
+        }),
       );
     });
+    const monthlyLimits = interests.map((interest, index) =>
+      interest === null || monthlyTaxes[index] === null
+        ? null
+        : Math.min(interest, monthlyTaxes[index]!),
+    );
+    if (monthlyTaxLimit && estimatedRefundAMD !== null) {
+      const total = sum(monthlyLimits);
+      estimatedRefundAMD =
+        total === null ? null : Math.min(estimatedRefundAMD, total);
+    }
     const allocations =
       estimatedRefundAMD === null || interests.some((value) => value === null)
         ? null
-        : allocateQuarterRefund(
-            estimatedRefundAMD,
-            interests as number[],
-            monthlyTaxes.map((value) => value ?? 0),
-          );
+        : monthlyTaxLimit
+          ? allocateAmount(estimatedRefundAMD, monthlyLimits as number[])
+          : allocateQuarterRefund(
+              estimatedRefundAMD,
+              interests as number[],
+              monthlyTaxes.map((value) => value ?? 0),
+            );
     for (const [offset, index] of indices.entries()) {
       const bank = rows[offset].mortgagePayment;
       const allocated = allocations?.[offset] ?? null;
@@ -309,6 +341,7 @@ function calculateProjection(
     calculationBasis: scenario
       ? "financial_scenario"
       : "eligibility_evaluation",
+    calculationMethod: monthlyTaxLimit ? "monthly_tax_limit" : "quarterly_pool",
     isEstimate: true,
     evidenceMode: mode,
     refundCurrency: "AMD",
@@ -361,7 +394,9 @@ function calculateProjection(
         : []),
       "This is an estimate, not SRC approval. Evidence verification flags are supplied by the caller; no government checks occur.",
       "Refunds are separate quarterly transfers. The effective monthly average is informational and never reduces the bank obligation.",
-      "Monthly refund rows allocate the quarterly benefit, first against each payment month's tax and interest, then any remaining quarterly capacity. They are not scheduled monthly transfers. Principal is never refunded.",
+      monthlyTaxLimit
+        ? "Conservative monthly estimate: each refund is bounded by that payment month's eligible interest and available salary tax. The shared quarterly cap still applies. No unused tax is transferred to other months. This is not the statutory quarterly entitlement calculation."
+        : "Monthly refund rows allocate the quarterly benefit, first against each payment month's tax and interest, then any remaining quarterly capacity. They are not scheduled monthly transfers. Principal is never refunded.",
       "All amounts are whole units; refunds and salary tax are AMD. No exchange-rate conversion is performed.",
       "Interest is taken from the Phase 1 schedule unless a bank-confirmed paid amount is supplied; subsidies are excluded from refundable interest.",
       "Salary tax estimates use gross registered salary only; net salary, social payments and other payroll deductions are not calculated.",

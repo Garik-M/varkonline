@@ -34,14 +34,14 @@ export default function CalculatorControlsEditor({
         [key]: { ...value.limits[key], [edge]: next },
       },
     });
-  const factor = mortgage && options.durationUnit === "years" ? 12 : 1;
+  const factor = mortgage ? 12 : 1;
   const numeric = (
     label: string,
     current: number,
     change: (value: number) => void,
     min: number,
     max: number,
-    step = 1,
+    step: number | "any" = 1,
   ) => (
     <label className="block text-sm space-y-2">
       {label}
@@ -119,56 +119,34 @@ export default function CalculatorControlsEditor({
           1,
           1e9,
         )}
-        <label className="block text-sm space-y-2">
-          {l("Ժամկետի միավոր", "Term unit", "Единица срока")}
-          <select
-            className="block w-full rounded border bg-background p-2"
-            aria-label={l("Ժամկետի միավոր", "Term unit", "Единица срока")}
-            value={options.durationUnit}
-            onChange={(event) => {
-              const unit = event.target.value as "years" | "months";
-              const min =
-                unit === "years"
-                  ? Math.max(
-                      12,
-                      Math.ceil(value.limits.durationMonths.min / 12) * 12,
-                    )
-                  : value.limits.durationMonths.min;
-              const max =
-                unit === "years"
-                  ? Math.max(
-                      min,
-                      Math.floor(value.limits.durationMonths.max / 12) * 12,
-                    )
-                  : value.limits.durationMonths.max;
-              onChange({
-                ...value,
-                calculator: { ...options, durationUnit: unit },
-                limits: {
-                  ...value.limits,
-                  durationMonths: { min, max, step: unit === "years" ? 12 : 1 },
-                  supportedDurations: [],
-                },
-              });
-            }}
-          >
-            <option value="years">{l("Տարիներ", "Years", "Годы")}</option>
-            <option value="months">{l("Ամիսներ", "Months", "Месяцы")}</option>
-          </select>
-        </label>
+        <p className="text-sm text-muted-foreground">
+          {mortgage
+            ? l(
+                "Հիփոթեքի ժամկետները՝ տարիներով։",
+                "Mortgage terms are shown in years.",
+                "Срок ипотеки указывается в годах.",
+              )
+            : l(
+                "Ապառիկի ժամկետները՝ ամիսներով։",
+                "Installment terms are shown in months.",
+                "Срок рассрочки указывается в месяцах.",
+              )}
+        </p>
         {numeric(
           l("Նվազագույն ժամկետ", "Minimum term", "Минимальный срок"),
           value.limits.durationMonths.min / factor,
           (next) => bound("durationMonths", "min", next * factor),
-          1,
+          1 / factor,
           600 / factor,
+          "any",
         )}
         {numeric(
           l("Առավելագույն ժամկետ", "Maximum term", "Максимальный срок"),
           value.limits.durationMonths.max / factor,
           (next) => bound("durationMonths", "max", next * factor),
-          1,
+          1 / factor,
           600 / factor,
+          "any",
         )}
         {mortgage && (
           <>

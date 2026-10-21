@@ -204,20 +204,28 @@
 .vk-widget .vk-control-wide {
   grid-column: 1 / -1;
 }
-.vk-widget .vk-rate-edit {
-  width: 42%;
-  font-size: 11px;
-  text-align: right;
-  font-weight: 400;
-  color: var(--vk-muted);
+.vk-widget .vk-rate-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--vk-soft);
+  color: inherit;
 }
-.vk-widget .vk-rate-edit input {
-  text-align: right;
-  color: var(--vk-text, inherit);
-  padding-right: 28px;
+.vk-widget .vk-rate-control input {
+  padding: 8px 26px 8px 10px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  color: inherit;
 }
-.vk-widget .vk-rate-edit .vk-input-suffix span {
-  right: 8px;
+.vk-widget .vk-rate-control .vk-input-suffix > span {
+  right: 10px;
+}
+.vk-widget .vk-rate-control .vk-field-error {
+  grid-column: 1 / -1;
 }
 .vk-widget .vk-controls > label:first-child .vk-input-suffix input {
   padding-right: 24px;

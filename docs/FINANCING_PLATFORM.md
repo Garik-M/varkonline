@@ -1,8 +1,10 @@
 # Current release: simplified refund-first calculator (2026-10-20)
 
+The [21 October UX review](FINANCING_UX_REVIEW.md) records the latest corrections: optional partner rates with price tiers, a separate rate editor, year-based mortgage terms and the conservative monthly refund estimate. The user confirmed fixed monthly annuity payments; no floating-payment formula was added.
+
 See [the current integration and demo guide](../public/docs/financing-integration.md) for authoritative UX, formulas, controls, telemetry/privacy and release assumptions. Historical release notes below describe earlier interfaces.
 
-The current widget always shows take-home salary, uses dram down payments and configured year terms, supports editable fractional rates, price tiers and both annuity/equal-principal schedules. The existing quarterly refund core remains authoritative; monthly allocations reconcile to it and never exceed interest. The primary result is period-specific rather than a lifetime average. Partner/admin controls share the same editor, draft previews collect no telemetry, and server-authorized analytics show only named actions with no payroll values.
+The current widget always shows take-home salary, uses dram down payments and configured year terms, supports editable fractional rates, price tiers and both annuity/equal-principal schedules. The statutory quarterly refund APIs remain available. The widget now uses the explicitly separate conservative monthly estimate, bounded by each month’s tax and interest plus the shared quarterly cap. The primary result is period-specific rather than a lifetime average. Partner/admin controls share the same editor, draft previews collect no telemetry, and server-authorized analytics show only named actions with no payroll values.
 
 Draft preview fix: both workspaces load the same widget stylesheet scoped to `.vk-widget`, with container-responsive layouts that do not affect surrounding portal forms. The draft is outside the save form, beside settings on desktop and before them on mobile. Admin SDK samples omit blank annual-rate overrides so the resolver uses saved price tiers or defaults; explicit per-apartment rates still take precedence. New browser regressions cover omitted/cleared/explicit rates, default fallback, isolated styling, mobile visibility and form boundaries.
 

@@ -41,6 +41,10 @@ const en = {
   installment: "Interest-free developer installments",
   currency: "Currency",
   rate: "Annual nominal interest rate, %",
+  optional: "optional",
+  automaticRate: "Use the apartment-price rule",
+  rateHelp:
+    "Leave blank to use the configured price rule. A default is required when no rule applies to the selected currency. Website-specific rates can override it.",
   down: "Down payment, %",
   duration: "Duration, months",
   theme: "Theme",
@@ -131,6 +135,10 @@ export const messages: Record<PartnerLanguage, typeof en> = {
     installment: "Կառուցապատողի անտոկոս ապառիկ",
     currency: "Արժույթ",
     rate: "Տարեկան անվանական տոկոսադրույք, %",
+    optional: "ըստ ցանկության",
+    automaticRate: "Ըստ բնակարանի գնի կանոնի",
+    rateHelp:
+      "Դատարկ թողնելու դեպքում կիրառվում է գնի կանոնը։ Եթե ընտրված արժույթի համար կանոն չկա, լրացրեք տոկոսադրույքը։ Կայքի ուղարկած տոկոսադրույքը կարող է փոխարինել այն։",
     down: "Կանխավճար, %",
     duration: "Ժամկետ, ամիս",
     theme: "Թեմա",
@@ -223,6 +231,10 @@ export const messages: Record<PartnerLanguage, typeof en> = {
     installment: "Беспроцентная рассрочка застройщика",
     currency: "Валюта",
     rate: "Годовая номинальная ставка, %",
+    optional: "необязательно",
+    automaticRate: "По правилу стоимости квартиры",
+    rateHelp:
+      "Оставьте пустым для правила по стоимости. Если для выбранной валюты правила нет, укажите ставку. Ставка с сайта может её переопределить.",
     down: "Первоначальный взнос, %",
     duration: "Срок, месяцев",
     theme: "Тема",

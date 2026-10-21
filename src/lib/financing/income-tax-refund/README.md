@@ -64,7 +64,15 @@ Results include `evidenceMode`; a successful declared scenario uses `CONDITIONS_
 
 Results carry `calculationBasis: "financial_scenario"` and `eligibility.status: "not_assessed"` when a complete amount can be illustrated. Loan, quarterly and participant eligibility also remain not assessed; a number never means actual entitlement. Missing financial data still remains unresolved and unsupported fields/combinations are rejected. Existing entitlement calculations return `calculationBasis: "eligibility_evaluation"` and retain their prior verified/declared behavior.
 
-The UI explicitly accepts a forecast with constant salary, fully settled salary tax, no subsidy and no competing tax-refund claims. These are financial scenario assumptions, not assertions about actual legal facts. The widget does not ask employment, owner, prior-use, tuition, tax-allocation or property questions. Do not use the illustration API to certify eligibility or submit a refund claim.
+The UI illustrates a forecast with constant salary, fully settled salary tax, no subsidy and no competing tax-refund claims. These are financial scenario assumptions, not assertions about actual legal facts. The widget does not ask employment, owner, prior-use, tuition, tax-allocation or property questions. Do not use the illustration API to certify eligibility or submit a refund claim.
+
+### Conservative monthly widget estimate
+
+`calculateMonthlyMortgageRefundEstimate(input, rules)` accepts the same financial scenario input and returns `calculationMethod: "monthly_tax_limit"`. Each row is limited by that payment month's eligible interest and available income tax, after prior tax allocations. The shared quarterly cap is then applied to those monthly capacities with whole-unit largest-remainder allocation. Tax from a calendar month with no loan payment is not assigned to the other rows. Unused monthly capacity is not moved to another month.
+
+This is a conservative financial illustration requested for the widget, not the statutory quarterly entitlement formula. `calculateMortgageIncomeTaxRefund` and `calculateMortgageRefundScenario` retain calendar-quarter pooling and return `calculationMethod: "quarterly_pool"`. Both methods reconcile monthly, quarterly, annual and full-term totals, leave principal payable and preserve the original bank schedule.
+
+For the reported 35m AMD / 20% down / 10% nominal / 240-month example and 139,086 AMD monthly income tax, months 1–3 each show 139,086 AMD refund and 131,120 AMD net cost. Full bank repayment is 64,849,495 AMD; estimated refund is 28,114,727 AMD; estimated net financing cost is 36,734,768 AMD. The last refund falls to 2,234 AMD interest. These values were independently calculated with Python Decimal.
 
 ## Public API and example
 
