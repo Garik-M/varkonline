@@ -351,6 +351,7 @@ export function createFinancingSdk(
         "allow-scripts",
         "allow-same-origin",
         "allow-forms",
+        "allow-downloads",
         "allow-popups",
         "allow-popups-to-escape-sandbox",
       );

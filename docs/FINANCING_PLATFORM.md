@@ -6,6 +6,8 @@ The current widget always shows take-home salary, uses dram down payments and co
 
 Draft preview fix: both workspaces load the same widget stylesheet scoped to `.vk-widget`, with container-responsive layouts that do not affect surrounding portal forms. The draft is outside the save form, beside settings on desktop and before them on mobile. Admin SDK samples omit blank annual-rate overrides so the resolver uses saved price tiers or defaults; explicit per-apartment rates still take precedence. New browser regressions cover omitted/cleared/explicit rates, default fallback, isolated styling, mobile visibility and form boundaries.
 
+Excel schedule download (2026-10-21): the widget exports a localized summary and the complete engine schedule, with optional resolved AMD refund/net-cost columns. Numeric cells retain whole-unit values and exact final reconciliation. A lazily loaded `write-excel-file/universal` writer creates the workbook locally; no salary data is exported or uploaded. The SDK adds `allow-downloads` to its sandbox. No financial formulas, partner configurations or database schema changed.
+
 # Financing platform implementation report
 
 ## Current workflow - 20 October 2026

@@ -41,6 +41,8 @@ function CalculatorBody({
   const [page, setPage] = useState(0);
   const [quarterPage, setQuarterPage] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(1);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
   const [refundState, setRefundState] = useState<{
     financing: FinancingResult;
     projection: MortgageRefundResult;
@@ -466,6 +468,54 @@ function CalculatorBody({
             })}
           </div>
         </section>
+      )}
+      {result && options.showSchedule && (
+        <div className="vk-download">
+          <button
+            type="button"
+            data-testid="download-schedule"
+            disabled={downloading}
+            aria-busy={downloading}
+            onClick={async () => {
+              setDownloading(true);
+              setDownloadError(false);
+              try {
+                const { downloadPaymentSchedule } = await import(
+                  "./schedule-export"
+                );
+                await downloadPaymentSchedule({
+                  financing: result,
+                  projection: hasRefund ? projection : null,
+                  partnerName: configuration.partner.displayName,
+                  apartmentId: configuration.apartmentId,
+                  language,
+                });
+              } catch {
+                setDownloadError(true);
+              } finally {
+                setDownloading(false);
+              }
+            }}
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+            </svg>
+            {t(downloading ? "preparingDownload" : "downloadSchedule")}
+          </button>
+          {downloadError && (
+            <p role="alert" className="vk-field-error">
+              {t("downloadFailed")}
+            </p>
+          )}
+        </div>
       )}
       {result && options.showSchedule && (
         <details

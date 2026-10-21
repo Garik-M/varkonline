@@ -892,3 +892,14 @@
   font-size: 10px;
   opacity: 0.8;
 }
+.vk-widget .vk-download {
+  margin-top: 12px;
+}
+.vk-widget .vk-download button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  color: var(--vk-text, inherit);
+}

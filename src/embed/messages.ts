@@ -818,6 +818,38 @@ export const widgetMessages = {
     en: "Payment schedule",
     ru: "График платежей",
   },
+  downloadSchedule: {
+    hy: "Ներբեռնել գրաֆիկը · Excel",
+    en: "Download schedule · Excel",
+    ru: "Скачать график · Excel",
+  },
+  preparingDownload: {
+    hy: "Ֆայլը պատրաստվում է…",
+    en: "Preparing file…",
+    ru: "Подготовка файла…",
+  },
+  downloadFailed: {
+    hy: "Ֆայլը չհաջողվեց պատրաստել։ Փորձեք կրկին։",
+    en: "Could not prepare the file. Please try again.",
+    ru: "Не удалось подготовить файл. Попробуйте ещё раз.",
+  },
+  exportSummary: { hy: "Ամփոփում", en: "Summary", ru: "Сводка" },
+  exportPartner: { hy: "Գործընկեր", en: "Partner", ru: "Партнёр" },
+  exportApartment: {
+    hy: "Բնակարանի ID",
+    en: "Apartment ID",
+    ru: "ID квартиры",
+  },
+  openingBalance: {
+    hy: "Սկզբնական մնացորդ",
+    en: "Opening balance",
+    ru: "Остаток на начало",
+  },
+  exportSnapshot: {
+    hy: "Ֆայլը արտացոլում է ներբեռնման պահին հաշվարկված արժեքները։ Փոփոխությունների դեպքում հաշվարկեք և ներբեռնեք նորից։",
+    en: "This file is a snapshot of the calculated values at download. Recalculate and download again after changing inputs.",
+    ru: "Файл содержит рассчитанные значения на момент скачивания. После изменения параметров пересчитайте и скачайте заново.",
+  },
   noPrincipal: {
     hy: "Ֆինանսավորվող մնացորդ չկա։",
     en: "No financed balance.",

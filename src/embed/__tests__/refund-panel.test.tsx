@@ -1,10 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { downloadPaymentSchedule } from "../schedule-export";
 import FinancingCalculator from "../FinancingCalculator";
 import type { ResolvedWidget } from "../types";
 import { mortgageControlPreset } from "../calculator-options";
 import { sample } from "@/lib/financing/income-tax-refund/__tests__/fixtures";
 import { translate, type WidgetLanguage } from "../messages";
+
+vi.mock("../schedule-export", () => ({ downloadPaymentSchedule: vi.fn() }));
 
 afterEach(cleanup);
 function fixture(): ResolvedWidget {
@@ -65,6 +74,41 @@ function input(label: string, value: string) {
 }
 
 describe("Visible net-salary refund calculator", () => {
+  it("downloads the current schedule and refund; failures show an error and allow retry", async () => {
+    const download = vi.mocked(downloadPaymentSchedule);
+    download.mockReset();
+    download.mockRejectedValueOnce(new Error("Simulated export failure"));
+    mount();
+    salary();
+    fireEvent.click(screen.getByTestId("download-schedule"));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(t("downloadFailed")),
+    );
+    expect(screen.getByTestId("download-schedule")).toBeEnabled();
+    download.mockResolvedValueOnce(undefined);
+    input(t("downAmount"), "10500000");
+    fireEvent.click(screen.getByTestId("download-schedule"));
+    await waitFor(() => expect(download).toHaveBeenCalledTimes(2));
+    const snapshot = download.mock.calls[1][0];
+    expect(snapshot.financing.downPaymentAmount).toBe(10500000);
+    expect(snapshot.projection?.totalEstimatedRefundAMD).toBe(29784076);
+    expect(snapshot.language).toBe("en");
+    await waitFor(() =>
+      expect(screen.getByTestId("download-schedule")).toBeEnabled(),
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("omits downloads when schedule access is disabled or values are invalid", () => {
+    const config = fixture();
+    config.calculator!.showSchedule = false;
+    mount(config);
+    expect(screen.queryByTestId("download-schedule")).toBeNull();
+    cleanup();
+    mount();
+    input(t("downAmount"), "");
+    expect(screen.queryByTestId("download-schedule")).toBeNull();
+  });
   it("shows salary immediately with no dropdown, dates, withholding or acknowledgement", () => {
     mount();
     expect(screen.getByTestId("net-salary")).toBeVisible();
@@ -177,7 +221,10 @@ describe("Visible net-salary refund calculator", () => {
     );
     for (const invalid of ["0x10", "1e1", "Infinity"]) {
       input(t("annualRate"), invalid);
-      expect(screen.getByLabelText(t("annualRate"))).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByLabelText(t("annualRate"))).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
     }
     input(t("annualRate"), "1");
     expect(screen.getByLabelText(t("annualRate"))).toHaveAttribute(
