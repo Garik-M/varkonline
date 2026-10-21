@@ -17,9 +17,9 @@ The widget sends only allowlisted event names, optional field names, language, r
 
 Queued actions retain their original signing context across apartment switches. Retries reuse event IDs and are idempotent. Public ingestion is token-scoped, rate-limited, size-bounded, and validated with strict allowlists. It measures widget activity, not arbitrary clicks on a partner's website, and does not provide bot-proof verified-person counts.
 
-Partner reports derive the integration slug from the authenticated user's accepted company membership. A client-supplied slug cannot select another company. Reports and timelines are scoped in SQL and are not publicly cached. Partner session tokens cannot authorize admin APIs. General admin analytics reads/deletions require a current admin role; public site event collection remains available. The standalone partner entry does not load the admin layout, admin reports, leads, or commissions.
+Partner reports derive the integration slug from the authenticated user's accepted company membership. A client-supplied slug cannot select another company. Reports are scoped in SQL and are not publicly cached. Partner session tokens cannot authorize admin APIs. General admin analytics reads/deletions require a current admin role; public site event collection remains available. The standalone partner entry does not load the admin layout, admin reports, leads, or commissions.
 
-Retention is 90 days. Reports exclude expired rows immediately, and ingestion purges expired events in bounded batches. Totals and all charts use one fixed server cutoff per report. Top apartments are bounded to 20 and session lists to 50; timelines to 500 actions.
+Retention is 90 days. Reports exclude expired rows immediately, and ingestion purges expired events in bounded batches. Totals and all charts use one fixed server cutoff per report. Top apartments are bounded to 20. Reports expose aggregate counts only; individual session listings and timeline endpoints are not available.
 
 ## Deployment
 

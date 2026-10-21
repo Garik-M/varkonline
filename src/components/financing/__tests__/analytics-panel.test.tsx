@@ -49,7 +49,6 @@ function report(): AnalyticsReport {
     daily: [{ date: "2026-10-21", sessions: 3, calculations: 8, refunds: 2 }],
     apartments: [],
     languages: [],
-    sessions: [],
   };
 }
 it("shows session counts separately from estimates, with exact 5m range data", async () => {

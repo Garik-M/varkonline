@@ -41,19 +41,5 @@ export interface AnalyticsReport {
     downloads: number;
   }[];
   languages: { language: string; views: number }[];
-  sessions: {
-    id: string;
-    startedAt: string;
-    lastSeenAt: string;
-    events: number;
-    apartments: number;
-  }[];
-}
-export interface AnalyticsSessionEvent {
-  type: string;
-  field: string | null;
-  language: string;
-  apartmentId: string;
-  at: string;
 }
 export type AnalyticsRequest = <T>(path: string) => Promise<T>;

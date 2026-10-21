@@ -103,25 +103,6 @@ export function analyticsCopy(language: "hy" | "en" | "ru") {
       "Actions and languages",
       "Действия и языки",
     ),
-    latest: l(
-      "Վերջին 50 սեսիաները",
-      "Latest 50 sessions",
-      "Последние 50 сессий",
-    ),
-    timeline: l(
-      "Սեսիայի գործողությունները",
-      "Session timeline",
-      "Хронология сессии",
-    ),
-    lastSeen: l("Վերջին գործողություն", "Last seen", "Последнее действие"),
-    session: l("Սեսիա", "Session", "Сессия"),
-    actionCount: l("Գործողություններ", "Actions", "Действия"),
-    close: l("Փակել", "Close", "Закрыть"),
-    timelineLimit: l(
-      "Առավելագույնը՝ առաջին 500 գործողությունը։",
-      "Up to the first 500 recorded actions.",
-      "До первых 500 записанных действий.",
-    ),
     empty: l(
       "Տվյալները կհայտնվեն առաջին այցելություններից հետո։",
       "Your first visits will bring this dashboard to life.",
@@ -137,11 +118,6 @@ export function analyticsCopy(language: "hy" | "en" | "ru") {
       "Չհաջողվեց բեռնել վերլուծությունը։ Փորձեք թարմացնել։",
       "Unable to load analytics. Try refreshing.",
       "Не удалось загрузить аналитику. Обновите.",
-    ),
-    sessionError: l(
-      "Չհաջողվեց բեռնել սեսիան։",
-      "Unable to load session.",
-      "Не удалось загрузить сессию.",
     ),
     counting: l(
       "Սեսիան անանուն այցելություն է, ոչ եզակի անձ։ Սկզբնական հաջող հաշվարկը և 0.8 վրկ կայունացած փոփոխությունները հաշվվում են առանձին։ Օրերը՝ Երևանի ժամով, ներառյալ այսօր։",

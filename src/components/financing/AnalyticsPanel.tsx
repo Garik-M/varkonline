@@ -20,11 +20,7 @@ import {
   YAxis,
 } from "recharts";
 import { analyticsCopy } from "./analytics-copy";
-import type {
-  AnalyticsReport,
-  AnalyticsRequest,
-  AnalyticsSessionEvent,
-} from "./analytics-types";
+import type { AnalyticsReport, AnalyticsRequest } from "./analytics-types";
 
 const tableClass =
   "w-full text-sm text-left [&_th]:px-3 [&_th]:py-3 [&_th]:font-medium [&_th]:text-muted-foreground [&_td]:px-3 [&_td]:py-3 [&_tr]:border-b [&_tbody_tr:last-child]:border-0";
@@ -49,15 +45,10 @@ export default function AnalyticsPanel({
     loaded?.source === request && loaded.days === days ? loaded.value : null;
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState(false);
-  const [session, setSession] = useState<string | null>(null);
-  const [events, setEvents] = useState<AnalyticsSessionEvent[] | null>(null);
-  const [sessionError, setSessionError] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [showAllApartments, setShowAllApartments] = useState(false);
   const gradientId = useId().replace(/:/g, "");
   const load = useCallback(() => {
-    setSession(null);
-    setEvents(null);
     setRefresh((value) => value + 1);
   }, []);
   useEffect(() => {
@@ -66,7 +57,6 @@ export default function AnalyticsPanel({
     setError(false);
     setLoaded(null);
     setShowAllApartments(false);
-    setSession(null);
     request<AnalyticsReport>(`?days=${days}`)
       .then((value) => {
         if (active) setLoaded({ source: request, days, value });
@@ -81,24 +71,6 @@ export default function AnalyticsPanel({
       active = false;
     };
   }, [request, days, refresh]);
-  useEffect(() => {
-    if (!session) return;
-    let active = true;
-    setEvents(null);
-    setSessionError(false);
-    request<{ events: AnalyticsSessionEvent[] }>(
-      `/sessions/${encodeURIComponent(session)}`,
-    )
-      .then((value) => {
-        if (active) setEvents(value.events);
-      })
-      .catch(() => {
-        if (active) setSessionError(true);
-      });
-    return () => {
-      active = false;
-    };
-  }, [request, session]);
   const count = (value: number) =>
     new Intl.NumberFormat(language).format(value);
   const date = (value: string, time = false) =>
@@ -233,7 +205,6 @@ export default function AnalyticsPanel({
                   aria-pressed={days === value}
                   onClick={() => {
                     setDays(value);
-                    setSession(null);
                   }}
                   className={`rounded-lg px-3 py-2 text-xs sm:text-sm ${days === value ? "bg-[#173453] text-white shadow-sm" : "text-muted-foreground hover:bg-muted"}`}
                 >
@@ -623,90 +594,6 @@ export default function AnalyticsPanel({
                     .join(" · ")}
                 </p>
               </details>
-              <details className={cardClass}>
-                <summary className="cursor-pointer font-medium">
-                  {c.latest}
-                </summary>
-                <div className="mt-4 overflow-x-auto">
-                  <table className={tableClass}>
-                    <thead>
-                      <tr>
-                        <th>{c.session}</th>
-                        <th>{c.lastSeen}</th>
-                        <th>{c.actionCount}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {report.sessions.map((row) => (
-                        <tr key={row.id}>
-                          <td>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEvents(null);
-                                setSession(row.id);
-                              }}
-                              className="font-medium text-primary underline underline-offset-4"
-                            >
-                              {row.id.slice(0, 8)}
-                            </button>
-                          </td>
-                          <td className="whitespace-nowrap">
-                            {date(row.lastSeenAt, true)}
-                          </td>
-                          <td>{count(row.events)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-              {session && (
-                <div className={cardClass} data-testid="analytics-session">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-semibold">
-                      {c.timeline} · {session.slice(0, 8)}
-                    </h3>
-                    <button
-                      type="button"
-                      className="rounded-lg border px-3 py-1 text-sm"
-                      onClick={() => setSession(null)}
-                    >
-                      {c.close}
-                    </button>
-                  </div>
-                  {sessionError ? (
-                    <p role="alert" className="mt-4">
-                      {c.sessionError}
-                    </p>
-                  ) : events === null ? (
-                    <p role="status" className="mt-4">
-                      {c.loading}
-                    </p>
-                  ) : (
-                    <ol className="mt-5 space-y-4 text-sm">
-                      {events.map((event, index) => (
-                        <li
-                          key={index}
-                          className="border-l-2 border-sky-200 pl-3"
-                        >
-                          <strong>{c.names[event.type] ?? event.type}</strong>
-                          {event.field
-                            ? ` · ${c.names[event.field] ?? event.field}`
-                            : ""}
-                          <p className="mt-1 break-all text-xs text-muted-foreground">
-                            {date(event.at, true)} ·{" "}
-                            {event.language.toUpperCase()} · {event.apartmentId}
-                          </p>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    {c.timelineLimit}
-                  </p>
-                </div>
-              )}
             </>
           )}
           <footer className="space-y-2 rounded-xl bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
