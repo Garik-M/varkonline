@@ -245,9 +245,9 @@ function CalculatorBody({
                   max: moneyInCurrency(maxDown),
                 })
               : t("downPercentHelp", {
-                  percent: number(
-                    (Number(down) / initial.apartmentPrice) * 100,
-                  ),
+                  percent: new Intl.NumberFormat(language, {
+                    maximumFractionDigits: 2,
+                  }).format((Number(down) / initial.apartmentPrice) * 100),
                 })}
           </small>
         </label>
@@ -489,7 +489,6 @@ function CalculatorBody({
                 await downloadPaymentSchedule({
                   financing: result,
                   projection: hasRefund ? projection : null,
-                  partnerName: configuration.partner.displayName,
                   apartmentId: configuration.apartmentId,
                   language,
                 });

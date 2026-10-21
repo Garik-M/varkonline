@@ -834,7 +834,31 @@ export const widgetMessages = {
     ru: "Не удалось подготовить файл. Попробуйте ещё раз.",
   },
   exportSummary: { hy: "Ամփոփում", en: "Summary", ru: "Сводка" },
-  exportPartner: { hy: "Գործընկեր", en: "Partner", ru: "Партнёр" },
+  exportFirstPayment: {
+    hy: "Առաջին ամսվա վճար",
+    en: "First monthly payment",
+    ru: "Первый ежемесячный платёж",
+  },
+  exportFinalPayment: {
+    hy: "Վերջին ամսվա վճար",
+    en: "Final monthly payment",
+    ru: "Последний ежемесячный платёж",
+  },
+  exportFirstRefund: {
+    hy: "Առաջին ամսվա կանխատեսված հետվերադարձ",
+    en: "Estimated first-month refund",
+    ru: "Прогноз возврата за первый месяц",
+  },
+  exportFirstNetPayment: {
+    hy: "Առաջին ամսվա ծախս՝ հետվերադարձով",
+    en: "First-month cost after refund",
+    ru: "Расходы за первый месяц с возвратом",
+  },
+  exportTotalCostAfterRefund: {
+    hy: "Ընդհանուր ծախս՝ կանխավճարով և հետվերադարձով",
+    en: "Total cost including down payment, after refund",
+    ru: "Общие расходы с первоначальным взносом и возвратом",
+  },
   exportApartment: {
     hy: "Բնակարանի ID",
     en: "Apartment ID",

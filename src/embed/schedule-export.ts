@@ -10,13 +10,12 @@ import { translate, type MessageKey, type WidgetLanguage } from "./messages";
 export interface ScheduleExport {
   financing: FinancingResult;
   projection: MortgageRefundResult | null;
-  partnerName: string;
   apartmentId: string;
   language: WidgetLanguage;
 }
 
 /** A snapshot of the authoritative engine results, not a second loan formula.
- * Explicit string cells keep partner/apartment text from becoming Excel formulas.
+ * Explicit string cells keep apartment text from becoming Excel formulas.
  * Payroll inputs, personal answers and analytics identifiers are never exported. */
 export function paymentScheduleSheets(input: ScheduleExport): Sheet<Blob>[] {
   const { financing: result, projection, language } = input;
@@ -53,8 +52,7 @@ export function paymentScheduleSheets(input: ScheduleExport): Sheet<Blob>[] {
     );
   const moneyLabel = (key: MessageKey) => `${t(key)} (${result.currency})`;
   const summary: Cell[][] = [
-    [header("Varkonline"), header(t("schedule"))],
-    [text(t("exportPartner")), text(input.partnerName)],
+    [header(t("exportSummary")), header(result.currency)],
     [text(t("exportApartment")), text(input.apartmentId)],
     [
       text(t("repaymentMethod")),
@@ -71,7 +69,12 @@ export function paymentScheduleSheets(input: ScheduleExport): Sheet<Blob>[] {
     [text(moneyLabel("price")), numeric(result.apartmentPrice)],
     [text(moneyLabel("downAmount")), numeric(result.downPaymentAmount)],
     [text(moneyLabel("principal")), numeric(result.financedPrincipal)],
-    [text(`${t("duration")} (${t("months")})`), numeric(result.durationMonths)],
+    result.financingType === "mortgage"
+      ? [
+          text(t("durationYears")),
+          { value: result.durationMonths / 12, type: Number, format: "0.##" },
+        ]
+      : [text(`${t("duration")} (${t("months")})`), numeric(result.durationMonths)],
     ...(result.financingType === "mortgage"
       ? [
           [
@@ -84,6 +87,14 @@ export function paymentScheduleSheets(input: ScheduleExport): Sheet<Blob>[] {
           ],
         ]
       : []),
+    [
+      text(moneyLabel("exportFirstPayment")),
+      numeric(result.schedule[0]?.scheduledPayment ?? 0),
+    ],
+    [
+      text(moneyLabel("exportFinalPayment")),
+      numeric(result.schedule.at(-1)?.scheduledPayment ?? 0),
+    ],
     [text(moneyLabel("totalInterest")), numeric(result.totalInterest)],
     [
       text(
@@ -102,12 +113,24 @@ export function paymentScheduleSheets(input: ScheduleExport): Sheet<Blob>[] {
     ...(hasRefund
       ? [
           [
+            text(moneyLabel("exportFirstRefund")),
+            numeric(projection!.monthlySchedule[0]?.allocatedRefundAMD ?? 0),
+          ],
+          [
+            text(moneyLabel("exportFirstNetPayment")),
+            numeric(projection!.monthlySchedule[0]?.costAfterAllocatedRefundAMD ?? 0),
+          ],
+          [
             text(moneyLabel("totalRefund")),
             numeric(projection!.totalEstimatedRefundAMD!),
           ],
           [
             text(moneyLabel("totalWithRefund")),
             numeric(projection!.totalEffectiveFinancingCostAMD!),
+          ],
+          [
+            text(moneyLabel("exportTotalCostAfterRefund")),
+            numeric(result.totalCostIncludingDownPayment - projection!.totalEstimatedRefundAMD!),
           ],
         ]
       : []),
@@ -206,7 +229,7 @@ export function paymentScheduleFilename(apartmentId: string) {
     .replace(/[^a-zA-Z0-9_-]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
-  return `varkonline-payment-schedule${safeId ? `-${safeId}` : ""}.xlsx`;
+  return `payment-schedule${safeId ? `-${safeId}` : ""}.xlsx`;
 }
 
 export async function downloadPaymentSchedule(input: ScheduleExport) {
