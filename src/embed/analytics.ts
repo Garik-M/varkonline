@@ -1,5 +1,7 @@
 export type WidgetEventType =
   | "widget_view"
+  | "calculation_completed"
+  | "schedule_downloaded"
   | "field_changed"
   | "refund_calculated"
   | "schedule_opened"
@@ -20,8 +22,9 @@ export type TrackWidgetEvent = (
   field?: WidgetField,
 ) => void;
 
-/** Per-iframe, in-memory session. No cookies, persistent identifiers, input
- * values, URLs, text, user-agent strings or third-party analytics. */
+/** Per-iframe, in-memory session. Only named actions are sent. Coarse property
+ * context is signed by the server, never supplied as arbitrary event metadata.
+ * No cookies, persistent identifiers, payroll, URLs or third-party analytics. */
 export function createWidgetTracker(endpoint: string) {
   const sessionId = crypto.randomUUID();
   let token: string | null = null;
@@ -29,6 +32,7 @@ export function createWidgetTracker(endpoint: string) {
   let sending = false;
   let sequence = 0;
   let queue: {
+    token: string;
     id: string;
     sequence: number;
     type: WidgetEventType;
@@ -41,19 +45,26 @@ export function createWidgetTracker(endpoint: string) {
   async function flush() {
     if (!token || stopped || sending || !queue.length) return;
     sending = true;
-    const events = queue.splice(0, 40);
+    // Capture context per event so apartment changes cannot misattribute queued actions.
+    const batchToken = queue[0].token;
+    const nextContext = queue.findIndex((event) => event.token !== batchToken);
+    const batch = queue.splice(
+      0,
+      Math.min(40, nextContext < 0 ? queue.length : nextContext),
+    );
+    const events = batch.map(({ token: _token, ...event }) => event);
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         credentials: "omit",
         keepalive: true,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, sessionId, events }),
+        body: JSON.stringify({ token: batchToken, sessionId, events }),
       });
       if (!response.ok && response.status >= 500)
-        queue = [...events, ...queue].slice(0, 120);
+        queue = [...batch, ...queue].slice(0, 120);
     } catch {
-      if (!stopped) queue = [...events, ...queue].slice(0, 120);
+      if (!stopped) queue = [...batch, ...queue].slice(0, 120);
     } finally {
       sending = false;
       if (queue.length && !stopped)
@@ -75,12 +86,13 @@ export function createWidgetTracker(endpoint: string) {
       field?: WidgetField,
     ) {
       if (!token || stopped) return;
-      const key = `${type}:${language}:${field ?? ""}`;
+      const key = `${token}:${type}:${language}:${field ?? ""}`;
       if (key === last && Date.now() - lastAt < 500) return;
       last = key;
       lastAt = Date.now();
       if (queue.length < 120 && sequence < 1000000)
         queue.push({
+          token,
           id: crypto.randomUUID(),
           sequence: ++sequence,
           type,

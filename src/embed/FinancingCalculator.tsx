@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateFinancing, type FinancingResult } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
 import RefundPanel, { RefundNotes } from "./RefundPanel";
@@ -132,6 +132,28 @@ function CalculatorBody({
   useEffect(() => {
     if (result) notify("calculated");
   }, [result, notify]);
+  // Count a settled successful estimate, not every keystroke or React render.
+  const lastTrackedCalculation = useRef("");
+  useEffect(() => {
+    if (!result || !track) return;
+    const snapshot = JSON.stringify([
+      result.currency,
+      result.financingType,
+      result.apartmentPrice,
+      result.downPaymentAmount,
+      result.durationMonths,
+      result.financingType === "mortgage"
+        ? result.annualInterestRatePercent
+        : null,
+      method,
+    ]);
+    if (snapshot === lastTrackedCalculation.current) return;
+    const timer = setTimeout(() => {
+      lastTrackedCalculation.current = snapshot;
+      track("calculation_completed");
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [result, track, method]);
   const change = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
@@ -492,6 +514,7 @@ function CalculatorBody({
                   apartmentId: configuration.apartmentId,
                   language,
                 });
+                track?.("schedule_downloaded");
               } catch {
                 setDownloadError(true);
               } finally {
