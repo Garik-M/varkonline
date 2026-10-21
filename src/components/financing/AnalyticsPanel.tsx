@@ -40,9 +40,9 @@ export default function AnalyticsPanel({
     days: number;
     value: AnalyticsReport;
   } | null>(null);
-  // Never render a previous company/period's report while its replacement loads.
-  const report =
-    loaded?.source === request && loaded.days === days ? loaded.value : null;
+  // Keep the current company's dashboard mounted during period updates.
+  // A different company must never inherit the previous report.
+  const report = loaded?.source === request ? loaded.value : null;
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(0);
@@ -55,14 +55,15 @@ export default function AnalyticsPanel({
     let active = true;
     setBusy(true);
     setError(false);
-    setLoaded(null);
-    setShowAllApartments(false);
     request<AnalyticsReport>(`?days=${days}`)
       .then((value) => {
         if (active) setLoaded({ source: request, days, value });
       })
       .catch(() => {
-        if (active) setError(true);
+        if (active) {
+          setLoaded(null);
+          setError(true);
+        }
       })
       .finally(() => {
         if (active) setBusy(false);
@@ -139,7 +140,11 @@ export default function AnalyticsPanel({
       </header>
       {busy && (
         <div
-          className={`${cardClass} animate-pulse text-muted-foreground`}
+          className={
+            report
+              ? "sr-only"
+              : `${cardClass} animate-pulse text-muted-foreground`
+          }
           role="status"
         >
           {c.loading}
@@ -192,6 +197,13 @@ export default function AnalyticsPanel({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays size={17} aria-hidden="true" />
               {c.period}
+              {busy && (
+                <RefreshCw
+                  size={14}
+                  className="animate-spin"
+                  aria-hidden="true"
+                />
+              )}
             </div>
             <div
               role="group"

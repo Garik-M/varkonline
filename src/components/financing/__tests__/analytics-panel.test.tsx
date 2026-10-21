@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -125,3 +126,41 @@ it.each(["hy", "ru"] as const)(
     ).toBeInTheDocument();
   },
 );
+
+it("keeps the dashboard and open details mounted while changing periods", async () => {
+  let finish: (value: AnalyticsReport) => void = () => {};
+  const request = vi
+    .fn()
+    .mockResolvedValueOnce(report())
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+  render(<AnalyticsPanel request={request as AnalyticsRequest} />);
+  const usage = await screen.findByTestId("analytics-usage");
+  const chart = screen.getByTestId("analytics-daily");
+  const details = screen
+    .getByText("View price range details")
+    .closest("details")!;
+  fireEvent.click(screen.getByText("View price range details"));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Last 7 days", exact: true }),
+  );
+  expect(screen.getByTestId("analytics-usage")).toBe(usage);
+  expect(screen.getByTestId("analytics-daily")).toBe(chart);
+  expect(details).toHaveAttribute("open");
+  expect(screen.getByTestId("financing-analytics")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  expect(screen.getByRole("status")).toHaveClass("sr-only");
+  await act(async () => finish({ ...report(), days: 7 }));
+  expect(screen.getByTestId("analytics-daily")).toBe(chart);
+  expect(details).toHaveAttribute("open");
+  expect(screen.getByTestId("financing-analytics")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+});
