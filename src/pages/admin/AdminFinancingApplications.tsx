@@ -30,7 +30,7 @@ export default function AdminFinancingApplications() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [invitations, setInvitations] = useState<Record<string, { url: string; expiresAt: string }>>({});
+  const [invitations, setInvitations] = useState<Record<string, { url: string; expiresAt: string | null }>>({});
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -93,7 +93,7 @@ export default function AdminFinancingApplications() {
           </dl>
           {invitations[application.id] && <div className="rounded-lg border p-4 space-y-3">
             <label className="block text-sm font-medium">Private invitation link<input readOnly className="block w-full border rounded p-2 mt-2 text-xs bg-background" value={invitations[application.id].url} onFocus={event => event.currentTarget.select()} /></label>
-            <p className="text-xs text-muted-foreground">Share only with {application.email}. Expires {new Date(invitations[application.id].expiresAt).toLocaleString()}. This secret is shown only for this session; create a new invitation if lost.</p>
+            <p className="text-xs text-muted-foreground">Share only with {application.email}. This single-use link does not expire. Issuing a new invitation replaces it. This secret is shown only for this session; create a new invitation if lost.</p>
             <Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(invitations[application.id].url); setMessage("Invitation copied. Share it privately with the approved contact."); } catch { setMessage("Select and copy the invitation link manually."); } }}>Copy invitation link</Button>
           </div>}
           <div className="flex flex-wrap gap-3 items-center">

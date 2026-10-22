@@ -19,10 +19,10 @@ const en = {
   activate: "Activate account",
   working: "Please wait…",
   accessHelp:
-    "Use the private invitation supplied by Varkonline after approval. For an expired invitation or account recovery, contact",
+    "Use the private invitation supplied by Varkonline after approval. For a replacement invitation or account recovery, contact",
   apply: "Apply to become a financing partner",
   invalidInvite:
-    "If your invitation is expired or already used, sign in below or ask Varkonline for a new invitation.",
+    "If your invitation was replaced or already used, sign in below or ask Varkonline for a new invitation.",
   company: "Company",
   settings: "Calculator settings",
   refundTitle: "Income-tax refund",
@@ -81,7 +81,7 @@ const en = {
   invalidCredentials:
     "The email or password is incorrect, or your partner access is not active.",
   invitationUnavailable:
-    "This invitation is expired, invalid or already used. Sign in or ask Varkonline for a new invitation.",
+    "This invitation is invalid, replaced or already used. Sign in or ask Varkonline for a new invitation.",
   existingAccountPassword:
     "This email already has an account. Enter its current password to connect your approved company.",
   revisionConflict:
@@ -113,10 +113,10 @@ export const messages: Record<PartnerLanguage, typeof en> = {
     activate: "Ակտիվացնել հաշիվը",
     working: "Խնդրում ենք սպասել…",
     accessHelp:
-      "Օգտագործեք հաստատումից հետո Varkonline-ի տրամադրած անձնական հրավերը։ Ժամկետանց հրավերի կամ հաշվի վերականգնման համար գրեք՝",
+      "Օգտագործեք հաստատումից հետո Varkonline-ի տրամադրած անձնական հրավերը։ Հրավերի փոխարինման կամ հաշվի վերականգնման համար գրեք՝",
     apply: "Դիմել որպես ֆինանսավորման գործընկեր",
     invalidInvite:
-      "Եթե հրավերը ժամկետանց է կամ արդեն օգտագործվել է, մուտք գործեք կամ Varkonline-ից նոր հրավեր խնդրեք։",
+      "Եթե հրավերը փոխարինվել է կամ արդեն օգտագործվել է, մուտք գործեք կամ Varkonline-ից նոր հրավեր խնդրեք։",
     company: "Ընկերություն",
     settings: "Հաշվիչի կարգավորումներ",
     refundTitle: "Եկամտահարկի հետվերադարձ",
@@ -178,7 +178,7 @@ export const messages: Record<PartnerLanguage, typeof en> = {
     invalidCredentials:
       "Էլ․ փոստը կամ գաղտնաբառը սխալ է, կամ գործընկերոջ հասանելիությունը ակտիվ չէ։",
     invitationUnavailable:
-      "Այս հրավերն անվավեր է, ժամկետանց կամ արդեն օգտագործվել է։ Մուտք գործեք կամ Varkonline-ից նոր հրավեր խնդրեք։",
+      "Այս հրավերն անվավեր է, փոխարինվել է կամ արդեն օգտագործվել է։ Մուտք գործեք կամ Varkonline-ից նոր հրավեր խնդրեք։",
     existingAccountPassword:
       "Այս էլ․ փոստով հաշիվ արդեն կա։ Մուտքագրեք դրա գործող գաղտնաբառը։",
     revisionConflict:
@@ -211,7 +211,7 @@ export const messages: Record<PartnerLanguage, typeof en> = {
       "Используйте личное приглашение от Varkonline после одобрения. Для нового приглашения или восстановления доступа напишите:",
     apply: "Стать финансовым партнёром",
     invalidInvite:
-      "Если приглашение истекло или уже использовано, войдите ниже или запросите новое приглашение у Varkonline.",
+      "Если приглашение заменено или уже использовано, войдите ниже или запросите новое приглашение у Varkonline.",
     company: "Компания",
     settings: "Настройки калькулятора",
     refundTitle: "Возврат подоходного налога",
@@ -270,7 +270,7 @@ export const messages: Record<PartnerLanguage, typeof en> = {
     invalidCredentials:
       "Неверная почта или пароль, либо доступ партнёра не активен.",
     invitationUnavailable:
-      "Приглашение недействительно, истекло или уже использовано. Войдите или запросите новое у Varkonline.",
+      "Приглашение недействительно, заменено или уже использовано. Войдите или запросите новое у Varkonline.",
     existingAccountPassword:
       "Аккаунт с этой почтой уже существует. Введите его текущий пароль.",
     revisionConflict:
