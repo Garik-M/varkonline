@@ -815,6 +815,7 @@
 }
 .vk-widget .vk-refund-visible h2 {
   font-size: 20px;
+  color: inherit;
   line-height: 1.3;
   letter-spacing: -0.25px;
 }

@@ -1,6 +1,7 @@
 export type PartnerLanguage = "hy" | "en" | "ru";
 const en = {
   title: "Financing partner workspace",
+  workspaceTitle: "{partner} partner workspace",
   subtitle:
     "Manage your calculator and get the integration code for your website.",
   signOut: "Sign out",
@@ -96,6 +97,7 @@ export const messages: Record<PartnerLanguage, typeof en> = {
   en,
   hy: {
     title: "Ֆինանսավորման գործընկերոջ աշխատասենյակ",
+    workspaceTitle: "{partner} գործընկերոջ աշխատասենյակ",
     subtitle: "Կառավարեք ձեր հաշվիչը և ստացեք կայքում տեղադրման կոդը։",
     signOut: "Դուրս գալ",
     loading: "Աշխատասենյակը բեռնվում է…",
@@ -190,6 +192,7 @@ export const messages: Record<PartnerLanguage, typeof en> = {
   },
   ru: {
     title: "Кабинет финансового партнёра",
+    workspaceTitle: "Кабинет партнёра {partner}",
     subtitle:
       "Управляйте калькулятором и получите код интеграции для вашего сайта.",
     signOut: "Выйти",

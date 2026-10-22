@@ -171,7 +171,11 @@ export default function PartnerApp({
       </header>
       <main className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">{c.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            {selected
+              ? c.workspaceTitle.replace("{partner}", selected.organizationName)
+              : c.title}
+          </h1>
           <p className="text-muted-foreground mt-2">{c.subtitle}</p>
         </div>
         {error && (
@@ -275,28 +279,24 @@ export default function PartnerApp({
           </section>
         ) : (
           <>
-            <label className="block text-sm font-medium space-y-2">
-              {c.company}
-              <select
-                aria-label={c.company}
-                value={selectedId}
-                className="block w-full rounded-lg border bg-card p-3"
-                onChange={(event) => {
-                  setSelectedId(event.target.value);
-                  setError("");
-                  setNotice("");
-                }}
-              >
+            {companies.length > 1 && (
+              <nav aria-label={c.company} className="flex flex-wrap gap-2">
                 {companies.map((company) => (
-                  <option
+                  <Button
                     key={company.applicationId}
-                    value={company.applicationId}
+                    variant={selectedId === company.applicationId ? "default" : "outline"}
+                    aria-pressed={selectedId === company.applicationId}
+                    onClick={() => {
+                      setSelectedId(company.applicationId);
+                      setError("");
+                      setNotice("");
+                    }}
                   >
                     {company.organizationName}
-                  </option>
+                  </Button>
                 ))}
-              </select>
-            </label>
+              </nav>
+            )}
             {selected && (
               <CompanyWorkspace
                 key={`${selected.applicationId}-${savedVersion}`}
