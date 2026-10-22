@@ -103,6 +103,7 @@ export interface QuarterlyRefundResult {
 }
 
 export interface MortgageRefundResult {
+  readonly calculationMethod: "quarterly_pool" | "monthly_tax_limit";
   readonly isEstimate: true;
   readonly calculationBasis: "eligibility_evaluation" | "financial_scenario";
   readonly evidenceMode: EvidenceMode;

@@ -54,9 +54,9 @@ export const widgetMessages = {
     ru: "Возврат производится поквартально; здесь показана расчётная доля месяца.",
   },
   refundAllocationNote: {
-    hy: "Հետվերադարձը չի գերազանցում վճարված իրավասու տոկոսները, հասանելի եկամտային հարկը և եռամսյակային սահմանաչափը։ Ամսական բաժանումը ցուցադրական է և ճշգրիտ համընկնում է եռամսյակային ընդհանուրին։ Մայր գումարը չի վերադարձվում, բանկի պարտավորությունը չի նվազում։",
-    en: "Refunds are limited by eligible interest, available salary tax and the quarterly cap. Monthly allocations are illustrative and reconcile exactly to each quarter. Principal is not refunded; the bank obligation stays unchanged.",
-    ru: "Возврат ограничен допустимыми процентами, доступным подоходным налогом и квартальным лимитом. Месячные доли условны и точно сходятся с квартальным итогом. Основной долг не возмещается; обязательство перед банком не меняется.",
+    hy: "Պահպանողական ամսական գնահատական․ հետվերադարձը չի գերազանցում տվյալ ամսվա իրավասու տոկոսները և հասանելի եկամտային հարկը։ Կիրառվում է նաև ընդհանուր եռամսյակային սահմանաչափը։ Չօգտագործված հարկը չի տեղափոխվում այլ ամիսներ։ Փաստացի վերադարձը եռամսյակային է և կարող է տարբերվել։ Մայր գումարը չի վերադարձվում, բանկի վճարումները չեն փոխվում։",
+    en: "Conservative monthly estimate: each refund is limited to that month's eligible interest and available salary tax, with the shared quarterly cap also applied. Unused tax is not shifted to other months. Actual refunds are quarterly and may differ. Principal is not refunded; bank payments stay unchanged.",
+    ru: "Консервативная месячная оценка: возврат ограничен процентами и доступным налогом этого месяца, с учётом общего квартального лимита. Неиспользованный налог не переносится на другие месяцы. Фактический возврат квартальный и может отличаться. Основной долг не возмещается; платежи банку не меняются.",
   },
   durationYears: { hy: "Ժամկետ, տարի", en: "Term, years", ru: "Срок, лет" },
   years: { hy: "տարի", en: "years", ru: "лет" },
@@ -834,7 +834,31 @@ export const widgetMessages = {
     ru: "Не удалось подготовить файл. Попробуйте ещё раз.",
   },
   exportSummary: { hy: "Ամփոփում", en: "Summary", ru: "Сводка" },
-  exportPartner: { hy: "Գործընկեր", en: "Partner", ru: "Партнёр" },
+  exportFirstPayment: {
+    hy: "Առաջին ամսվա վճար",
+    en: "First monthly payment",
+    ru: "Первый ежемесячный платёж",
+  },
+  exportFinalPayment: {
+    hy: "Վերջին ամսվա վճար",
+    en: "Final monthly payment",
+    ru: "Последний ежемесячный платёж",
+  },
+  exportFirstRefund: {
+    hy: "Առաջին ամսվա կանխատեսված հետվերադարձ",
+    en: "Estimated first-month refund",
+    ru: "Прогноз возврата за первый месяц",
+  },
+  exportFirstNetPayment: {
+    hy: "Առաջին ամսվա ծախս՝ հետվերադարձով",
+    en: "First-month cost after refund",
+    ru: "Расходы за первый месяц с возвратом",
+  },
+  exportTotalCostAfterRefund: {
+    hy: "Ընդհանուր ծախս՝ կանխավճարով և հետվերադարձով",
+    en: "Total cost including down payment, after refund",
+    ru: "Общие расходы с первоначальным взносом и возвратом",
+  },
   exportApartment: {
     hy: "Բնակարանի ID",
     en: "Apartment ID",

@@ -141,8 +141,7 @@ function EmbedApp() {
         const data = (await response.json()) as ResolvedWidget;
         if (disposed || request !== sequence) return;
         if (!refresh) {
-          tracker.current?.stop();
-          tracker.current = createWidgetTracker(
+          tracker.current ??= createWidgetTracker(
             `${boot.apiBase}/embed/${encodeURIComponent(boot.partner!)}/events`,
           );
           const selectedLanguage =

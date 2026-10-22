@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateFinancing, type FinancingResult } from "@/lib/financing";
 import type { ResolvedWidget } from "./types";
 import RefundPanel, { RefundNotes } from "./RefundPanel";
@@ -25,7 +25,7 @@ function CalculatorBody({
   const options = configuration.calculator ?? LEGACY_CALCULATOR_OPTIONS;
   const limits = configuration.controls.limits;
   const mortgage = initial.financingType === "mortgage";
-  const factor = mortgage && options.durationUnit === "years" ? 12 : 1;
+  const factor = mortgage ? 12 : 1;
   const [down, setDown] = useState(
     String(
       Math.round((initial.apartmentPrice * initial.downPaymentPercent) / 100),
@@ -132,6 +132,28 @@ function CalculatorBody({
   useEffect(() => {
     if (result) notify("calculated");
   }, [result, notify]);
+  // Count a settled successful estimate, not every keystroke or React render.
+  const lastTrackedCalculation = useRef("");
+  useEffect(() => {
+    if (!result || !track) return;
+    const snapshot = JSON.stringify([
+      result.currency,
+      result.financingType,
+      result.apartmentPrice,
+      result.downPaymentAmount,
+      result.durationMonths,
+      result.financingType === "mortgage"
+        ? result.annualInterestRatePercent
+        : null,
+      method,
+    ]);
+    if (snapshot === lastTrackedCalculation.current) return;
+    const timer = setTimeout(() => {
+      lastTrackedCalculation.current = snapshot;
+      track("calculation_completed");
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [result, track, method]);
   const change = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
@@ -196,35 +218,11 @@ function CalculatorBody({
             {moneyInCurrency(initial.apartmentPrice)}
           </strong>
         </div>
-        {mortgage && (
-          <label className="vk-rate vk-rate-edit">
-            {t("annualRate")}
-            {options.rateEditable ? (
-              <div className="vk-input-suffix">
-                <input
-                  data-testid="annual-rate"
-                  aria-label={t("annualRate")}
-                  aria-invalid={rateError}
-                  type="text"
-                  inputMode="decimal"
-                  value={rate}
-                  onChange={(event) => change(setRate, event.target.value)}
-                  onBlur={() => track?.("field_changed", "interest_rate")}
-                />
-                <span>%</span>
-              </div>
-            ) : (
-              <strong data-testid="annual-rate">{number(rateValue)}%</strong>
-            )}
-            {rateError && (
-              <small className="vk-field-error">
-                {t("rateBounds", {
-                  min: limits.annualInterestRatePercent.min,
-                  max: limits.annualInterestRatePercent.max,
-                })}
-              </small>
-            )}
-          </label>
+        {mortgage && !options.rateEditable && (
+          <div className="vk-rate">
+            <span>{t("annualRate")}</span>
+            <strong data-testid="annual-rate">{number(rateValue)}%</strong>
+          </div>
         )}
 
         {!mortgage && (
@@ -269,9 +267,9 @@ function CalculatorBody({
                   max: moneyInCurrency(maxDown),
                 })
               : t("downPercentHelp", {
-                  percent: number(
-                    (Number(down) / initial.apartmentPrice) * 100,
-                  ),
+                  percent: new Intl.NumberFormat(language, {
+                    maximumFractionDigits: 2,
+                  }).format((Number(down) / initial.apartmentPrice) * 100),
                 })}
           </small>
         </label>
@@ -322,6 +320,33 @@ function CalculatorBody({
             </small>
           )}
         </label>
+        {mortgage && options.rateEditable && (
+          <label className="vk-rate-control vk-control-wide">
+            <span>{t("annualRate")}</span>
+            <div className="vk-input-suffix">
+              <input
+                data-testid="annual-rate"
+                aria-label={t("annualRate")}
+                aria-invalid={rateError}
+                aria-describedby={rateError ? "vk-rate-help" : undefined}
+                type="text"
+                inputMode="decimal"
+                value={rate}
+                onChange={(event) => change(setRate, event.target.value)}
+                onBlur={() => track?.("field_changed", "interest_rate")}
+              />
+              <span>%</span>
+            </div>
+            {rateError && (
+              <small id="vk-rate-help" className="vk-field-error">
+                {t("rateBounds", {
+                  min: limits.annualInterestRatePercent.min,
+                  max: limits.annualInterestRatePercent.max,
+                })}
+              </small>
+            )}
+          </label>
+        )}
         {mortgage && options.allowRepaymentChoice && (
           <label className="vk-control-wide">
             {t("repaymentMethod")}
@@ -486,10 +511,10 @@ function CalculatorBody({
                 await downloadPaymentSchedule({
                   financing: result,
                   projection: hasRefund ? projection : null,
-                  partnerName: configuration.partner.displayName,
                   apartmentId: configuration.apartmentId,
                   language,
                 });
+                track?.("schedule_downloaded");
               } catch {
                 setDownloadError(true);
               } finally {

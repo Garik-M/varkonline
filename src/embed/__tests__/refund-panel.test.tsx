@@ -74,6 +74,34 @@ function input(label: string, value: string) {
 }
 
 describe("Visible net-salary refund calculator", () => {
+  it("uses years even for a saved legacy configuration whose display unit was months", () => {
+    const config = fixture();
+    config.calculator!.durationUnit = "months";
+    mount(config);
+    expect(screen.getByLabelText(t("durationYears"))).toHaveValue(20);
+    expect(amount("monthly-payment")).toBe(333041);
+  });
+
+  it("does not inflate refunds in a first quarter with only two mortgage payments", () => {
+    const config = fixture();
+    if (config.financing.financingType !== "mortgage")
+      throw new Error("Expected mortgage fixture");
+    config.financing.annualInterestRatePercent = 10;
+    config.refund.loanOriginationDate = {
+      value: "2026-10-21",
+      verified: false,
+    };
+    config.refund.firstPaymentDate = "2026-11-21";
+    mount(config);
+    salary();
+    expect(amount("monthly-payment")).toBe(270206);
+    expect(amount("monthly-refund")).toBe(139086);
+    expect(amount("monthly-net-payment")).toBe(131120);
+    expect(amount("total-refund")).toBe(28114727);
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "2" } });
+    expect(amount("monthly-refund")).toBe(139086);
+    expect(amount("monthly-net-payment")).toBe(131120);
+  });
   it("downloads the current schedule and refund; failures show an error and allow retry", async () => {
     const download = vi.mocked(downloadPaymentSchedule);
     download.mockReset();
@@ -91,7 +119,7 @@ describe("Visible net-salary refund calculator", () => {
     await waitFor(() => expect(download).toHaveBeenCalledTimes(2));
     const snapshot = download.mock.calls[1][0];
     expect(snapshot.financing.downPaymentAmount).toBe(10500000);
-    expect(snapshot.projection?.totalEstimatedRefundAMD).toBe(29784076);
+    expect(snapshot.projection?.totalEstimatedRefundAMD).toBe(29782541);
     expect(snapshot.language).toBe("en");
     await waitFor(() =>
       expect(screen.getByTestId("download-schedule")).toBeEnabled(),
@@ -125,8 +153,8 @@ describe("Visible net-salary refund calculator", () => {
     expect(amount("monthly-refund")).toBe(139086);
     expect(amount("monthly-net-payment")).toBe(193955);
     expect(amount("total-bank-payment")).toBe(79929410);
-    expect(amount("total-refund")).toBe(30333367);
-    expect(amount("total-net-payment")).toBe(49596043);
+    expect(amount("total-refund")).toBe(30332866);
+    expect(amount("total-net-payment")).toBe(49596544);
   });
   it("shows the shrinking refund without refunding principal at the last month", () => {
     mount();
@@ -144,7 +172,7 @@ describe("Visible net-salary refund calculator", () => {
     input(t("downAmount"), "10500000");
     expect(field).toHaveFocus();
     expect(amount("monthly-payment")).toBe(291411);
-    expect(amount("total-refund")).toBe(29784076);
+    expect(amount("total-refund")).toBe(29782541);
     expect(screen.getByTestId("net-salary")).toHaveValue(500000);
     const term = screen.getByLabelText(t("durationYears"));
     term.focus();
@@ -154,8 +182,8 @@ describe("Visible net-salary refund calculator", () => {
     input(t("durationYears"), "15");
     expect(term).toHaveFocus();
     expect(amount("monthly-payment")).toBe(314025);
-    expect(amount("total-refund")).toBe(21760414);
-    expect(amount("total-net-payment")).toBe(34764328);
+    expect(amount("total-refund")).toBe(21759028);
+    expect(amount("total-net-payment")).toBe(34765714);
   });
   it("validates minimum, maximum and term locally without clamping the entered value", () => {
     mount();
@@ -240,7 +268,7 @@ describe("Visible net-salary refund calculator", () => {
     });
     expect(amount("monthly-payment")).toBe(425834);
     expect(amount("total-bank-payment")).toBe(65254587);
-    expect(amount("total-refund")).toBe(25941666);
+    expect(amount("total-refund")).toBe(25941627);
     fireEvent.change(screen.getByRole("slider"), { target: { value: "240" } });
     expect(amount("monthly-payment")).toBe(117955);
     expect(amount("monthly-refund")).toBe(1288);
@@ -254,7 +282,7 @@ describe("Visible net-salary refund calculator", () => {
     expect(amount("total-bank-payment")).toBe(0);
     expect(screen.getByTestId("net-salary")).toHaveValue(500000);
     input(t("downAmount"), "7000000");
-    expect(amount("total-refund")).toBe(30333367);
+    expect(amount("total-refund")).toBe(30332866);
   });
   it.each(["hy", "en", "ru"] as const)(
     "preserves results across language changes to %s",
@@ -267,7 +295,7 @@ describe("Visible net-salary refund calculator", () => {
       expect(screen.getByLabelText(t("netSalary", language))).toHaveValue(
         500000,
       );
-      expect(amount("total-refund")).toBe(30333367);
+      expect(amount("total-refund")).toBe(30332866);
     },
   );
   it("respects hidden controls and refund visibility", () => {

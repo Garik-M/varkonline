@@ -1,5 +1,5 @@
 import {
-  calculateMortgageRefundScenario,
+  calculateMonthlyMortgageRefundEstimate,
   calculateSalaryIncomeTax,
   ARMENIA_REFUND_RULES_2026_10,
   estimateIncomeTaxFromNetSalary,
@@ -87,7 +87,7 @@ export function refundProjection(
   participants: MortgageRefundScenarioInput["participants"],
 ) {
   const dates = paymentDates(first, result.schedule.length);
-  return calculateMortgageRefundScenario(
+  return calculateMonthlyMortgageRefundEstimate(
     {
       financing: result,
       loanOriginationDate: loan,

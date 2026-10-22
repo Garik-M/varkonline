@@ -436,10 +436,7 @@ function CompanyWorkspace({
           }
         : mortgageControlPreset()),
   );
-  const factor =
-    type === "mortgage" && controls.calculator?.durationUnit === "years"
-      ? 12
-      : 1;
+  const factor = type === "mortgage" ? 12 : 1;
   const [defaultDown, setDefaultDown] = useState(
     String(existing?.settings.downPaymentPercent ?? 20),
   );
@@ -447,7 +444,7 @@ function CompanyWorkspace({
     String(existing?.settings.durationMonths ?? 240),
   );
   const [defaultRate, setDefaultRate] = useState(
-    String(existing?.settings.annualInterestRatePercent ?? 12.75),
+    existing?.settings.annualInterestRatePercent?.toString() ?? "",
   );
   const [theme, setTheme] = useState<"light" | "dark">(
     existing?.settings.theme ?? "light",
@@ -584,7 +581,7 @@ function CompanyWorkspace({
                   downPaymentPercent: Number(defaultDown),
                   durationMonths: Number(defaultMonths),
                   controls,
-                  ...(type === "mortgage"
+                  ...(type === "mortgage" && defaultRate.trim()
                     ? { annualInterestRatePercent: Number(defaultRate) }
                     : {}),
                   theme,
@@ -664,17 +661,31 @@ function CompanyWorkspace({
                 </label>
                 {type === "mortgage" && (
                   <label className="space-y-2 text-sm font-medium">
-                    {c.rate}
+                    {c.rate}{" "}
+                    {controls.calculator?.priceRateRule?.currency ===
+                      currency && (
+                      <span className="text-muted-foreground">
+                        ({c.optional})
+                      </span>
+                    )}
                     <Input
                       name="rate"
+                      aria-label={c.rate}
                       type="number"
                       min={controls.limits.annualInterestRatePercent.min}
                       max={controls.limits.annualInterestRatePercent.max}
                       step="any"
-                      required
+                      required={
+                        controls.calculator?.priceRateRule?.currency !==
+                        currency
+                      }
+                      placeholder={c.automaticRate}
                       value={defaultRate}
                       onChange={(event) => setDefaultRate(event.target.value)}
                     />
+                    <small className="block text-muted-foreground">
+                      {c.rateHelp}
+                    </small>
                   </label>
                 )}
                 <label className="space-y-2 text-sm font-medium">

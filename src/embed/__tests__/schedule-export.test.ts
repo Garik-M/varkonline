@@ -29,7 +29,6 @@ function fixture(): ScheduleExport {
       },
       ARMENIA_REFUND_RULES_2026_10,
     ),
-    partnerName: '=HYPERLINK("https://example.invalid")',
     apartmentId: "../A-101",
     language: "en",
   };
@@ -67,6 +66,26 @@ describe("Excel schedule snapshot", () => {
     expect(JSON.stringify(input)).toBe(before);
     expect((summary.data[1][1] as CellObject).type).toBe(String);
     expect((schedule.data[1][2] as CellObject).type).toBe(Number);
+  });
+
+  it("provides useful unbranded summary amounts from the same calculation", () => {
+    const [summary] = paymentScheduleSheets(fixture());
+    const rows = values(summary);
+    expect(JSON.stringify(summary)).not.toMatch(/varkonline/i);
+    expect(rows).toEqual(expect.arrayContaining([
+      ["Summary", "AMD"],
+      ["Term, years", 0.25],
+      ["First monthly payment (AMD)", 340],
+      ["Final monthly payment (AMD)", 340],
+      ["Estimated first-month refund (AMD)", 10],
+      ["First-month cost after refund (AMD)", 330],
+      ["Total payments to the bank (AMD)", 1020],
+      ["Total cost including down payment, after refund (AMD)", 1250],
+    ]));
+    const apartmentId = '=HYPERLINK("https://example.invalid")';
+    const [untrusted] = paymentScheduleSheets({ ...fixture(), apartmentId });
+    expect(untrusted.data[1][1]).toMatchObject({ value: apartmentId, type: String });
+    expect(paymentScheduleFilename("A-101")).not.toMatch(/varkonline/i);
   });
 
   it.each(["hy", "en", "ru"] as const)(
@@ -153,7 +172,7 @@ describe("Excel schedule snapshot", () => {
 
   it("bounds filenames and removes path separators and control characters", () => {
     expect(paymentScheduleFilename("../A-101\n")).toBe(
-      "varkonline-payment-schedule-A-101.xlsx",
+      "payment-schedule-A-101.xlsx",
     );
     expect(paymentScheduleFilename("a".repeat(200)).length).toBeLessThan(100);
   });
